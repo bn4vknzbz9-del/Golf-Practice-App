@@ -3,10 +3,12 @@
 A private practice tracker with three sections:
 
 - **Technique**: a 30-minute protocol generator that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log (date, mechanics, notes, how to improve) is still there too.
-- **Calibration**: generated 30-minute sessions of three structured games, one each for face strike, low point and clubface direction, drawn from ten games per category (30 in total). Each keeps one club and one target and steps one variable from one extreme to the other, then in toward the target. Nothing is randomised. A new session avoids the games you used in your last two sessions.
+- **Calibration**: generated 30-minute sessions of three structured games, one each for face strike, low point and clubface direction, drawn from 11 to 13 games per category. Your club and target never change. Each game steps one thing through a fixed order, from one extreme to the other and in toward the centre, and then switches between strike positions, contact types, shot shapes or start lines from ball to ball. A new session avoids the games you used in your last two sessions.
 - **Transfer**: generated 30-minute sessions of three range-friendly games, drawn from seventeen. Clubs and targets change on every ball, you use your full routine, and there is a consequence for a miss. The first game always tests your new move under pressure. Score each game out of 10, mark pass or fail, and add notes.
 
-The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations, with target sizes in yards instead of finger widths, and are not their official programmes.
+Target sizes are in fingers. One finger is about 3.3 yards at 100 yards, 5 yards at 150 and 6.6 yards at 200 (distance x 0.033). Each session page has a calculator that turns your shot distance into yards per finger.
+
+The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations and are not their official programmes.
 
 Plain HTML, CSS and JavaScript. No build step, no server, no third-party code.
 
@@ -19,6 +21,10 @@ Plain HTML, CSS and JavaScript. No build step, no server, no third-party code.
 5. Tick **Enforce HTTPS** on the same Pages screen.
 
 Open the link on your phone and use Add to Home Screen to keep it handy.
+
+## Finger widths
+
+Targets are sized in fingers, as in Adam Young's transference games. One finger width is about 3.3 yards at 100 yards, 5 yards at 150 yards and 6.6 yards at 200 yards. Each session page has a calculator: type your shot distance to see how wide a finger is.
 
 ## How the login and security work
 

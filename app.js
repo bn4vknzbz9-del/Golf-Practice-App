@@ -10,11 +10,15 @@
      EDIT ME: drill and test libraries
      Add your own drills by copying a line inside any list.
      ========================================================== */
+  // One finger width is about 3.3 yards at 100 yards, 5 at 150 and 6.6 at 200 (distance x 0.033).
+  const FINGER_NOTE = 'Fingers: 1 finger is about 3.3 yards at 100 yards, 5 yards at 150 and 6.6 yards at 200. An 8-finger window is 4 fingers either side of the line. Use the calculator on this page.';
+  const addFingers = (lines) => (/finger/i.test(lines.join(' ')) ? lines.concat(FINGER_NOTE) : lines);
+
   // G(name, setup, play, interleave rule, scoring) builds a practice game.
   // Every game must have an interleave rule: change club, target, shot or set-up from ball to ball.
   const G = (name, setup, play, interleave, score, cat) => ({
     name, cat,
-    how: ['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score].join('\n')
+    how: addFingers(['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score]).join('\n')
   });
   const PICK = 'Use a die, a deck of cards or a random-number app to choose.';
 
@@ -22,7 +26,7 @@
   // one club and one target, with a single variable stepped through a fixed order. Nothing is randomised.
   const GC = (name, setup, constant, steps, score) => ({
     name,
-    how: ['Setup: ' + setup, 'Keep constant: ' + constant, 'Steps:\n' + steps.map((x, i) => (i + 1) + '. ' + x).join('\n'), 'Score: ' + score].join('\n')
+    how: addFingers(['Setup: ' + setup, 'Keep constant: ' + constant, 'Steps:\n' + steps.map((x, i) => (i + 1) + '. ' + x).join('\n'), 'Score: ' + score]).join('\n')
   });
 
   const CAL = {
@@ -30,7 +34,7 @@
       GC('Heel to toe spectrum',
         'Spray or tape on one mid-iron. One target.',
         'Club, target and ball position stay the same for the whole game.',
-        ['3 balls struck toward the heel on purpose.', '3 balls struck toward the toe on purpose.', '3 balls high on the face, then 3 low.', '2 balls just off centre toward the heel, then 2 just off centre toward the toe.', '6 balls aiming for dead centre.'],
+        ['3 balls struck toward the heel on purpose.', '3 balls struck toward the toe on purpose.', '2 balls high on the face, then 2 low.', '6 balls switching between heel and toe on every ball, starting with heel.', '6 balls aiming for dead centre.'],
         'Check the mark after every ball and say what it felt like. Score: centre strikes in the final 6, scaled to 10.'),
       GC('Groove ladder',
         'Spray or tape on a wedge. Use the grooves as a ruler. One target.',
@@ -40,18 +44,13 @@
       GC('Find your edges',
         'Spray or tape on a mid-iron. Count the grooves up from the bottom edge. One target.',
         'Same club, target and ball position.',
-        ['3 balls struck low on the face, around the 2nd groove. Notice where the shot stops being useful.', '3 balls struck high on the face, around the 5th groove. Notice the same.', '3 balls testing each edge again, a little closer to the middle.', '8 balls aiming for the middle, around the 3rd to 4th groove.'],
+        ['3 balls struck low on the face, around the 2nd groove. Notice where the shot stops being useful.', '3 balls struck high on the face, around the 5th groove. Notice the same.', '4 balls switching between the low edge and the high edge, starting low.', '8 balls aiming for the middle, around the 3rd to 4th groove.'],
         'Strikes in the final 8 between the 3rd and 4th groove, scaled to 10. Write down which edge you drift toward.'),
       GC('Tee height staircase',
-        'Spray or tape on your driver or 3-wood. One tee and one target.',
+        'Spray or tape on your driver. One club for the whole game, one tee and one target.',
         'Same club and target. Only the tee height changes, and only in this order.',
         ['3 balls on a low tee.', '3 balls on a medium tee.', '3 balls on a high tee.', '2 balls on medium, then 2 on low.', '5 balls on the tee height that gave your best strikes.'],
         'Centre strikes in the final 5, scaled to 10. Write down which tee height gave your best strikes.'),
-      GC('Club ladder',
-        'Spray or tape on each club: wedge, 9-iron, 7-iron, 5-iron and a hybrid. One target.',
-        'Same target and routine. Only the club changes, and only in this order.',
-        ['4 balls with the wedge.', '4 balls with the 9-iron, then 4 with the 7-iron, 4 with the 5-iron and 4 with the hybrid.', 'Note where on the face each club tends to strike.'],
-        'Centre strikes out of 20, scaled to 10.'),
       GC('Ball position staircase',
         'Spray or tape on a mid-iron. Mark five ball positions from well back to well forward in your stance. One target.',
         'Same club and target. Only the ball position changes, in order.',
@@ -76,26 +75,46 @@
         'Spray or tape on a mid-iron. One target.',
         'Same club and target for the whole game.',
         ['12 balls. After impact, and before you look at the face, call the strike (toe, centre or heel, and high, middle or low).', 'Check the mark and note whether your call was right.'],
-        '1 point for each centre strike and 1 point for each correct call. Maximum 24, scaled to 10.')
+        '1 point for each centre strike and 1 point for each correct call. Maximum 24, scaled to 10.'),
+      GC('Heel and toe switch',
+        'Spray or tape on a mid-iron. One target.',
+        'Same club, target and ball position. Only the strike zone changes, and it switches on every ball.',
+        ['8 balls switching heel, toe, heel, toe, starting with heel.', '8 balls switching heel, centre, toe, centre, then repeating.', '6 balls aiming for dead centre.'],
+        'A ball scores 1 if the strike lands in the zone you called (first 16 balls), plus 1 for each centre strike in the final 6. Out of 22, scaled to 10.'),
+      GC('High and low switch',
+        'Spray or tape on a mid-iron. Count the grooves up from the bottom edge. One target.',
+        'Same club, target and ball position. Only the strike height on the face changes, and it switches on every ball.',
+        ['8 balls switching between high on the face (around the 5th groove) and low (around the 2nd groove), starting low.', '8 balls switching low, middle, high, middle, then repeating.', '6 balls aiming for the middle, around the 3rd to 4th groove.'],
+        'A ball scores 1 if the strike lands in the zone you called (first 16 balls), plus 1 for each strike between the 3rd and 4th groove in the final 6. Out of 22, scaled to 10.'),
+      GC('Four corners switch',
+        'Spray or tape on a mid-iron. Think of the face as four quarters: heel-high, toe-high, toe-low and heel-low. One target.',
+        'Same club, target and ball position. Only the strike zone changes, on every ball.',
+        ['Work around the face one ball per zone: heel-high, toe-high, toe-low, heel-low, then centre. Repeat the cycle 3 times (15 balls).', '6 balls aiming for centre.'],
+        'Balls struck in the zone you called, out of 21, scaled to 10.'),
+      GC('Strike zone on call',
+        'Spray or tape on a mid-iron. One target. A die or random-number app to call the zone: 1 or 2 = centre, 3 = heel, 4 = toe, 5 = high, 6 = low.',
+        'Same club and target. Only the strike zone changes, and it is called before every ball.',
+        ['18 balls. Before each ball, roll to call the strike zone, then try to hit that zone.', 'If you roll the same zone as the previous ball, roll again so the zone always switches.'],
+        'Balls struck in the called zone, out of 18, scaled to 10.')
     ],
     'Low point': [
       GC('Fat to thin spectrum',
         'A mid-iron and a line on the turf. Ball on or just ahead of the line. One target.',
         'Same club, target and ball position.',
-        ['3 balls hit deliberately fat (divot well behind the ball).', '3 balls hit deliberately thin (clip the ball, almost no divot).', '2 slightly fat, then 2 slightly thin.', '6 balls with ball-first contact and the divot starting at or just ahead of the line.'],
+        ['3 balls hit deliberately fat (divot well behind the ball).', '3 balls hit deliberately thin (clip the ball, almost no divot).', '6 balls switching fat, thin, fat, thin, fat, thin.', '2 slightly fat, then 2 slightly thin.', '6 balls with ball-first contact and the divot starting at or just ahead of the line.'],
         'Look at every divot and say where you felt the low point. Score: clean strikes in the final 6, scaled to 10.'),
       GC('Divot position ladder',
-        'A wedge or short iron. Use ball widths as a ruler to judge where the divot starts.',
+        'A wedge (one club for the whole game). Use ball widths as a ruler to judge where the divot starts.',
         'Same club and target. Only the intended divot position changes.',
         ['Aim for the divot to start 1 ball width ahead of the ball, then 2, then 3, then 4 (two balls per rung).', 'Come back down: 3, 2, 1 (one ball per rung).', 'Check each divot against the ball position before the next shot.'],
         'A ball scores 1 if the divot starts within one ball width of where you aimed. Out of 11, scaled to 10.'),
       GC('Towel gate progression',
-        'A wedge or short iron, a towel or headcover and one target.',
+        'A wedge (one club for the whole game), a towel or headcover and one target.',
         'Same club and target. Only the gap between the towel and the ball changes.',
         ['3 balls with the towel about 6 inches behind the ball.', 'Then 3 balls each at 5, 4, 3, 2 and 1 inch, moving the towel closer each time.'],
         'Balls with clean ball-first contact and no towel contact, out of 18, scaled to 10.'),
       GC('Tee ahead ladder',
-        'A wedge or short iron and a tee peg pushed into the turf in line with the ball. One target.',
+        'A wedge (one club for the whole game) and a tee peg pushed into the turf in line with the ball. One target.',
         'Same club and target. Only the distance from the ball to the tee changes.',
         ['3 balls with the tee 1 inch ahead of the ball: hit the ball, then take turf between the ball and the tee.', 'Then 3 balls each with the tee 2, 3 and 4 inches ahead.', '6 balls with the tee 2 inches ahead.'],
         'Balls with ball-first contact and the divot starting between the ball and the tee, out of 21, scaled to 10.'),
@@ -104,11 +123,6 @@
         'Same club and target. Only the ball position changes, in order.',
         ['4 balls with the ball well back.', '4 balls slightly back, 4 in the middle, 4 slightly forward, then 4 well forward.', 'Look at where each divot starts relative to the ball.'],
         'Balls with ball-first contact, out of 20, scaled to 10. Note which position gave you the cleanest contact.'),
-      GC('Club ladder',
-        'A wedge, 9-iron, 7-iron, 5-iron and a hybrid. A line on the turf for the ball. One target.',
-        'Same target and routine. Only the club changes, and only in this order.',
-        ['4 balls with the wedge.', '4 balls with the 9-iron, then 4 with the 7-iron, 4 with the 5-iron and 4 with the hybrid.', 'Notice how your low point has to shift as the club gets longer.'],
-        'Balls with ball-first contact, out of 20, scaled to 10.'),
       GC('Shaft lean staircase',
         'A mid-iron and one target.',
         'Same club and target. Only the amount of shaft lean at impact changes (by feel).',
@@ -128,19 +142,29 @@
         'A mid-iron and one target. Judge your weight by feel in the lead foot.',
         'Same club and target. Only the pressure in your lead foot at impact changes.',
         ['5 balls with weight about even between your feet.', '5 balls with a bit more on the lead foot, then 5 with most of it on the lead foot.', '5 balls back at a bit more on the lead foot.'],
-        'Balls with ball-first contact, out of 20, scaled to 10. Note which amount of pressure gave your cleanest contact.')
+        'Balls with ball-first contact, out of 20, scaled to 10. Note which amount of pressure gave your cleanest contact.'),
+      GC('Fat and thin switch',
+        'A mid-iron and a line on the turf. Ball on or just ahead of the line. One target.',
+        'Same club, target and ball position. Only the contact changes, and it switches on every ball.',
+        ['10 balls switching between deliberately fat and deliberately thin, starting with fat.', '8 balls switching fat, clean, thin, clean, then repeating.', '6 balls with ball-first contact and the divot starting at or just ahead of the line.'],
+        'A ball scores 1 if the contact matches what you called (first 18 balls), plus 1 for each clean strike in the final 6. Out of 24, scaled to 10.'),
+      GC('Brush and dig switch',
+        'A mid-iron and one target.',
+        'Same club and target. Only the depth of the divot changes, and it switches on every ball.',
+        ['8 balls switching between brushing the grass with almost no divot and taking a deep divot, starting with the brush.', '8 balls switching brush, medium, deep, medium, then repeating.', '6 balls with a shallow divot and ball-first contact.'],
+        'A ball scores 1 if the divot matches what you called (first 16 balls), plus 1 for each ball in the final 6 with a shallow divot and ball-first contact. Out of 22, scaled to 10.')
     ],
     'Clubface direction': [
       GC('Start line spectrum',
         'A mid-iron, one target and an alignment stick on the ground pointing at it. Film from behind if you can.',
         'Same club and target. Only your intended start line changes.',
-        ['3 balls starting well left of the target on purpose.', '3 balls starting well right of the target on purpose.', '2 balls starting just left, then 2 just right.', '6 balls starting dead on the target.'],
-        'Balls in the final 6 that start within about three yards of the target line, scaled to 10.'),
+        ['3 balls starting well left of the target on purpose.', '3 balls starting well right of the target on purpose.', '2 balls starting just left, then 2 just right.', '6 balls switching left, right, left, right, left, right.', '6 balls starting dead on the target.'],
+        'Balls in the final 6 that start inside a 2-finger window around the target line (1 finger either side), scaled to 10.'),
       GC('Curve spectrum',
         'A mid-iron and one target.',
-        'Same club and target. Only the amount of curve changes.',
-        ['3 big draws, then 3 big fades.', '2 small draws, then 2 small fades.', '6 balls aiming to start and finish on the target line.'],
-        'Balls in the final 6 finishing inside a ten-yard window around the target, scaled to 10. Note how the face felt for each shape.'),
+        'Same club and target. Only the amount and direction of curve changes.',
+        ['3 big draws, then 3 big fades.', '2 small draws, then 2 small fades.', '6 balls switching draw, fade, draw, fade, draw, fade.', '6 balls aiming to start and finish on the target line.'],
+        'Balls in the final 6 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Note how the face felt for each shape.'),
       GC('Gate narrowing',
         'Two tees set as a gate about two metres ahead of the ball, on the line to your target. A mid-iron.',
         'Same club and target. Only the gate width changes.',
@@ -149,137 +173,177 @@
       GC('Hook to slice spectrum',
         'A mid-iron, one target and plenty of room either side.',
         'Same club and target. Only the amount and direction of curve changes.',
-        ['4 big hooks on purpose.', '4 big slices on purpose.', '3 smaller draws, then 3 smaller fades.', '6 balls aiming to start and finish on the target line.'],
-        'Balls in the final 6 finishing inside a ten-yard window around the target, scaled to 10. Notice how much you had to change to go from one extreme to the other.'),
+        ['4 big hooks on purpose.', '4 big slices on purpose.', '6 balls switching hook and slice on every ball, starting with a hook.', '6 balls aiming to start and finish on the target line.'],
+        'Balls in the final 6 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Notice how much you had to change to go from one extreme to the other.'),
       GC('Face feel ladder',
         'A mid-iron, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the face you intend to present at impact changes (by feel).',
         ['3 balls with a very closed face feel, 3 with a slightly closed feel.', '3 balls with a neutral feel.', '3 balls with a slightly open feel, 3 with a very open feel.', '5 balls back at neutral, aiming at the target.'],
         'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer). Out of 20, scaled to 10.'),
-      GC('Left to right sweep',
-        'A mid-iron and five aim points across the range, from far left to far right. Film if you can.',
-        'Same club. Only the aim point changes, in order from left to right.',
-        ['3 balls starting at each aim point, moving from left to right.', '5 balls at the middle aim point.'],
-        'Balls starting within about three yards of their aim point, out of 20, scaled to 10.'),
-      GC('Club-by-club face window',
-        'A wedge, a 7-iron and a driver or fairway wood. One target and an alignment stick.',
-        'Same target and routine. Only the club changes, and only in this order.',
-        ['5 balls with the wedge.', '5 balls with the 7-iron, then 5 balls with the driver.', 'For each club, note whether the typical start line is left or right of the target. A different club can need a different face to start on line.'],
-        'Balls starting within about three yards of the target line, out of 15, scaled to 10.'),
       GC('Landing window shrink',
-        'A mid-iron and one target. Markers to set the width of a landing window.',
+        'A mid-iron and one target. Markers to set the width of a landing window in fingers.',
         'Same club and target. Only the width of the landing window changes.',
-        ['4 balls into a window 16 yards wide.', '4 balls at 12 yards, then 4 at 8 yards, 4 at 6 yards and 4 at 4 yards.'],
+        ['4 balls into a window 8 fingers wide (4 either side of the target).', '4 balls at 6 fingers, then 4 at 4 fingers, 4 at 3 fingers and 4 at 2 fingers.'],
         'Balls landing inside the window, out of 20, scaled to 10.'),
       GC('Bias check and correct',
         'A mid-iron and one target. A notepad or phone to tally.',
         'Same club and target.',
         ['10 balls at the target with your normal intention. Tally each as starting left, centre or right.', 'Work out your bias: the side where most balls start.', '10 more balls with a small intended correction against your bias.'],
-        'Balls starting within about three yards of the line in the second 10, scaled to 10. Compare with the first 10 and note what the correction felt like.'),
+        'Balls starting inside a 2-finger window around the line in the second 10, scaled to 10. Compare with the first 10 and note what the correction felt like.'),
       GC('Face call before you look',
         'A mid-iron and one target.',
         'Same club and target for the whole game.',
         ['12 balls. After impact, and before the ball lands, call where it will finish: left of, on or right of the target.', 'Then watch the result and note whether your call was right.'],
-        'Correct calls out of 12, scaled to 10. Calibration is about knowing what the face did, not just hitting the target.')
+        'Correct calls out of 12, scaled to 10. Calibration is about knowing what the face did, not just hitting the target.'),
+      GC('Left and right switch',
+        'A mid-iron, one target and an alignment stick. Film if you can.',
+        'Same club and target. Only the start line changes, left or right of the same target, and it switches on every ball.',
+        ['10 balls switching between starting the ball left of the target and right of it, about 2 fingers off the line each way, starting left.', '8 balls switching left, target, right, target, then repeating.', '6 balls starting on the target.'],
+        'A ball scores 1 if it starts where you called (first 18 balls), plus 1 for each on-target ball in the final 6. Out of 24, scaled to 10.'),
+      GC('Draw and fade switch',
+        'A mid-iron and one target. Both shapes start from the target line: the draw curves left and the fade curves right.',
+        'Same club and target. Only the shape changes, and it switches on every ball.',
+        ['10 balls switching between a draw and a fade, starting with a draw.', '8 balls switching draw, straight, fade, straight, then repeating.', '6 balls aiming to start and finish on the target line.'],
+        'A ball scores 1 if it shows the shape you called (first 18 balls), plus 1 for each ball in the final 6 finishing inside a 4-finger window. Out of 24, scaled to 10.'),
+      GC('Shape and start line grid',
+        'A mid-iron and one target. A notepad for a grid of three start lines (left, on target, right) by three shapes (draw, straight, fade).',
+        'Same club and target. Only the start line and the shape change.',
+        ['Work through the nine combinations in this order, one ball each: left-draw, left-straight, left-fade, target-draw, target-straight, target-fade, right-draw, right-straight, right-fade.', 'Repeat the nine once more (18 balls).', 'Mark the combinations you found easiest and hardest.'],
+        'Balls that matched both the start line and the shape, out of 18, scaled to 10.'),
+      GC('Shape and line on call',
+        'A mid-iron, one target and a die or random-number app. First roll picks the start line (1 or 2 = left, 3 or 4 = on target, 5 or 6 = right). Second roll picks the shape (1 or 2 = draw, 3 or 4 = straight, 5 or 6 = fade).',
+        'Same club and target. Only the start line and the shape change, and they are called before every ball.',
+        ['16 balls. Before each ball, roll for the start line and the shape, then play that combination.', 'If the combination matches the previous ball, roll again so it always switches.'],
+        '2 points if both the start line and the shape are right, 1 if one is right, 0 if neither. Maximum 32, scaled to 10.')
     ]
   };
 
+  // Switching: club and target never change in calibration. The part of the face, the contact, the shot
+  // shape and the start line switch from ball to ball in a pattern you call before you hit. Games that
+  // already switch (their steps say so) are left alone; the rest get a short switch block.
+  const SWITCH = {
+    'Face strike': {
+      play: '6 balls switching where you strike the face on every ball, never the same spot twice in a row. Call the spot before you hit, for example heel, toe, high, low, centre, centre. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+      score: 'Switch balls struck where you called, out of 6, scaled to 10. Your game score is the average of that and the score above.'
+    },
+    'Low point': {
+      play: '6 balls switching your contact on every ball in a pattern you call first, for example fat, clean, thin, clean, fat, thin. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+      score: 'Switch balls that matched your call, out of 6, scaled to 10. Your game score is the average of that and the score above.'
+    },
+    'Clubface direction': {
+      play: '6 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw, right start with a fade, on target and straight. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+      score: 'Switch balls where both the start line and the shape matched your call, out of 6, scaled to 10. Your game score is the average of that and the score above.'
+    }
+  };
+  for (const cat of Object.keys(CAL)) {
+    CAL[cat] = CAL[cat].map((g) => {
+      const steps = (g.how.split('Steps:')[1] || '').split('\nScore: ')[0];
+      if (/switch|on call|grid/i.test(g.name) || /switch|on call/i.test(steps)) return g;
+      const parts = g.how.split('\nScore: ');
+      const tail = parts.slice(1).join('\nScore: ');
+      const note = /\nFingers: /.test(tail) ? '' : '';
+      const scoreLine = tail.split('\nFingers: ');
+      const fingers = scoreLine.length > 1 ? '\nFingers: ' + scoreLine.slice(1).join('\nFingers: ') : '';
+      return { name: g.name, how: parts[0] + '\nSwitch: ' + SWITCH[cat].play + '\nScore: ' + scoreLine[0] + ' ' + SWITCH[cat].score + fingers };
+    });
+  }
+
   const TRANSFER_BASE = [
     G('Range round, six holes',
-      'Write six holes on a card. For each, pick a tee shot (driver or 3-wood to a landing window between two range markers) and an approach (a flag distance and a club). Use a different flag and club on every hole.',
+      'Write six holes on a card. For each, pick a tee shot (driver or 3-wood to a 4-finger landing window between two range markers) and an approach (a flag distance and a club, with a 3-finger window around the flag). Use a different flag and club on every hole.',
       '12 balls: tee shot, then approach, for each hole. One ball per shot, no re-hits, full routine every ball. Play the holes in a random order you draw.',
       'Random hole order, and a different club and target on each shot, as on a real course.',
       'Shots finishing inside the window or on the flag, out of 12, scaled to 10. Mark it passed if you score 7 or higher.',
       'Course simulation'),
     G('Protect your points',
-      'Choose four targets at different distances and four clubs. Start with 10 points.',
-      '10 balls. Before every ball, draw the target and the club. Each ball that misses the target costs 1 point. Full routine every ball, no re-hits.',
+      'Choose four targets at different distances and four clubs. Use a 4-finger window for every target. Start with 10 points.',
+      '10 balls. Before every ball, draw the target and the club. Each ball that misses the window costs 1 point. Full routine every ball, no re-hits.',
       'Target and club both change on every ball, never the same club twice in a row.',
       'Points left at the end. Mark it passed if you finish with 6 or more.',
       'Pressure game'),
     G('Three targets, random order',
-      'Choose three targets and three clubs. Write down a random order for hitting the targets, and change the order every round.',
-      'Hit each target once, in the random order, with a different club each time. Missing any target means you start the round again. Maximum 15 balls.',
+      'Choose three targets, each with a 4-finger window, and three clubs. Write down a random order for hitting the targets, and change the order every round.',
+      'Hit each target once, in the random order, with a different club each time. Missing any window means you start the round again. Maximum 15 balls.',
       'Target order is reshuffled after every round, and the club for each target changes each round.',
       '10 for a clean first round, minus 2 for each restart. 0 if you do not finish in 15 balls. Mark it passed if you finish.',
       'Pressure game'),
     G('Routine under pressure',
-      'Four targets, four clubs and a phone timer. Decide your pre-shot routine and its length.',
+      'Four targets with 4-finger windows, four clubs and a phone timer. Decide your pre-shot routine and its length.',
       '8 balls with your full routine every ball. A ball hit without the full routine counts as a miss, and so does a ball that takes longer than 45 seconds from start of routine to contact.',
       'Random target, club and shape on every ball, drawn before the routine starts.',
       'Balls that finish inside the window out of 8, scaled to 10. Mark it passed if you score 7 or higher.',
       'Pressure game'),
     G('Range Stableford',
-      'Choose three targets. Mark a target window about ten yards across, and an inner window about five yards across if you can.',
+      'Choose three targets. Each has an outer window 4 fingers wide and an inner window 2 fingers wide.',
       '12 balls. Before every ball, draw the target and a club. Score 2 for inside the inner window, 1 for inside the outer window and 0 for a miss.',
       'Target and club change on every ball, never the same club twice in a row.',
       'Total points out of 24, scaled to 10. Mark it passed if you reach 12 points or more.',
       'Scoring game'),
     G('Clock pressure',
-      'A phone timer set to 40 seconds per ball, three targets and three clubs.',
+      'A phone timer set to 40 seconds per ball, three targets with 4-finger windows and three clubs.',
       '10 balls. Draw the target and the club, start the timer, and finish your routine and hit within the 40 seconds. A ball hit after the timer counts as a miss.',
       'Draw a new target and club for every ball, before the timer starts.',
       'Balls inside the window out of 10. Mark it passed if you score 6 or higher.',
       'Pressure game'),
     G('Beat your number',
-      'Choose your own target set and clubs. Look at your last result for this game and write down the number you need to beat.',
+      'Choose your own target set (each with a 4-finger window) and clubs. Look at your last result for this game and write down the number you need to beat.',
       '10 balls. Draw the target and the club for each ball, then play it with full routine and no re-hits. Count balls inside the window.',
       'Target and club change on every ball. Write the sequence down first so you cannot choose easy targets.',
       'Balls inside the window out of 10. Mark it passed only if you beat your previous number.',
       'Scoring game'),
     G('Tee shot and approach pairs',
-      'A landing window for driver or 3-wood, and a flag for approach shots. Five pairs.',
+      'A 4-finger landing window for driver or 3-wood, and a flag with a 3-finger window for approach shots. Five pairs.',
       '10 balls: five tee shots alternating with five approach shots, as one hole after another. Draw the approach club and distance for each pair. No re-hits.',
       'Alternate long and short clubs, with a new approach club, flag and shape each pair.',
       'Balls inside their window out of 10. Mark it passed if you score 7 or higher.',
       'Course simulation'),
     G('Infinity levels',
-      'One driver, one mid-iron and one wedge, each with its own target on the range and a window about 8 yards wide. Levels: level 1 is one shot with each club. Each new level adds one shot, in this order: another wedge, another iron, another driver, and so on.',
+      'One driver, one mid-iron and one wedge, each with its own target on the range and an 8-finger window. Levels: level 1 is one shot with each club. Each new level adds one shot, in this order: another wedge, another iron, another driver, and so on.',
       'Hit the level in rotation (driver, iron, wedge, then repeat). You pass a level when every shot lands inside its window with no mistakes. You get three attempts at each level; if you fail all three, drop back a level. Play until your 10 minutes are up. Next time, start from the level you reached.',
       'Rotate between the clubs and never hit the same shot twice in a row.',
       'Levels passed in 10 minutes, doubled (maximum 10). Mark it passed if you pass level 3 or higher.',
       'Scoring game'),
     G('Perfection ladder',
-      'A full set of clubs from wedge to driver, one target and a window 8 yards wide. Windows to move to later: 6 yards, then 4 yards.',
+      'A full set of clubs from wedge to driver, one target and an 8-finger window. Windows to move to later: 6 fingers, then 4 fingers.',
       'Start with your wedge. If the ball lands inside the window, move up one club for the next ball; if it misses, move down one club. Keep going through the set. When you reach the driver, repeat with a narrower window. Play until your 10 minutes are up.',
       'The club changes after every ball by design, because you always move up or down the set.',
       'Balls inside the window out of your first 12, scaled to 10. Mark it passed if you reach your 7-iron or a longer club.',
       'Scoring game'),
     G('Two-ball test',
-      'Two clubs and a target window 8 yards wide. Windows to move to: 6, 4, 3 and 2 yards.',
+      'Two clubs and a target with an 8-finger window. Windows to move to: 6, 4, 3 and 2 fingers.',
       'Hit two balls at the window, each with a different club. Two out of two: shrink the window one step. One out of two: stay the same. None: widen the window one step. Play until your 10 minutes are up.',
       'Use a different club for each of the two balls, and swap the two clubs for different ones every few rounds.',
-      'Narrowest window reached: 8 yards = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if you ended wider than 8). Mark it passed at 6 yards or narrower.',
+      'Narrowest window reached: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if you ended wider than 8). Mark it passed at 6 fingers or narrower.',
       'Pressure game'),
     G('Gambler',
-      'Four clubs, three targets and a notepad. Window widths you can choose are 2 to 10 yards.',
-      '10 balls. Before every ball, draw the club and the target, then choose your window width before you hit. Landing inside the window scores points equal to its width in yards. A miss adds 10 points. The lowest total wins.',
+      'Four clubs, three targets and a notepad. Window widths you can choose are 2 to 10 fingers.',
+      '10 balls. Before every ball, draw the club and the target, then choose your window width before you hit. Landing inside the window scores points equal to its width in fingers. A miss adds 10 points. The lowest total wins.',
       'The club and target are drawn fresh for every ball, so you cannot settle on a favourite shot.',
       'Your total over 10 balls: 25 or less = 10, 40 = 7, 60 = 4, 80 or more = 0. Mark it passed at 40 or less.',
       'Pressure game'),
     G('Worst shot',
-      'A target, three clubs and a notepad.',
-      'Hit three balls at the target, each with a different club. Find the worst of the three and measure how many yards it finished from the target. Repeat for three rounds and add up the three worst shots.',
+      'A target, three clubs and a notepad. Measure misses in fingers from the target line.',
+      'Hit three balls at the target, each with a different club. Find the worst of the three and count how many fingers it finished from the target. Repeat for three rounds and add up the three worst shots.',
       'A different club for each of the three balls, and a new target for each round.',
-      'Total yards for your three worst shots: 15 or less = 10, 30 = 7, 45 = 4, 60 or more = 0. Mark it passed at 30 or less.',
+      'Total fingers for your three worst shots: 3 or less = 10, 6 = 7, 9 = 4, 12 or more = 0. Mark it passed at 6 or less.',
       'Scoring game'),
     G('Danger side',
-      'Work out which side you miss more often. Pick a flag, and set a window 4 yards wide on the safe side of it. The danger side is the other side of the flag. Scoring: 1 point inside the window, 0 points on the safe side outside it, minus 3 points on the danger side.',
+      'Work out which side you miss more often. Pick a flag, and set a 4-finger window on the safe side of it. The danger side is the other side of the flag. Scoring: 1 point inside the window, 0 points on the safe side outside it, minus 3 points on the danger side.',
       '10 balls, tallying points as you go. Full routine every ball, no re-hits.',
       'Draw a new club for every ball and change the flag after five balls.',
       'Points after 10 balls (maximum 10). Mark it passed at 5 points or more.',
       'Pressure game'),
     G('Wide or narrow',
-      'Two targets: one wide (about 30 yards) and one narrow (about 12 yards), for example range poles or two pairs of yardage markers. A scorecard for six par 4 holes.',
+      'Two targets set with range markers: one wide (4 fingers) and one narrow (2 fingers), for example range poles or two pairs of yardage markers. A scorecard for six par 4 holes.',
       'Each hole: hit your driver at the wide target. If you hit it, play your 7-iron at the wide target; if you miss, play your 7-iron at the narrow target. Hole score: drive hit and approach hit = 3. Drive hit and approach missed = 4. Drive missed and approach hit = 4. Both missed = 5.',
       'Driver and 7-iron alternate every shot, the targets change with the result of the drive, and you move to a new pair of markers every two holes.',
       '10 for 18 strokes or fewer over six holes, minus 1 for each stroke over. Mark it passed at 24 or fewer.',
       'Course simulation'),
     G('Weakest link, mixed',
-      'Two targets and four clubs. A window 8 yards wide. Windows to move to: 6, 4, 3 and 2 yards.',
+      'Two targets and four clubs. An 8-finger window. Windows to move to: 6, 4, 3 and 2 fingers.',
       'Count how many balls in a row land inside the window. Alternate between the two targets and change the club on every ball. A miss takes your count back to zero. When you reach five in a row, shrink the window one step. Play until your 10 minutes are up.',
       'Targets alternate and the club changes on every ball. This is a mixed version of a game normally played at one target.',
-      'Narrowest window completed: 8 yards = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if none). Mark it passed at 6 yards or narrower.',
+      'Narrowest window completed: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if none). Mark it passed at 6 fingers or narrower.',
       'Pressure game')
   ];
 
@@ -287,10 +351,10 @@
   const FOCUS = 'Focus: use your full routine on every ball and keep your attention on the target and the ball flight, not on body positions.';
   const ANCHOR = 'New move under pressure';
   TRANSFER_BASE.push(G(ANCHOR,
-    'Use the mechanic from your latest technique protocol. Three targets, three clubs and, if you can, your phone to film.',
+    'Use the mechanic from your latest technique protocol. Three targets with 4-finger windows, three clubs and, if you can, your phone to film.',
     '12 balls. Before each ball, draw the target and the club. Take one smoothie rehearsal swing with the new move beside the ball, step in, then hit with your attention on the target. Film as many as you can.',
     'Target and club change on every ball, never the same club twice in a row.',
-    'Balls where the new move showed up and the ball finished inside the window, out of 12, scaled to 10. Mark it passed if you score 6 or higher.',
+    'Balls where the new move showed up and the ball finished inside a 4-finger window, out of 12, scaled to 10. Mark it passed if you score 6 or higher.',
     'Pattern transfer'));
   const TRANSFER = TRANSFER_BASE.map((g) => ({ name: g.name, cat: g.cat, how: g.how + '\n' + FOCUS }));
 
@@ -1040,11 +1104,11 @@
   const META = {
     calibration: {
       title: 'Calibration practice', unit: 'drill', gen: genCalibration,
-      intro: 'Thirty minutes of structured calibration: three ten-minute games, one each for face strike, low point and clubface direction, drawn from ten games per category. Each game keeps one club and one target and steps a single variable through a fixed order, from one extreme to the other and then in toward the target, so you learn the edges and then the centre. Nothing is randomised. Score each game out of 10.'
+      intro: 'Thirty minutes of structured calibration: three ten-minute games, one each for face strike, low point and clubface direction, drawn from more than ten games per category. You never change club or target. Instead the part of the face you strike, the shape or the start line steps from one extreme to the other, switches back and forth, and then narrows in on the centre. Score each game out of 10. Target sizes are in fingers: use the calculator below.'
     },
     transfer: {
       title: 'Transfer training', unit: 'test', gen: genTransfer,
-      intro: 'Thirty minutes of course-style games you can play at a driving range, drawn from seventeen games. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Score each game out of 10 and tick Passed when you meet its pass mark.'
+      intro: 'Thirty minutes of course-style games you can play at a driving range, drawn from seventeen games. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Target sizes are in fingers: use the calculator below. Score each game out of 10 and tick Passed when you meet its pass mark.'
     }
   };
 
@@ -1155,6 +1219,21 @@
     return h('div', null, clock, h('div', { class: 'timeline', 'aria-hidden': 'true' }, segs), nowLabel, h('div', { class: 'actions' }, toggle, reset));
   }
 
+  // Converts a shot distance into the width of one finger: about 3.3 yards at 100, 5 at 150 and 6.6 at 200.
+  function fingerCalc(d) {
+    const out = h('p', { class: 'hint' });
+    const input = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, placeholder: '150', 'aria-label': 'Shot distance in yards', value: d.dist || '' });
+    function update() {
+      const dist = Number(input.value);
+      if (!input.value || !Number.isFinite(dist) || dist < 20 || dist > 400) { out.textContent = 'Enter a shot distance to see how wide a finger is.'; return; }
+      const f = Math.round(dist * 0.33) / 10;
+      out.textContent = 'At ' + dist + ' yards, 1 finger = ' + f.toFixed(1) + ' yards. 2 fingers = ' + (2 * f).toFixed(1) + ', 4 = ' + (4 * f).toFixed(1) + ', 6 = ' + (6 * f).toFixed(1) + ', 8 = ' + (8 * f).toFixed(1) + ' yards wide.';
+    }
+    input.addEventListener('input', () => { d.dist = input.value.replace(/[^0-9]/g, ''); update(); });
+    update();
+    return h('div', null, field('Finger calculator: shot distance in yards', input, '1 finger is about 3.3 yards at 100 yards, 5 at 150 and 6.6 at 200.'), out);
+  }
+
   function sessionForm(kind) {
     const d = drafts[kind];
     const meta = META[kind];
@@ -1188,6 +1267,7 @@
     return h('div', { class: 'stack' },
       editing ? h('p', { class: 'banner', text: 'Editing an earlier session' }) : null,
       field('Date', dateInput(d)),
+      editing ? null : fingerCalc(d),
       editing ? null : timerWidget(d, cards),
       h('ol', { class: 'drills' }, cards),
       h('div', { class: 'actions' },
