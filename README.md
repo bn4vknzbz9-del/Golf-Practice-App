@@ -2,9 +2,11 @@
 
 A private practice tracker with three sections:
 
-- **Technique**: log the date, the mechanics you worked on, how it went, and how to improve next time.
-- **Calibration**: generated 30-minute variability sessions (face strike, low point, clubface direction). Score each drill out of 10 and add notes.
-- **Transfer**: generated 30-minute course-style pressure tests. Score each test out of 10, mark pass or fail, and add notes.
+- **Technique**: a 30-minute protocol generator that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log (date, mechanics, notes, how to improve) is still there too.
+- **Calibration**: generated 30-minute sessions of three structured games, one each for face strike, low point and clubface direction, drawn from ten games per category (30 in total). Each keeps one club and one target and steps one variable from one extreme to the other, then in toward the target. Nothing is randomised. A new session avoids the games you used in your last two sessions.
+- **Transfer**: generated 30-minute sessions of three range-friendly games, drawn from seventeen. Clubs and targets change on every ball, you use your full routine, and there is a consequence for a miss. The first game always tests your new move under pressure. Score each game out of 10, mark pass or fail, and add notes.
+
+The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations, with target sizes in yards instead of finger widths, and are not their official programmes.
 
 Plain HTML, CSS and JavaScript. No build step, no server, no third-party code.
 
@@ -44,4 +46,4 @@ If you later want a log that syncs across devices with real accounts, that needs
 
 ## Customising
 
-The drill and test lists are at the top of `app.js` under **EDIT ME**. Add, remove or reword entries there. Session lengths are controlled by `CAL_BLOCK_MINUTES` and `TRANSFER_BLOCK_MINUTES`.
+The calibration and transfer games are at the top of `app.js` under **EDIT ME**, and the protocol stages and timings are just below them. Add, remove or reword entries there. Session lengths are controlled by `CAL_BLOCK_MINUTES`, `TRANSFER_BLOCK_MINUTES` and `PROTO_PLANS`.
