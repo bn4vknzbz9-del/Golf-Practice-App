@@ -10,44 +10,144 @@
      EDIT ME: drill and test libraries
      Add your own drills by copying a line inside any list.
      ========================================================== */
+  // G(name, setup, play, interleave rule, scoring) builds a practice game.
+  // Every game must have an interleave rule: change club, target, shot or set-up from ball to ball.
+  const G = (name, setup, play, interleave, score, cat) => ({
+    name, cat,
+    how: ['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score].join('\n')
+  });
+  const PICK = 'Use a die, a deck of cards or a random-number app to choose.';
+
   const CAL = {
     'Face strike': [
-      { name: 'Club rotation strike check', how: 'Spray the face or use impact tape. Hit one ball each with a wedge, a 7-iron and a 5-iron, rotating in a different order each round. Aim for centre contact on every club.' },
-      { name: 'Ball position roulette', how: 'Change the ball position (forward, middle, back) on every shot. Note where each strike lands on the face.' },
-      { name: 'Swing length ladder', how: 'Alternate half, three-quarter and full swings with the same club. Keep the strike in the same spot on all three.' },
-      { name: 'Random distance contact', how: 'Pick a new target distance for every ball. Same centre strike, different carry.' }
+      G('Strike roulette',
+        'Put impact tape or face spray on the club you are hitting. Lay out four clubs you carry (for example wedge, 7-iron, 5-iron or hybrid, driver) and number them 1 to 4. Mark three ball positions: forward, middle, back.',
+        '18 balls. Before every ball, draw the club and the ball position. Run your normal routine, hit, then record the strike as centre, heel, toe, high or low.',
+        'New club and ball position on every ball. If you draw the same club twice in a row, redraw. ' + PICK,
+        'Centre strikes out of 18, scaled to 10. Note which club or position produced most of your misses.'),
+      G('Swing length ladder',
+        'One wedge and one mid-iron with tape or spray on the face. Mark three target distances on the range. Swing lengths are half, three-quarter and full.',
+        '15 balls. Before every ball, draw the club, the swing length and the target distance. Match your swing length to the distance as well as you can, then hit and record the strike.',
+        'Never repeat the same club and swing length back to back. Change at least one of club, swing length or distance on every ball.',
+        'Centre strikes out of 15, scaled to 10. Also note whether strike quality drops on any one swing length.'),
+      G('Tee height and lie shuffle',
+        'Tape or spray on the face. Three set-ups: ball on the mat, ball on a low tee, ball on a normal-height tee. Use a short iron, a mid-iron and a hybrid or fairway wood.',
+        '15 balls. Before every ball, draw the set-up and the club. Adjust your stance and ball position to suit, hit, and record the strike.',
+        'Set-up and club change on every ball. No two consecutive balls from the same set-up.',
+        'Centre strikes out of 15, scaled to 10. Write down which set-up cost you the most strike quality.'),
+      G('Strike, then predict',
+        'Tape or spray on the face. Pick three targets at different distances and three clubs.',
+        '12 balls. Before every ball, draw a club and a target. After impact, and before you look at the face, call the strike (toe, centre or heel, and high, middle or low). Then check the mark.',
+        'Random club and target on every ball, never the same club twice in a row.',
+        '1 point for each centre strike and 1 point for each correct call. Maximum 24, scaled to 10.')
     ],
     'Low point': [
-      { name: 'Line drill, rotating clubs', how: 'Draw a line on the turf and place the ball just ahead of it. Brush the turf at or in front of the line. Rotate wedge, 8-iron and 5-iron every three balls.' },
-      { name: 'Shot type switch', how: 'Alternate punch, stock and high shots. Check that every divot starts ahead of the ball.' },
-      { name: 'Lie variation', how: 'Change the spot you hit from on every ball: tight lie, fluffy lie, new area of the mat. Ball first, then turf.' },
-      { name: 'Towel behind the ball', how: 'Place a towel or headcover just behind the ball. Hit the ball without touching the towel. Change club every three balls.' }
+      G('Line and clubs lottery',
+        'Lay an alignment stick or draw a line on the turf at 90 degrees to your target. Place each ball just ahead of the line. Use a wedge, a mid-iron and a hybrid or fairway wood.',
+        '15 balls. Before every ball, draw the club and the shot type (stock, punch or high). Ball first, then turf at or ahead of the line.',
+        'Club and shot type change on every ball. ' + PICK,
+        'Balls with ball-first contact and the divot or brush mark starting at or past the line, out of 15, scaled to 10.'),
+      G('Headcover gate, mixed clubs',
+        'Place a headcover or towel about a hand-width behind the ball. Choose four clubs. Pick three targets.',
+        '16 balls. Before every ball, draw the club and the target. Swing without touching the headcover and make ball-first contact.',
+        'New club and new target on every ball, no repeats back to back.',
+        'Clean strikes (no headcover contact and ball first) out of 16, scaled to 10.'),
+      G('Wedge to wood relay',
+        'Four clubs in your bag from steepest to shallowest: wedge, mid-iron, long iron or hybrid, fairway wood. A line on the turf to mark where the divot should start.',
+        '4 rounds of 4 balls, so 16 balls. In each round, shuffle the order of the four clubs and hit each once. Notice how your low point has to change with each club.',
+        'Reshuffle the club order every round, and make sure the last club of one round is never the first of the next.',
+        'Balls with ball-first contact and the divot starting at or past the line, out of 16, scaled to 10.'),
+      G('Height and shape switch',
+        'Pick a wedge, a mid-iron and a long iron. Mark one target. Heights are low, medium and high.',
+        '15 balls. Before every ball, draw the club and the height. Hit the height you drew while keeping ball-first contact.',
+        'Both club and height change on every ball. Do not hit the same height twice in a row.',
+        'Balls with ball-first contact and the intended height, out of 15, scaled to 10.')
     ],
     'Clubface direction': [
-      { name: 'Start-line gate, changing targets', how: 'Set two tees as a gate about two metres ahead. Pick a different target for each ball and start it through the gate.' },
-      { name: 'Shape on demand', how: 'Before each ball, choose draw, fade or straight at random (roll a die or use your phone). Match the start line and the curve.' },
-      { name: 'Face call before you look', how: 'After each swing, say where you think the face pointed at impact before you watch the ball. Then compare.' },
-      { name: 'Club switch, same gate', how: 'Use the same target and gate with a different club on every ball. Keep the start line inside the gate.' }
+      G('Target roulette',
+        'Choose three targets at different spots on the range (flags, markers, net posts). If you can, film from behind on your phone to judge start line.',
+        '15 balls. Before every ball, draw the target and the club. The ball must start within about three yards either side of the target line.',
+        'New target and new club on every ball. Never aim at the same target twice in a row.',
+        'Balls starting inside the window, out of 15, scaled to 10. Write down whether your misses start left or right.'),
+      G('Shape on demand',
+        'Three targets and three clubs. Shapes are draw, fade and straight.',
+        '12 balls. Before every ball, draw the shape, the target and the club. Start the ball on the right line and curve it as called.',
+        'Shape, target and club all come from the draw. Redraw if shape and target both repeat the previous ball.',
+        '2 points if both start line and shape are right, 1 point if one is right, 0 if neither. Maximum 24, scaled to 10.'),
+      G('Face call before you look',
+        'Three targets and three clubs.',
+        '12 balls. Before every ball, draw the club and the target. After impact, and before the ball lands, call where it will finish: left of, on or right of the target. Then watch the result.',
+        'Club and target change on every ball. Do not let the same club come up twice in a row.',
+        'Correct calls out of 12, scaled to 10. Calibration is about knowing what the face did, not just hitting the target.'),
+      G('Imaginary wind switch',
+        'Three targets and two clubs. Imaginary wind directions are left to right, right to left and none.',
+        '12 balls. Before every ball, draw the target, the club and the wind. Aim and shape the shot to counter the wind, and decide your start line before you set up.',
+        'Wind, target and club all change from the draw each ball. Redraw if the wind repeats.',
+        '1 point for a start line that matches your plan and 1 point for a finish inside a window around the target. Maximum 24, scaled to 10.')
     ]
   };
 
   const TRANSFER = [
-    { name: 'Six-hole imaginary round', how: 'Play six holes, one ball per shot. Name the hole, club, target and shape before you hit. No re-hits. Score: balls finishing in your intended window, scaled to 10.' },
-    { name: 'Streak to finish', how: 'Choose a target. You finish when you hit it three times in a row, with a maximum of 12 balls. Score: 10 if done in 6 balls or fewer, minus 1 for each extra ball, 0 if not finished.' },
-    { name: 'Protect your points', how: 'Start with 10 points. Every ball that misses the target costs a point. Ten balls, change club on every ball. Score: points left.' },
-    { name: 'Routine under pressure', how: 'Full pre-shot routine on every ball, 8 balls, no re-hits. A ball hit without your full routine counts as a miss. Score: successful balls out of 8, scaled to 10.' },
-    { name: 'Last ball, three targets', how: 'Three balls, three targets, one ball per target. Hit all three to pass. Any miss resets the round, up to four attempts. Score: 10 for a first-attempt pass, minus 2 for each reset, 0 if you never pass.' },
-    { name: 'Narrow fairway', how: 'Pick a narrow landing window for driver or 3-wood. 8 balls, one per shot, no re-hits. Score: balls inside the window out of 8, scaled to 10.' }
+    G('Range round, six holes',
+      'Write six holes on a card. For each, pick a tee shot (driver or 3-wood to a landing window between two range markers) and an approach (a flag distance and a club). Use a different flag and club on every hole.',
+      '12 balls: tee shot, then approach, for each hole. One ball per shot, no re-hits, full routine every ball. Play the holes in a random order you draw.',
+      'Random hole order, and a different club and target on each shot, as on a real course.',
+      'Shots finishing inside the window or on the flag, out of 12, scaled to 10. Mark it passed if you score 7 or higher.',
+      'Course simulation'),
+    G('Protect your points',
+      'Choose four targets at different distances and four clubs. Start with 10 points.',
+      '10 balls. Before every ball, draw the target and the club. Each ball that misses the target costs 1 point. Full routine every ball, no re-hits.',
+      'Target and club both change on every ball, never the same club twice in a row.',
+      'Points left at the end. Mark it passed if you finish with 6 or more.',
+      'Pressure game'),
+    G('Three targets, random order',
+      'Choose three targets and three clubs. Write down a random order for hitting the targets, and change the order every round.',
+      'Hit each target once, in the random order, with a different club each time. Missing any target means you start the round again. Maximum 15 balls.',
+      'Target order is reshuffled after every round, and the club for each target changes each round.',
+      '10 for a clean first round, minus 2 for each restart. 0 if you do not finish in 15 balls. Mark it passed if you finish.',
+      'Pressure game'),
+    G('Routine under pressure',
+      'Four targets, four clubs and a phone timer. Decide your pre-shot routine and its length.',
+      '8 balls with your full routine every ball. A ball hit without the full routine counts as a miss, and so does a ball that takes longer than 45 seconds from start of routine to contact.',
+      'Random target, club and shape on every ball, drawn before the routine starts.',
+      'Balls that finish inside the window out of 8, scaled to 10. Mark it passed if you score 7 or higher.',
+      'Pressure game'),
+    G('Range Stableford',
+      'Choose three targets. Mark a target window as a circle about ten yards across, and an inner circle about five yards across if you can.',
+      '12 balls. Before every ball, draw the target and a club. Score 2 for inside the inner circle, 1 for inside the window and 0 for a miss.',
+      'Target and club change on every ball, never the same club twice in a row.',
+      'Total points out of 24, scaled to 10. Mark it passed if you reach 12 points or more.',
+      'Scoring game'),
+    G('Clock pressure',
+      'A phone timer set to 40 seconds per ball, three targets and three clubs.',
+      '10 balls. Draw the target and the club, start the timer, and finish your routine and hit within the 40 seconds. A ball hit after the timer counts as a miss.',
+      'Draw a new target and club for every ball, before the timer starts.',
+      'Balls inside the window out of 10. Mark it passed if you score 6 or higher.',
+      'Pressure game'),
+    G('Beat your number',
+      'Choose your own target set and clubs. Look at your last result for this game and write down the number you need to beat.',
+      '10 balls. Draw the target and the club for each ball, then play it with full routine and no re-hits. Count balls inside the window.',
+      'Target and club change on every ball. Write the sequence down first so you cannot choose easy targets.',
+      'Balls inside the window out of 10. Mark it passed only if you beat your previous number.',
+      'Scoring game'),
+    G('Tee shot and approach pairs',
+      'A landing window for driver or 3-wood, and a flag for approach shots. Five pairs.',
+      '10 balls: five tee shots alternating with five approach shots, as one hole after another. Draw the approach club and distance for each pair. No re-hits.',
+      'Alternate long and short clubs, with a new approach club, flag and shape each pair.',
+      'Balls inside their window out of 10. Mark it passed if you score 7 or higher.',
+      'Course simulation')
   ];
 
-  const CAL_BLOCK_MINUTES = 5;      // 6 drills x 5 min = 30 min
-  const TRANSFER_BLOCK_MINUTES = 6; // 5 tests x 6 min = 30 min
+  const CAL_BLOCK_MINUTES = 10;      // 3 games x 10 min = 30 min
+  const TRANSFER_BLOCK_MINUTES = 10; // 3 games x 10 min = 30 min
 
   /* ==========================================================
      Constants and small helpers
      ========================================================== */
   const VAULT_KEY = 'golfpractice.vault.v1';
   const LOCK_KEY = 'golfpractice.attempts.v1';
+  const BACKUP_KEY = 'golfpractice.lastbackup.v1';
+  const BACKUP_REMIND_MS = 7 * 24 * 60 * 60 * 1000;
   const PBKDF2_ITER = 600000;
   const IDLE_MS = 10 * 60 * 1000;
   const MAX_ITEMS = 3000;
@@ -191,7 +291,7 @@
             id: str(i.id, 64) || uid(),
             cat: str(i.cat, 40),
             name: str(i.name, 120),
-            how: str(i.how, 600),
+            how: str(i.how, 1500),
             minutes: num(i.minutes, 0, 120),
             score: i.score == null ? null : Math.round(num(i.score, 0, 10)),
             passed: i.passed === true,
@@ -272,11 +372,30 @@
   }
   const resetAttempts = () => localStorage.removeItem(LOCK_KEY);
 
+  // Ask the browser not to evict this site's storage when space is low or history is cleared automatically.
+  let persistAsked = false;
+  function requestPersist() {
+    if (persistAsked) return;
+    persistAsked = true;
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    } catch (e) { /* best effort */ }
+  }
+  const markBackup = () => { try { localStorage.setItem(BACKUP_KEY, String(Date.now())); } catch (e) { /* ignore */ } };
+  function backupDue() {
+    if (!session) return false;
+    const total = session.data.technique.length + session.data.calibration.length + session.data.transfer.length;
+    if (!total) return false;
+    const last = Number(localStorage.getItem(BACKUP_KEY));
+    return !Number.isFinite(last) || !last || Date.now() - last > BACKUP_REMIND_MS;
+  }
+
   function eraseAll() {
     const typed = window.prompt('This permanently deletes your practice log from this device. Type ERASE to continue.');
     if (typed !== 'ERASE') return;
     localStorage.removeItem(VAULT_KEY);
     localStorage.removeItem(LOCK_KEY);
+    localStorage.removeItem(BACKUP_KEY);
     session = null;
     renderLock();
   }
@@ -393,6 +512,7 @@
 
   function renderApp(toTop) {
     clearTimer();
+    requestPersist();
     let view;
     if (ui.tab === 'settings') view = settingsView();
     else if (ui.tab === 'technique') view = techniqueView();
@@ -409,7 +529,11 @@
         'aria-current': ui.tab === id ? 'page' : false,
         onclick: () => { ui.tab = id; renderApp(true); }
       })));
-    root.replaceChildren(header, h('main', null, view), nav);
+    const reminder = backupDue() ? h('div', { class: 'stack' },
+      h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
+      h('div', { class: 'actions' },
+        h('button', { type: 'button', class: 'primary', text: 'Back up now', onclick: async () => { if (await exportBackup()) { toast('Backup saved'); renderApp(); } } }))) : null;
+    root.replaceChildren(header, h('main', null, reminder, view), nav);
     if (toTop) window.scrollTo(0, 0);
   }
 
@@ -518,21 +642,20 @@
   const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, score: null, passed: false, notes: '' });
 
   function genCalibration() {
-    const picks = shuffle(Object.keys(CAL)).map((c) => shuffle(CAL[c]).slice(0, 2).map((x) => mkItem(x, c, CAL_BLOCK_MINUTES)));
-    return [picks[0][0], picks[1][0], picks[2][0], picks[0][1], picks[1][1], picks[2][1]];
+    return shuffle(Object.keys(CAL)).map((c) => mkItem(shuffle(CAL[c])[0], c, CAL_BLOCK_MINUTES));
   }
   function genTransfer() {
-    return shuffle(TRANSFER).slice(0, 5).map((x) => mkItem(x, 'Pressure test', TRANSFER_BLOCK_MINUTES));
+    return shuffle(TRANSFER).slice(0, 3).map((x) => mkItem(x, x.cat, TRANSFER_BLOCK_MINUTES));
   }
 
   const META = {
     calibration: {
       title: 'Calibration practice', unit: 'drill', gen: genCalibration,
-      intro: 'Thirty minutes of variability practice: six five-minute drills across face strike, low point and clubface direction. Change club, target and lie often, and score each drill out of 10.'
+      intro: 'Thirty minutes of interleaved variability practice: three ten-minute games, one each for face strike, low point and clubface direction. Every game has you change club, target, shot or set-up on every ball, so you never hit the same shot twice in a row. Score each game out of 10.'
     },
     transfer: {
       title: 'Transfer training', unit: 'test', gen: genTransfer,
-      intro: 'Thirty minutes of course-style pressure tests to carry your new mechanics onto the course. One ball per shot, no re-hits, and score each test out of 10.'
+      intro: 'Thirty minutes of course-style games you can play at a driving range: three ten-minute games with random clubs and targets on every ball, one ball per shot and no re-hits. Score each game out of 10 and tick Passed when you meet its pass mark.'
     }
   };
 
@@ -740,15 +863,29 @@
   /* ==========================================================
      Settings: backup, restore, change passphrase, erase
      ========================================================== */
-  function exportBackup() {
+  // Uses the iPhone share sheet when available (choose Save to Files or iCloud Drive), otherwise downloads a file.
+  async function exportBackup() {
     const raw = localStorage.getItem(VAULT_KEY);
-    if (!raw) return;
+    if (!raw) return false;
+    const name = 'golf-practice-backup-' + today() + '.json';
+    try {
+      const f = new File([raw], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        await navigator.share({ files: [f], title: 'Golf practice backup' });
+        markBackup();
+        return true;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return false; // you closed the share sheet
+    }
     const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
-    const a = h('a', { href: url, download: 'golf-practice-backup-' + today() + '.json' });
+    const a = h('a', { href: url, download: name });
     document.body.append(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    markBackup();
+    return true;
   }
 
   function settingsView() {
@@ -756,6 +893,12 @@
 
     // Backup
     const expMsg = status();
+    const storageNote = h('p', { class: 'hint', text: '' });
+    if (navigator.storage && navigator.storage.persisted) {
+      navigator.storage.persisted().then((ok) => {
+        storageNote.textContent = ok ? 'Browser storage protection: on.' : 'Browser storage protection: not granted by this browser. Regular backups are your safety net.';
+      }).catch(() => {});
+    }
     // Restore
     const file = h('input', { type: 'file', accept: 'application/json,.json', 'aria-label': 'Backup file' });
     const bpass = h('input', { type: 'password', autocomplete: 'off', autocapitalize: 'off', 'aria-label': 'Passphrase the backup was made with' });
@@ -818,9 +961,10 @@
       h('h2', { text: 'Settings' }),
       h('div', { class: 'panel' },
         h('h3', { text: 'Back up' }),
-        h('p', { text: 'Downloads an encrypted copy of your log. It can only be opened with your passphrase, so it is safe to keep in cloud storage.' }),
-        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', text: 'Download backup', onclick: () => { exportBackup(); expMsg.className = 'msg ok'; expMsg.textContent = 'Backup downloaded.'; } })),
-        expMsg),
+        h('p', { text: 'Saves an encrypted copy of your log. On iPhone, choose Save to Files and pick iCloud Drive. It can only be opened with your passphrase, so it is safe to keep in cloud storage.' }),
+        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', text: 'Back up now', onclick: async () => { expMsg.className = 'msg'; expMsg.textContent = ''; if (await exportBackup()) { expMsg.className = 'msg ok'; expMsg.textContent = 'Backup saved.'; } } })),
+        expMsg,
+        storageNote),
       h('div', { class: 'panel' },
         h('h3', { text: 'Restore' }),
         h('p', { text: 'Replaces this log with a backup file. Enter the passphrase that backup was made with.' }),

@@ -27,6 +27,7 @@ Open the link on your phone and use Add to Home Screen to keep it handy.
 - Repeated wrong passphrases trigger growing delays, and the app locks itself after 10 idle minutes (it stays open while a practice timer is running).
 - A strict Content-Security-Policy blocks outside scripts and network requests, and all text you enter is displayed as plain text, never as HTML.
 - Backups are the same encrypted data, so they are safe to keep in cloud storage.
+- The app asks your browser to protect its storage from automatic clearing, and reminds you to back up if you haven't in a week. Clearing Safari history or website data can still erase the log, so keep a recent backup in iCloud Drive.
 
 ## What this does not do
 
