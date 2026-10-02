@@ -2,11 +2,15 @@
 
 A private practice tracker with three sections:
 
-- **Technique**: a 30-minute protocol generator that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log (date, mechanics, notes, how to improve) is still there too.
-- **Calibration**: generated 30-minute sessions of three structured games, one each for face strike, low point and clubface direction, drawn from 11 to 13 games per category. Your club and target never change. Each game steps one thing through a fixed order, from one extreme to the other and in toward the centre, and then switches between strike positions, contact types, shot shapes or start lines from ball to ball. A new session avoids the games you used in your last two sessions.
-- **Transfer**: generated 30-minute sessions of three range-friendly games, drawn from seventeen. Clubs and targets change on every ball, you use your full routine, and there is a consequence for a miss. The first game always tests your new move under pressure. Score each game out of 10, mark pass or fail, and add notes.
+- **Technique**: a protocol generator (30 minutes or 1 hour) that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log (date, mechanics, notes, how to improve) is still there too.
+- **Calibration**: generated 30-minute sessions (three structured games, one each for face strike, low point and clubface direction) or 1-hour sessions (six games, two per category), drawn from 32 games in all, each 15 balls or fewer. Your club and target never change. Each game steps one thing through a fixed order, from one extreme to the other and in toward the centre, and then switches between strike positions, contact types, shot shapes or start lines from ball to ball. A new session avoids the games you used in your last two sessions.
+- **Transfer**: generated 30-minute sessions (three range-friendly games) or 1-hour sessions (six), drawn from seventeen. Clubs and targets change on every ball, you use your full routine, and there is a consequence for a miss. The first game always tests your new move under pressure. Score each game out of 10, mark pass or fail, and add notes.
 
 Target sizes are in fingers. One finger is about 3.3 yards at 100 yards, 5 yards at 150 and 6.6 yards at 200 (distance x 0.033). Each session page has a calculator that turns your shot distance into yards per finger.
+
+- **Tracking**: a bar chart of the hours spent on each technique change, added up from your saved protocol sessions. Under 10 hours is red, 10 to 15 amber, 15 to 20 light green, and over 20 dark green and labelled Course Ready.
+
+Each practice tab (Technique, Calibration, Transfer) has a slider to switch between a 30 minute and a 1 hour session, which changes the number of drills.
 
 The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations and are not their official programmes.
 

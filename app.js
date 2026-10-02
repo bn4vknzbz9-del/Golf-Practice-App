@@ -29,220 +29,199 @@
     how: addFingers(['Setup: ' + setup, 'Keep constant: ' + constant, 'Steps:\n' + steps.map((x, i) => (i + 1) + '. ' + x).join('\n'), 'Score: ' + score]).join('\n')
   });
 
+  // SH marks a drill that gets its category's shared Switch block (written once, further down).
+  const SH = (g) => ({ ...g, shared: true });
+
   const CAL = {
     'Face strike': [
-      GC('Heel to toe spectrum',
+      GC('Full Face Spectrum',
         'Spray or tape on one mid-iron. One target.',
         'Club, target and ball position stay the same for the whole game.',
-        ['3 balls struck toward the heel on purpose.', '3 balls struck toward the toe on purpose.', '2 balls high on the face, then 2 low.', '6 balls switching between heel and toe on every ball, starting with heel.', '6 balls aiming for dead centre.'],
-        'Check the mark after every ball and say what it felt like. Score: centre strikes in the final 6, scaled to 10.'),
-      GC('Groove ladder',
-        'Spray or tape on a wedge. Use the grooves as a ruler. One target.',
+        ['2 balls struck toward the heel on purpose.', '2 balls struck toward the toe on purpose.', '1 ball high on the face, then 1 low.', '5 balls switching between heel and toe on every ball, starting with heel.', '4 balls aiming for dead centre.'],
+        'Check the mark after every ball and say what it felt like. Centre strikes in the final 4, scaled to 10.'),
+      GC('Heel/Toe ladder',
+        'Spray or tape on a wedge. Use a clear ruler or a pen to mark a centre line, and lines every 5 mm toward the heel and the toe, on the tape. One target.',
         'Same club and target. Only the strike position on the face changes.',
-        ['One ball per rung, working across the face: 3 grooves toward the heel, 2, 1, centre, 1 toward the toe, 2, 3.', 'Then one ball per rung back the other way.', '6 balls aiming for centre.'],
-        'A rung scores 1 if the strike lands within one groove of where you aimed (maximum 14), plus 1 for each centre strike in the final 6. Total out of 20, scaled to 10.'),
+        ['One ball per rung, working across the face: 10 mm toward the heel, 5 mm, centre, 5 mm toward the toe, 10 mm.', 'Then one ball per rung back the other way.', '5 balls aiming for centre.'],
+        'A rung scores 1 if the strike lands within 3 mm of where you aimed (maximum 10), plus 1 for each centre strike in the final 5. Total out of 15, scaled to 10.'),
       GC('Find your edges',
         'Spray or tape on a mid-iron. Count the grooves up from the bottom edge. One target.',
         'Same club, target and ball position.',
-        ['3 balls struck low on the face, around the 2nd groove. Notice where the shot stops being useful.', '3 balls struck high on the face, around the 5th groove. Notice the same.', '4 balls switching between the low edge and the high edge, starting low.', '8 balls aiming for the middle, around the 3rd to 4th groove.'],
-        'Strikes in the final 8 between the 3rd and 4th groove, scaled to 10. Write down which edge you drift toward.'),
+        ['2 balls struck low on the face, around the 2nd groove. Notice where the shot stops being useful.', '2 balls struck high on the face, around the 5th groove. Notice the same.', '3 balls switching between the low edge and the high edge, starting low.', '8 balls switching between the 2nd groove, 3rd groove and the 4th groove on every ball, starting with the 2nd.'],
+        'Strikes in the final 8 on the groove you called, scaled to 10. Write down which edge you drift toward.'),
       GC('Tee height staircase',
         'Spray or tape on your driver. One club for the whole game, one tee and one target.',
         'Same club and target. Only the tee height changes, and only in this order.',
-        ['3 balls on a low tee.', '3 balls on a medium tee.', '3 balls on a high tee.', '2 balls on medium, then 2 on low.', '5 balls on the tee height that gave your best strikes.'],
-        'Centre strikes in the final 5, scaled to 10. Write down which tee height gave your best strikes.'),
+        ['2 balls on a low tee.', '2 balls on a medium tee.', '2 balls on a high tee.', '2 balls on medium, then 2 on low, then 2 on high.', '3 balls on the tee height that gave your best strikes.'],
+        'Centre strikes in the final 3, scaled to 10. Write down which tee height gave your best strikes.'),
       GC('Ball position staircase',
         'Spray or tape on a mid-iron. Mark five ball positions from well back to well forward in your stance. One target.',
         'Same club and target. Only the ball position changes, in order.',
-        ['4 balls with the ball well back.', '4 balls slightly back, 4 in the middle, 4 slightly forward, then 4 well forward.', 'Note which position gives your most central strikes.'],
-        'Centre strikes out of 20, scaled to 10.'),
-      GC('Swing length staircase',
+        ['3 balls with the ball well back.', '3 balls slightly back, 3 in the middle, 3 slightly forward, then 3 well forward.', 'Note which position gives your most central strikes.'],
+        'Centre strikes out of 15, scaled to 10.'),
+      GC('Wedge length staircase',
         'Spray or tape on a wedge. One target.',
         'Same club and target. Only the swing length changes.',
-        ['4 half swings.', '4 three-quarter swings, then 4 full swings.', 'Come back down: 4 three-quarter swings, then 4 half swings.'],
-        'Centre strikes out of 20, scaled to 10. Note whether strike quality changes with swing length.'),
+        ['3 half swings.', '3 three-quarter swings, then 3 full swings.', 'Come back down: 3 three-quarter swings, then 3 half swings.'],
+        'Centre strikes out of 15, scaled to 10. Note whether strike quality changes with swing length.'),
       GC('Effort staircase',
         'Spray or tape on a mid-iron. One target.',
         'Same club and target. Only your effort level changes.',
-        ['4 balls at about 50 percent effort.', '4 balls at 70 percent, 4 at 85 percent, then 4 at 100 percent.', 'Come back to 70 percent for 4 balls.'],
-        'Centre strikes out of 20, scaled to 10. Note the effort level where your strike starts to move.'),
+        ['2 balls at about 50 percent effort.', '3 balls at 70 percent.', '3 balls at 85 percent.', '3 balls at 100 percent.', '4 balls moving from 50 percent, 70 percent, 85 percent and 100 percent.'],
+        'Centre strikes out of 15, scaled to 10. Note the effort level where your strikes are best.'),
       GC('Strike map',
         'Spray or tape on a mid-iron. Draw a grid on paper or your phone: three columns (heel, centre, toe) by three rows (high, middle, low). One target.',
-        'Everything stays the same for all 20 balls.',
-        ['Hit 20 balls with your normal swing and intention.', 'After every ball, tally the strike in the grid.', 'Look at the grid: where is the middle of your pattern, and how wide is it?'],
-        'Share of strikes in the centre cell, out of 20, scaled to 10. Write down the direction your pattern leans.'),
+        'Everything stays the same for all 15 balls.',
+        ['Hit 15 balls with your normal swing and intention.', 'After every ball, tally the strike in the grid.', 'Try and adjust your strike feel to stay in the centre of the face.', 'Look at the grid: where is the middle of your pattern, and how wide is it?'],
+        'Share of strikes in the centre cell, out of 15, scaled to 10. Write down the direction your pattern leans.'),
       GC('Strike, then predict',
         'Spray or tape on a mid-iron. One target.',
         'Same club and target for the whole game.',
         ['12 balls. After impact, and before you look at the face, call the strike (toe, centre or heel, and high, middle or low).', 'Check the mark and note whether your call was right.'],
         '1 point for each centre strike and 1 point for each correct call. Maximum 24, scaled to 10.'),
-      GC('Heel and toe switch',
-        'Spray or tape on a mid-iron. One target.',
-        'Same club, target and ball position. Only the strike zone changes, and it switches on every ball.',
-        ['8 balls switching heel, toe, heel, toe, starting with heel.', '8 balls switching heel, centre, toe, centre, then repeating.', '6 balls aiming for dead centre.'],
-        'A ball scores 1 if the strike lands in the zone you called (first 16 balls), plus 1 for each centre strike in the final 6. Out of 22, scaled to 10.'),
       GC('High and low switch',
         'Spray or tape on a mid-iron. Count the grooves up from the bottom edge. One target.',
         'Same club, target and ball position. Only the strike height on the face changes, and it switches on every ball.',
-        ['8 balls switching between high on the face (around the 5th groove) and low (around the 2nd groove), starting low.', '8 balls switching low, middle, high, middle, then repeating.', '6 balls aiming for the middle, around the 3rd to 4th groove.'],
-        'A ball scores 1 if the strike lands in the zone you called (first 16 balls), plus 1 for each strike between the 3rd and 4th groove in the final 6. Out of 22, scaled to 10.'),
+        ['5 balls switching between high on the face (around the 5th groove) and low (around the 2nd groove), starting low.', '5 balls switching low, middle, high, middle, then repeating.', '5 balls aiming for the middle, around the 3rd to 4th groove.', 'Note how this affects your low point.'],
+        'A ball scores 1 if the strike lands in the zone you called (first 10 balls), plus 1 for each strike between the 3rd and 4th groove in the final 5. Out of 15, scaled to 10.'),
       GC('Four corners switch',
         'Spray or tape on a mid-iron. Think of the face as four quarters: heel-high, toe-high, toe-low and heel-low. One target.',
         'Same club, target and ball position. Only the strike zone changes, on every ball.',
-        ['Work around the face one ball per zone: heel-high, toe-high, toe-low, heel-low, then centre. Repeat the cycle 3 times (15 balls).', '6 balls aiming for centre.'],
-        'Balls struck in the zone you called, out of 21, scaled to 10.'),
-      GC('Strike zone on call',
-        'Spray or tape on a mid-iron. One target. A die or random-number app to call the zone: 1 or 2 = centre, 3 = heel, 4 = toe, 5 = high, 6 = low.',
-        'Same club and target. Only the strike zone changes, and it is called before every ball.',
-        ['18 balls. Before each ball, roll to call the strike zone, then try to hit that zone.', 'If you roll the same zone as the previous ball, roll again so the zone always switches.'],
-        'Balls struck in the called zone, out of 18, scaled to 10.')
+        ['Work around the face one ball per zone: heel-high, toe-high, toe-low, heel-low, then centre. Repeat the cycle 2 times (10 balls).', '5 balls aiming for centre.'],
+        'Balls struck in the zone you called, out of 15, scaled to 10.')
     ],
     'Low point': [
       GC('Fat to thin spectrum',
         'A mid-iron and a line on the turf. Ball on or just ahead of the line. One target.',
         'Same club, target and ball position.',
-        ['3 balls hit deliberately fat (divot well behind the ball).', '3 balls hit deliberately thin (clip the ball, almost no divot).', '6 balls switching fat, thin, fat, thin, fat, thin.', '2 slightly fat, then 2 slightly thin.', '6 balls with ball-first contact and the divot starting at or just ahead of the line.'],
-        'Look at every divot and say where you felt the low point. Score: clean strikes in the final 6, scaled to 10.'),
-      GC('Divot position ladder',
-        'A wedge (one club for the whole game). Use ball widths as a ruler to judge where the divot starts.',
-        'Same club and target. Only the intended divot position changes.',
-        ['Aim for the divot to start 1 ball width ahead of the ball, then 2, then 3, then 4 (two balls per rung).', 'Come back down: 3, 2, 1 (one ball per rung).', 'Check each divot against the ball position before the next shot.'],
-        'A ball scores 1 if the divot starts within one ball width of where you aimed. Out of 11, scaled to 10.'),
-      GC('Towel gate progression',
-        'A wedge (one club for the whole game), a towel or headcover and one target.',
+        ['2 balls hit deliberately fat (divot well behind the ball).', '2 balls hit deliberately thin (clip the ball, almost no divot).', '4 balls switching fat, thin, fat, thin.', '1 slightly fat, then 1 slightly thin.', '5 balls with ball-first contact and the divot starting at or just ahead of the line.'],
+        'Look at every divot and say where you felt the low point. Clean strikes in the final 5, scaled to 10.'),
+      SH(GC('Towel gate progression',
+        'An 8-iron (one club for the whole game), a towel or headcover and one target.',
         'Same club and target. Only the gap between the towel and the ball changes.',
-        ['3 balls with the towel about 6 inches behind the ball.', 'Then 3 balls each at 5, 4, 3, 2 and 1 inch, moving the towel closer each time.'],
-        'Balls with clean ball-first contact and no towel contact, out of 18, scaled to 10.'),
-      GC('Tee ahead ladder',
-        'A wedge (one club for the whole game) and a tee peg pushed into the turf in line with the ball. One target.',
-        'Same club and target. Only the distance from the ball to the tee changes.',
-        ['3 balls with the tee 1 inch ahead of the ball: hit the ball, then take turf between the ball and the tee.', 'Then 3 balls each with the tee 2, 3 and 4 inches ahead.', '6 balls with the tee 2 inches ahead.'],
-        'Balls with ball-first contact and the divot starting between the ball and the tee, out of 21, scaled to 10.'),
-      GC('Ball position staircase',
+        ['2 balls with the towel about 6 inches behind the ball.', 'Then 2 balls each at 4, 3, 2 and 1 inch, moving the towel closer each time.'],
+        'Balls with clean ball-first contact and no towel contact, out of 10, scaled to 10.')),
+      SH(GC('Ball position staircase',
         'A mid-iron and a line on the turf. Five ball positions from well back to well forward. One target.',
         'Same club and target. Only the ball position changes, in order.',
-        ['4 balls with the ball well back.', '4 balls slightly back, 4 in the middle, 4 slightly forward, then 4 well forward.', 'Look at where each divot starts relative to the ball.'],
-        'Balls with ball-first contact, out of 20, scaled to 10. Note which position gave you the cleanest contact.'),
-      GC('Shaft lean staircase',
+        ['2 balls with the ball well back.', '2 balls slightly back, 2 in the middle, 2 slightly forward, then 2 well forward.', 'Look at where each divot starts relative to the ball.'],
+        'Balls with ball-first contact, out of 10, scaled to 10. Note which position gave you the cleanest contact.')),
+      SH(GC('Shaft lean staircase',
         'A mid-iron and one target.',
         'Same club and target. Only the amount of shaft lean at impact changes (by feel).',
-        ['5 balls with very little shaft lean.', '5 balls with a moderate amount.', '5 balls with a lot of shaft lean.', '5 balls back at the moderate amount.'],
-        'Balls with ball-first contact, out of 20, scaled to 10. Note which amount gave your cleanest contact.'),
-      GC('Divot depth staircase',
-        'A mid-iron and one target.',
+        ['3 balls with very little shaft lean.', '3 balls with a moderate amount.', '3 balls with a lot of shaft lean.', '2 balls back at the moderate amount.'],
+        'Balls with ball-first contact, out of 11, scaled to 10. Note which amount gave your cleanest contact.')),
+      SH(GC('Divot depth staircase',
+        'A mid-iron, one target and a divot board.',
         'Same club and target. Only the depth of the divot changes.',
-        ['4 balls brushing the grass with almost no divot.', '4 balls with a shallow divot, then 4 with a deeper divot.', '4 balls back at shallow, then 4 back at brushing.'],
-        'Balls with ball-first contact and the divot depth you intended, out of 20, scaled to 10.'),
-      GC('Tempo staircase',
+        ['2 balls brushing the grass with almost no divot.', '2 balls with a shallow divot, then 2 with a deeper divot.', '2 balls back at shallow, then 2 back at brushing.'],
+        'Balls with ball-first contact and the divot depth you intended, out of 10, scaled to 10.')),
+      SH(GC('Tempo staircase',
         'A mid-iron and one target. A metronome app is helpful.',
         'Same club and target. Only the tempo changes.',
-        ['5 balls at a slow tempo.', '5 balls at your normal tempo, then 5 at a quick tempo.', '5 balls back at normal.'],
-        'Balls with ball-first contact, out of 20, scaled to 10. Note which tempo gave you the cleanest contact.'),
-      GC('Weight staircase',
+        ['3 balls at a slow tempo.', '3 balls at your normal tempo, then 3 at a quick tempo.', '2 balls back at normal.'],
+        'Balls with ball-first contact, out of 11, scaled to 10. Note which tempo gave you the cleanest contact.')),
+      SH(GC('Weight staircase',
         'A mid-iron and one target. Judge your weight by feel in the lead foot.',
         'Same club and target. Only the pressure in your lead foot at impact changes.',
-        ['5 balls with weight about even between your feet.', '5 balls with a bit more on the lead foot, then 5 with most of it on the lead foot.', '5 balls back at a bit more on the lead foot.'],
-        'Balls with ball-first contact, out of 20, scaled to 10. Note which amount of pressure gave your cleanest contact.'),
+        ['3 balls with weight about even between your feet.', '3 balls with a bit more on the lead foot, then 3 with most of it on the lead foot.', '2 balls back at a bit more on the lead foot.'],
+        'Balls with ball-first contact, out of 11, scaled to 10. Note which amount of pressure gave your cleanest contact.')),
       GC('Fat and thin switch',
-        'A mid-iron and a line on the turf. Ball on or just ahead of the line. One target.',
+        'A mid-iron and a line on the turf or a divot board. Ball on or just ahead of the line. One target.',
         'Same club, target and ball position. Only the contact changes, and it switches on every ball.',
-        ['10 balls switching between deliberately fat and deliberately thin, starting with fat.', '8 balls switching fat, clean, thin, clean, then repeating.', '6 balls with ball-first contact and the divot starting at or just ahead of the line.'],
-        'A ball scores 1 if the contact matches what you called (first 18 balls), plus 1 for each clean strike in the final 6. Out of 24, scaled to 10.'),
+        ['6 balls switching between deliberately fat and deliberately thin, starting with fat.', '5 balls switching fat, clean, thin, clean, then repeating.', '4 balls with ball-first contact and the divot starting at or just ahead of the line.'],
+        'A ball scores 1 if the contact matches what you called (first 11 balls), plus 1 for each clean strike in the final 4. Out of 15, scaled to 10.'),
       GC('Brush and dig switch',
         'A mid-iron and one target.',
         'Same club and target. Only the depth of the divot changes, and it switches on every ball.',
-        ['8 balls switching between brushing the grass with almost no divot and taking a deep divot, starting with the brush.', '8 balls switching brush, medium, deep, medium, then repeating.', '6 balls with a shallow divot and ball-first contact.'],
-        'A ball scores 1 if the divot matches what you called (first 16 balls), plus 1 for each ball in the final 6 with a shallow divot and ball-first contact. Out of 22, scaled to 10.')
+        ['6 balls switching between brushing the grass with almost no divot and taking a deep divot, starting with the brush.', '5 balls switching brush, medium, deep, medium, then repeating.', '4 balls with a shallow divot and ball-first contact.'],
+        'A ball scores 1 if the divot matches what you called (first 11 balls), plus 1 for each ball in the final 4 with a shallow divot and ball-first contact. Out of 15, scaled to 10.')
     ],
     'Clubface direction': [
       GC('Start line spectrum',
         'A mid-iron, one target and an alignment stick on the ground pointing at it. Film from behind if you can.',
         'Same club and target. Only your intended start line changes.',
-        ['3 balls starting well left of the target on purpose.', '3 balls starting well right of the target on purpose.', '2 balls starting just left, then 2 just right.', '6 balls switching left, right, left, right, left, right.', '6 balls starting dead on the target.'],
-        'Balls in the final 6 that start inside a 2-finger window around the target line (1 finger either side), scaled to 10.'),
+        ['2 balls starting well left of the target on purpose.', '2 balls starting well right of the target on purpose.', '1 ball starting just left, then 1 just right.', '5 balls switching left, right, left, right, left.', '4 balls starting dead on the target.'],
+        'Balls in the final 4 that start inside a 2-finger window around the target line (1 finger either side), scaled to 10.'),
       GC('Curve spectrum',
         'A mid-iron and one target.',
         'Same club and target. Only the amount and direction of curve changes.',
-        ['3 big draws, then 3 big fades.', '2 small draws, then 2 small fades.', '6 balls switching draw, fade, draw, fade, draw, fade.', '6 balls aiming to start and finish on the target line.'],
-        'Balls in the final 6 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Note how the face felt for each shape.'),
-      GC('Gate narrowing',
+        ['2 big draws, then 2 big fades.', '1 small draw, then 1 small fade.', '5 balls switching draw, fade, draw, fade, draw.', '4 balls aiming to start and finish on the target line.'],
+        'Balls in the final 4 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Note how the face felt for each shape.'),
+      SH(GC('Gate narrowing',
         'Two tees set as a gate about two metres ahead of the ball, on the line to your target. A mid-iron.',
         'Same club and target. Only the gate width changes.',
-        ['4 balls through a gate about 1 metre wide.', '4 balls at 80 cm, then 4 at 60 cm, 4 at 40 cm and 4 at 20 cm.'],
-        'Balls through the gate, out of 20, scaled to 10.'),
+        ['2 balls through a gate about 1 metre wide.', '2 balls at 80 cm, then 2 at 60 cm, 2 at 40 cm and 2 at 20 cm.'],
+        'Balls through the gate, out of 10, scaled to 10.')),
       GC('Hook to slice spectrum',
         'A mid-iron, one target and plenty of room either side.',
         'Same club and target. Only the amount and direction of curve changes.',
-        ['4 big hooks on purpose.', '4 big slices on purpose.', '6 balls switching hook and slice on every ball, starting with a hook.', '6 balls aiming to start and finish on the target line.'],
-        'Balls in the final 6 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Notice how much you had to change to go from one extreme to the other.'),
-      GC('Face feel ladder',
+        ['3 big hooks on purpose.', '3 big slices on purpose.', '5 balls switching hook and slice on every ball, starting with a hook.', '4 balls aiming to start and finish on the target line.'],
+        'Balls in the final 4 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Notice how much you had to change to go from one extreme to the other.'),
+      SH(GC('Face feel ladder',
         'A mid-iron, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the face you intend to present at impact changes (by feel).',
-        ['3 balls with a very closed face feel, 3 with a slightly closed feel.', '3 balls with a neutral feel.', '3 balls with a slightly open feel, 3 with a very open feel.', '5 balls back at neutral, aiming at the target.'],
-        'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer). Out of 20, scaled to 10.'),
-      GC('Landing window shrink',
+        ['2 balls with a very closed face feel, 2 with a slightly closed feel.', '1 ball with a neutral feel.', '2 balls with a slightly open feel, 2 with a very open feel.', '2 balls back at neutral, aiming at the target.'],
+        'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer). Out of 11, scaled to 10.')),
+      SH(GC('Landing window shrink',
         'A mid-iron and one target. Markers to set the width of a landing window in fingers.',
         'Same club and target. Only the width of the landing window changes.',
-        ['4 balls into a window 8 fingers wide (4 either side of the target).', '4 balls at 6 fingers, then 4 at 4 fingers, 4 at 3 fingers and 4 at 2 fingers.'],
-        'Balls landing inside the window, out of 20, scaled to 10.'),
-      GC('Bias check and correct',
+        ['2 balls into a window 8 fingers wide (4 either side of the target).', '2 balls at 6 fingers, then 2 at 4 fingers, 2 at 3 fingers and 2 at 2 fingers.'],
+        'Balls landing inside the window, out of 10, scaled to 10.')),
+      SH(GC('Bias check and correct',
         'A mid-iron and one target. A notepad or phone to tally.',
         'Same club and target.',
-        ['10 balls at the target with your normal intention. Tally each as starting left, centre or right.', 'Work out your bias: the side where most balls start.', '10 more balls with a small intended correction against your bias.'],
-        'Balls starting inside a 2-finger window around the line in the second 10, scaled to 10. Compare with the first 10 and note what the correction felt like.'),
-      GC('Face call before you look',
+        ['6 balls at the target with your normal intention. Tally each as starting left, centre or right.', 'Work out your bias: the side where most balls start.', '5 more balls with a small intended correction against your bias.'],
+        'Balls starting inside a 2-finger window around the line in the 5 correction balls, scaled to 10. Compare with the first 6 and note what the correction felt like.')),
+      SH(GC('Face call before you look',
         'A mid-iron and one target.',
         'Same club and target for the whole game.',
-        ['12 balls. After impact, and before the ball lands, call where it will finish: left of, on or right of the target.', 'Then watch the result and note whether your call was right.'],
-        'Correct calls out of 12, scaled to 10. Calibration is about knowing what the face did, not just hitting the target.'),
+        ['10 balls. After impact, and before the ball lands, call where it will finish: left of, on or right of the target.', 'Then watch the result and note whether your call was right.'],
+        'Correct calls out of 10, scaled to 10. Calibration is about knowing what the face did, not just hitting the target.')),
       GC('Left and right switch',
         'A mid-iron, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the start line changes, left or right of the same target, and it switches on every ball.',
-        ['10 balls switching between starting the ball left of the target and right of it, about 2 fingers off the line each way, starting left.', '8 balls switching left, target, right, target, then repeating.', '6 balls starting on the target.'],
-        'A ball scores 1 if it starts where you called (first 18 balls), plus 1 for each on-target ball in the final 6. Out of 24, scaled to 10.'),
+        ['6 balls switching between starting the ball left of the target and right of it, about 2 fingers off the line each way, starting left.', '5 balls switching left, target, right, target, then repeating.', '4 balls starting on the target.'],
+        'A ball scores 1 if it starts where you called (first 11 balls), plus 1 for each on-target ball in the final 4. Out of 15, scaled to 10.'),
       GC('Draw and fade switch',
         'A mid-iron and one target. Both shapes start from the target line: the draw curves left and the fade curves right.',
         'Same club and target. Only the shape changes, and it switches on every ball.',
-        ['10 balls switching between a draw and a fade, starting with a draw.', '8 balls switching draw, straight, fade, straight, then repeating.', '6 balls aiming to start and finish on the target line.'],
-        'A ball scores 1 if it shows the shape you called (first 18 balls), plus 1 for each ball in the final 6 finishing inside a 4-finger window. Out of 24, scaled to 10.'),
+        ['6 balls switching between a draw and a fade, starting with a draw.', '5 balls switching draw, straight, fade, straight, then repeating.', '4 balls aiming to start and finish on the target line.'],
+        'A ball scores 1 if it shows the shape you called (first 11 balls), plus 1 for each ball in the final 4 finishing inside a 4-finger window. Out of 15, scaled to 10.'),
       GC('Shape and start line grid',
         'A mid-iron and one target. A notepad for a grid of three start lines (left, on target, right) by three shapes (draw, straight, fade).',
         'Same club and target. Only the start line and the shape change.',
-        ['Work through the nine combinations in this order, one ball each: left-draw, left-straight, left-fade, target-draw, target-straight, target-fade, right-draw, right-straight, right-fade.', 'Repeat the nine once more (18 balls).', 'Mark the combinations you found easiest and hardest.'],
-        'Balls that matched both the start line and the shape, out of 18, scaled to 10.'),
+        ['Work through the nine combinations in this order, one ball each: left-draw, left-straight, left-fade, target-draw, target-straight, target-fade, right-draw, right-straight, right-fade.', 'Repeat the first six combinations once more (15 balls in total).', 'Mark the combinations you found easiest and hardest.'],
+        'Balls that matched both the start line and the shape, out of 15, scaled to 10.'),
       GC('Shape and line on call',
         'A mid-iron, one target and a die or random-number app. First roll picks the start line (1 or 2 = left, 3 or 4 = on target, 5 or 6 = right). Second roll picks the shape (1 or 2 = draw, 3 or 4 = straight, 5 or 6 = fade).',
         'Same club and target. Only the start line and the shape change, and they are called before every ball.',
-        ['16 balls. Before each ball, roll for the start line and the shape, then play that combination.', 'If the combination matches the previous ball, roll again so it always switches.'],
-        '2 points if both the start line and the shape are right, 1 if one is right, 0 if neither. Maximum 32, scaled to 10.')
+        ['15 balls. Before each ball, roll for the start line and the shape, then play that combination.', 'If the combination matches the previous ball, roll again so it always switches.'],
+        '2 points if both the start line and the shape are right, 1 if one is right, 0 if neither. Maximum 30, scaled to 10.')
     ]
   };
 
-  // Switching: club and target never change in calibration. The part of the face, the contact, the shot
-  // shape and the start line switch from ball to ball in a pattern you call before you hit. Games that
-  // already switch (their steps say so) are left alone; the rest get a short switch block.
+  // Switch blocks: club and target never change in calibration. Drills tagged shared get their category's
+  // 4-ball block after their steps; its score is averaged with the drill's own score.
   const SWITCH = {
     'Face strike': {
-      play: '6 balls switching where you strike the face on every ball, never the same spot twice in a row. Call the spot before you hit, for example heel, toe, high, low, centre, centre. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-      score: 'Switch balls struck where you called, out of 6, scaled to 10. Your game score is the average of that and the score above.'
+      play: '4 balls switching where you strike the face on every ball, never the same spot twice in a row. Call the spot before you hit, for example heel, toe, high, low. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+      score: 'Switch balls struck where you called, out of 4, scaled to 10. Your game score is the average of that and the score above.'
     },
     'Low point': {
-      play: '6 balls switching your contact on every ball in a pattern you call first, for example fat, clean, thin, clean, fat, thin. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-      score: 'Switch balls that matched your call, out of 6, scaled to 10. Your game score is the average of that and the score above.'
+      play: '4 balls switching your contact on every ball in a pattern you call first, for example fat, clean, thin, clean. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+      score: 'Switch balls that matched your call, out of 4, scaled to 10. Your game score is the average of that and the score above.'
     },
     'Clubface direction': {
-      play: '6 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw, right start with a fade, on target and straight. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-      score: 'Switch balls where both the start line and the shape matched your call, out of 6, scaled to 10. Your game score is the average of that and the score above.'
+      play: '4 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+      score: 'Switch balls where both the start line and the shape matched your call, out of 4, scaled to 10. Your game score is the average of that and the score above.'
     }
   };
   for (const cat of Object.keys(CAL)) {
     CAL[cat] = CAL[cat].map((g) => {
-      const steps = (g.how.split('Steps:')[1] || '').split('\nScore: ')[0];
-      if (/switch|on call|grid/i.test(g.name) || /switch|on call/i.test(steps)) return g;
+      if (!g.shared) return { name: g.name, how: g.how };
       const parts = g.how.split('\nScore: ');
-      const tail = parts.slice(1).join('\nScore: ');
-      const note = /\nFingers: /.test(tail) ? '' : '';
-      const scoreLine = tail.split('\nFingers: ');
+      const scoreLine = parts.slice(1).join('\nScore: ').split('\nFingers: ');
       const fingers = scoreLine.length > 1 ? '\nFingers: ' + scoreLine.slice(1).join('\nFingers: ') : '';
       return { name: g.name, how: parts[0] + '\nSwitch: ' + SWITCH[cat].play + '\nScore: ' + scoreLine[0] + ' ' + SWITCH[cat].score + fingers };
     });
@@ -567,7 +546,8 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  let ui = { tab: 'technique', mode: 'new' };
+  const freshUi = () => ({ tab: 'technique', mode: 'new', len: { technique: 30, calibration: 30, transfer: 30 } });
+  let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
   let idleHandle = null;
@@ -603,7 +583,7 @@
     clearTimer();
     session = null;
     drafts = freshDrafts();
-    ui = { tab: 'technique', mode: 'new' };
+    ui = freshUi();
     renderLock();
   }
 
@@ -768,7 +748,7 @@
   /* ==========================================================
      App shell
      ========================================================== */
-  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer']];
+  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['tracking', 'Tracking']];
 
   function renderApp(toTop) {
     clearTimer();
@@ -776,6 +756,7 @@
     let view;
     if (ui.tab === 'settings') view = settingsView();
     else if (ui.tab === 'technique') view = techniqueView();
+    else if (ui.tab === 'tracking') view = trackingView();
     else view = sessionsView(ui.tab);
 
     const header = h('header', { class: 'top' },
@@ -870,8 +851,10 @@
   function freshProtocol() {
     return { id: null, date: today(), mechanic: '', target: '', start: 0, startTouched: false, items: [], notes: '', next: '', timer: { base: 0, startedAt: null } };
   }
-  function buildProtocol(start) {
-    return PROTO_PLANS[start].map(([st, minutes]) => {
+  function buildProtocol(start, len) {
+    const scale = (len || 30) / 30;
+    return PROTO_PLANS[start].map(([st, base]) => {
+      const minutes = base * scale;
       const def = st === -1 ? SET_BLOCK : st === 5 ? REFINE_BLOCK : STAGES[st];
       const cat = st === -1 ? 'Diagnose' : st === 5 ? 'Refine' : 'Stage ' + (st + 1) + ' of 5';
       return { id: uid(), cat, name: def.name, how: def.how, minutes, stage: st, rounds: 0, passed: false, score: null, notes: '' };
@@ -889,14 +872,123 @@
       h('div', { class: 'pips', 'aria-hidden': 'true' }, STAGE_SHORT.map((n, i) => h('span', { class: 'pip' + (i <= e.furthest ? ' on' : ''), text: n }))))));
   }
 
+  /* ==========================================================
+     Tracking: hours spent on each technique change
+     ========================================================== */
+  const fmtH = (v) => String(Math.round(v * 10) / 10);
+
+  // Hours = the full time of every saved protocol session (30 minutes or 1 hour each), grouped by mechanic.
+  function techniqueHours() {
+    const map = new Map();
+    for (const p of session.data.protocols) {
+      const k = mechKey(p.mechanic);
+      if (!k) continue;
+      let e = map.get(k);
+      if (!e) { e = { name: p.mechanic.trim(), minutes: 0, sessions: 0, last: p.date }; map.set(k, e); }
+      e.minutes += p.items.reduce((a, it) => a + it.minutes, 0);
+      e.sessions += 1;
+      if (p.date >= e.last) { e.last = p.date; e.name = p.mechanic.trim(); }
+    }
+    return [...map.values()].map((e) => ({ ...e, hours: e.minutes / 60 })).sort((a, b) => b.hours - a.hours);
+  }
+
+  // Under 10 hours red, 10 up to 15 amber, 15 to 20 light green, over 20 dark green and Course Ready.
+  function techStatus(hours) {
+    if (hours > 20) return { cls: 'dg', label: 'Over 20 hours: Course Ready', short: 'Course Ready' };
+    if (hours >= 15) return { cls: 'lg', label: '15 to 20 hours', short: '15 to 20 h' };
+    if (hours >= 10) return { cls: 'am', label: '10 to 15 hours', short: '10 to 15 h' };
+    return { cls: 'rd', label: 'Under 10 hours', short: 'Under 10 h' };
+  }
+
+  function trackingChart(rows) {
+    const maxH = Math.max(...rows.map((r) => r.hours));
+    const axisMax = Math.max(25, Math.ceil(maxH / 5) * 5);
+    const W = 320, L = 8, R = 8, ROW = 46, TOP = 24, BOT = 22;
+    const x = (v) => L + (v / axisMax) * (W - L - R);
+    const H = TOP + rows.length * ROW + BOT;
+    const svg = s('svg', {
+      viewBox: '0 0 ' + W + ' ' + H, class: 'chart', role: 'img',
+      'aria-label': 'Hours per technique change. ' + rows.map((r) => r.name + ': ' + fmtH(r.hours) + ' hours, ' + techStatus(r.hours).label).join('. ')
+    });
+    [10, 15, 20].forEach((v) => {
+      svg.append(
+        s('line', { x1: x(v), x2: x(v), y1: TOP - 6, y2: H - BOT, class: 'guide-line' }),
+        s('text', { x: x(v), y: TOP - 10, class: 'axis', 'text-anchor': 'middle' }, v + ' h'));
+    });
+    rows.forEach((r, i) => {
+      const y0 = TOP + i * ROW;
+      const st = techStatus(r.hours);
+      const name = r.name.length > 20 ? r.name.slice(0, 19) + '\u2026' : r.name;
+      svg.append(
+        s('text', { x: L, y: y0 + 12, class: 'bar-name' }, name),
+        s('text', { x: W - R, y: y0 + 12, class: 'bar-val', 'text-anchor': 'end' }, fmtH(r.hours) + ' h, ' + st.short),
+        s('rect', { x: L, y: y0 + 18, width: Math.max(2, x(r.hours) - L).toFixed(1), height: 16, rx: 2, class: 'bar-fill st-' + st.cls }));
+    });
+    svg.append(
+      s('text', { x: L, y: H - 6, class: 'axis' }, '0'),
+      s('text', { x: W - R, y: H - 6, class: 'axis', 'text-anchor': 'end' }, axisMax + ' h'));
+    return svg;
+  }
+
+  function trackingView() {
+    const rows = techniqueHours();
+    const total = rows.reduce((a, r) => a + r.hours, 0);
+    if (!rows.length) {
+      return h('section', { class: 'stack' },
+        h('h2', { text: 'Technique tracking' }),
+        h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
+    }
+    const legend = [['rd', 'Under 10 hours'], ['am', '10 to 15 hours'], ['lg', '15 to 20 hours'], ['dg', 'Over 20 hours: Course Ready']];
+    return h('section', { class: 'stack' },
+      h('h2', { text: 'Technique tracking' }),
+      h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
+      h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
+      trackingChart(rows),
+      h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, 30 minutes or 1 hour. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }));
+  }
+
+  // Slider between a 30 minute and a 1 hour session. Changing it rebuilds an unsaved plan with fewer or more drills.
+  function lengthControl(kind, onChange) {
+    const val = ui.len[kind];
+    const left = h('span', { class: 'len-label' + (val === 30 ? ' on' : ''), text: '30 minutes' });
+    const right = h('span', { class: 'len-label' + (val === 60 ? ' on' : ''), text: '1 hour' });
+    const range = h('input', { type: 'range', min: 0, max: 1, step: 1, 'aria-label': 'Session length: 30 minutes or 1 hour' });
+    range.value = val === 60 ? '1' : '0';
+    range.addEventListener('input', () => {
+      const v = range.value === '1' ? 60 : 30;
+      left.classList.toggle('on', v === 30);
+      right.classList.toggle('on', v === 60);
+    });
+    range.addEventListener('change', () => onChange(range.value === '1' ? 60 : 30));
+    return h('div', { class: 'length' }, left, range, right);
+  }
+  function setTechniqueLength(len) {
+    const d = drafts.protocol;
+    if (len === ui.len.technique) return;
+    if (d.items.length && d.items.some((i) => i.rounds > 0 || i.passed) && !window.confirm('Change the length? Progress you logged on this plan will be lost.')) { renderApp(); return; }
+    ui.len.technique = len;
+    if (d.items.length) { d.items = buildProtocol(d.start, len); d.len = len; d.timer = { base: 0, startedAt: null }; }
+    renderApp();
+  }
+  function setSessionLength(kind, len) {
+    const d = drafts[kind];
+    if (len === ui.len[kind]) return;
+    if (d && d.items.some((i) => i.score !== null) && !window.confirm('Change the length? Scores you entered on this plan will be lost.')) { renderApp(); return; }
+    ui.len[kind] = len;
+    if (d) drafts[kind] = { id: null, date: d.date, items: META[kind].gen(len), timer: { base: 0, startedAt: null }, len };
+    renderApp();
+  }
+
   function techniqueView() {
     let body;
     if (ui.mode === 'history') body = techniqueHistory();
     else if (ui.mode === 'log') body = techniqueForm();
     else body = drafts.protocol.items.length ? protocolSession(drafts.protocol) : protocolSetup(drafts.protocol);
+    const showLength = ui.mode === 'new' && !drafts.protocol.id;
     return h('section', null,
       h('h2', { text: 'Technique practice' }),
-      modeBar([['new', '30-min protocol'], ['log', 'Quick log'], ['history', 'History']]),
+      modeBar([['new', 'Protocol'], ['log', 'Quick log'], ['history', 'History']]),
+      showLength ? lengthControl('technique', setTechniqueLength) : null,
       body);
   }
 
@@ -930,10 +1022,11 @@
       field('Start at', sel),
       hint,
       h('button', {
-        type: 'button', class: 'primary', text: 'Generate 30-minute protocol',
+        type: 'button', class: 'primary', text: 'Generate ' + (ui.len.technique === 60 ? '1-hour' : '30-minute') + ' protocol',
         onclick: () => {
           if (!d.mechanic.trim()) { toast('Add the mechanic you are working on'); return; }
-          d.items = buildProtocol(d.start);
+          d.items = buildProtocol(d.start, ui.len.technique);
+          d.len = ui.len.technique;
           d.timer = { base: 0, startedAt: null };
           renderApp();
         }
@@ -1085,30 +1178,34 @@
     return new Set([...session.data[kind]].sort(byDateDesc).slice(0, 2).flatMap((r) => r.items.map((i) => i.name)));
   }
 
-  function genCalibration() {
+  function genCalibration(len) {
+    const per = (len || 30) / 30; // 1 game per category for 30 minutes, 2 for one hour
     const seen = recentNames('calibration');
-    return Object.keys(CAL).map((c) => {
+    const out = [];
+    for (const c of Object.keys(CAL)) {
       const fresh = CAL[c].filter((g) => !seen.has(g.name));
-      return mkItem(shuffle(fresh.length ? fresh : CAL[c])[0], c, CAL_BLOCK_MINUTES);
-    });
+      shuffle(fresh.length >= per ? fresh : CAL[c]).slice(0, per).forEach((g) => out.push(mkItem(g, c, CAL_BLOCK_MINUTES)));
+    }
+    return out;
   }
-  function genTransfer() {
+  function genTransfer(len) {
+    const n = (len || 30) / TRANSFER_BLOCK_MINUTES; // 3 games for 30 minutes, 6 for one hour
     const anchor = TRANSFER.find((g) => g.name === ANCHOR);
     const seen = recentNames('transfer');
     let pool = TRANSFER.filter((g) => g.name !== ANCHOR && !seen.has(g.name));
-    if (pool.length < 2) pool = TRANSFER.filter((g) => g.name !== ANCHOR);
-    const rest = shuffle(pool).slice(0, 2);
+    if (pool.length < n - 1) pool = TRANSFER.filter((g) => g.name !== ANCHOR);
+    const rest = shuffle(pool).slice(0, n - 1);
     return [anchor, ...rest].map((x) => mkItem(x, x.cat, TRANSFER_BLOCK_MINUTES));
   }
 
   const META = {
     calibration: {
       title: 'Calibration practice', unit: 'drill', gen: genCalibration,
-      intro: 'Thirty minutes of structured calibration: three ten-minute games, one each for face strike, low point and clubface direction, drawn from more than ten games per category. You never change club or target. Instead the part of the face you strike, the shape or the start line steps from one extreme to the other, switches back and forth, and then narrows in on the centre. Score each game out of 10. Target sizes are in fingers: use the calculator below.'
+      intro: (len) => (len === 60 ? 'An hour' : 'Thirty minutes') + ' of structured calibration: ' + (len === 60 ? 'six ten-minute games, two each' : 'three ten-minute games, one each') + ' for face strike, low point and clubface direction. You never change club or target. Instead the part of the face you strike, your contact, your shot shape and your start line step through a fixed order and then switch from ball to ball. Every game is 15 balls or fewer. Score each game out of 10.'
     },
     transfer: {
       title: 'Transfer training', unit: 'test', gen: genTransfer,
-      intro: 'Thirty minutes of course-style games you can play at a driving range, drawn from seventeen games. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Target sizes are in fingers: use the calculator below. Score each game out of 10 and tick Passed when you meet its pass mark.'
+      intro: (len) => (len === 60 ? 'An hour' : 'Thirty minutes') + ' of course-style games you can play at a driving range: ' + (len === 60 ? 'six' : 'three') + ' ten-minute games drawn from seventeen. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Score each game out of 10 and tick Passed when you meet its pass mark.'
     }
   };
 
@@ -1118,6 +1215,7 @@
     return h('section', null,
       h('h2', { text: meta.title }),
       modeBar('New session'),
+      ui.mode !== 'history' && !(drafts[kind] && drafts[kind].id) ? lengthControl(kind, (len) => setSessionLength(kind, len)) : null,
       ui.mode === 'history' ? sessionHistory(kind) : sessionNew(kind));
   }
 
@@ -1125,10 +1223,10 @@
     const meta = META[kind];
     if (!drafts[kind]) {
       return h('div', { class: 'stack' },
-        h('p', { class: 'lead', text: meta.intro }),
+        h('p', { class: 'lead', text: meta.intro(ui.len[kind]) }),
         h('button', {
-          type: 'button', class: 'primary', text: 'Generate 30-minute session',
-          onclick: () => { drafts[kind] = { id: null, date: today(), items: meta.gen(), timer: { base: 0, startedAt: null } }; renderApp(); }
+          type: 'button', class: 'primary', text: 'Generate ' + (ui.len[kind] === 60 ? '1-hour' : '30-minute') + ' session',
+          onclick: () => { const len = ui.len[kind]; drafts[kind] = { id: null, date: today(), items: meta.gen(len), timer: { base: 0, startedAt: null }, len }; renderApp(); }
         }));
     }
     return sessionForm(kind);
@@ -1255,7 +1353,8 @@
     }
     function regenerate() {
       if (d.items.some((i) => i.score !== null) && !window.confirm('Replace this plan? Scores you entered will be lost.')) return;
-      drafts[kind] = { id: null, date: d.date, items: meta.gen(), timer: { base: 0, startedAt: null } };
+      const len = d.len || ui.len[kind];
+      drafts[kind] = { id: null, date: d.date, items: meta.gen(len), timer: { base: 0, startedAt: null }, len };
       renderApp();
     }
     function discard() {
