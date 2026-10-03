@@ -10,15 +10,34 @@
      EDIT ME: drill and test libraries
      Add your own drills by copying a line inside any list.
      ========================================================== */
-  // One finger width is about 3.3 yards (10 feet) at 100 yards, 5 yards (15 feet) at 150 and 6.6 yards (20 feet) at 200 (distance x 0.033).
-  const FINGER_NOTE = 'Fingers: 1 finger is about 10 feet (3.3 yards) at 100 yards, 15 feet (5 yards) at 150 yards and 20 feet (6.6 yards) at 200 yards. An 8-finger window is 4 fingers either side of the line. Use the converter on this page to turn a width in yards into fingers at your distance.';
-  const addFingers = (lines) => (/finger/i.test(lines.join(' ')) ? lines.concat(FINGER_NOTE) : lines);
+  // Target sizes are written in yards with feet in brackets, set for a shot of about 150 yards.
+  // The yards-to-fingers slider on each session page converts a width to fingers at your distance.
+  const Y = (y) => +y.toFixed(1) + ' yards (' + Math.round(y * 3) + ' feet)';
+  // A window written for 150 yards, scaled to a wedge (about 100 yards) or a driver (about 250 yards).
+  const Yw = (y) => Y(Math.round(((y * 100) / 150) * 10) / 10);
+  const Yd = (y) => Y(Math.round(((y * 250) / 150) * 10) / 10);
+  // Sizes in a game that does not name its club are written as tokens and scaled to the club picked on the drill card.
+  const T = (y) => '{{y:' + y + '}}'; // a window written for 150 yards
+  const N = (n) => '{{n:' + n + '}}'; // a plain number that scales with the club, such as points
+  const CLUBS = [['Wedge (about 100 yards)', 100, 'wedge'], ['Short iron (about 125 yards)', 125, 'short iron'], ['Mid-iron (about 150 yards)', 150, 'mid-iron'],
+    ['Long iron or hybrid (about 200 yards)', 200, 'long iron or hybrid'], ['Driver (about 250 yards)', 250, 'driver']];
+  function renderHow(how, dist) {
+    const d = dist || 150;
+    const k = d / 150;
+    const club = CLUBS.find((c) => c[1] === d) || CLUBS[2];
+    return how
+      .replace(/\{\{y:([\d.]+)\}\}/g, (m, y) => Y(Math.round(Number(y) * k * 10) / 10))
+      .replace(/\{\{n:([\d.]+)\}\}/g, (m, n) => String(Math.round(Number(n) * k)))
+      .replace(/\{\{Club\}\}/g, 'A ' + club[2])
+      .replace(/\{\{club\}\}/g, 'a ' + club[2]);
+  }
+  const BY_CLUB = (y) => 'wedge (about 100 yards) ' + Yw(y) + ', mid-iron (about 150 yards) ' + Y(y) + ' and driver (about 250 yards) ' + Yd(y);
 
   // G(name, setup, play, interleave rule, scoring) builds a practice game.
   // Every game must have an interleave rule: change club, target, shot or set-up from ball to ball.
   const G = (name, setup, play, interleave, score, cat, balls, pointsMax) => ({
     name, cat, balls, pointsMax,
-    how: addFingers(['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score]).join('\n')
+    how: ['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score].join('\n')
   });
   const PICK = 'Use a die, a deck of cards or a random-number app to choose.';
 
@@ -26,7 +45,7 @@
   // one club and one target, with a single variable stepped through a fixed order. Nothing is randomised.
   const GC = (name, setup, constant, steps, score, balls) => ({
     name, balls,
-    how: addFingers(['Setup: ' + setup, 'Keep constant: ' + constant, 'Steps:\n' + steps.map((x, i) => (i + 1) + '. ' + x).join('\n'), 'Score: ' + score]).join('\n')
+    how: ['Setup: ' + setup, 'Keep constant: ' + constant, 'Steps:\n' + steps.map((x, i) => (i + 1) + '. ' + x).join('\n'), 'Score: ' + score].join('\n')
   });
 
   // SH marks a drill that gets its category's shared Switch block (written once, further down).
@@ -139,10 +158,10 @@
     ],
     'Clubface direction': [
       GC('Start line spectrum',
-        'A mid-iron, one target and an alignment stick on the ground pointing at it. Film from behind if you can.',
+        '{{Club}}, one target and an alignment stick on the ground pointing at it. Film from behind if you can.',
         'Same club and target. Only your intended start line changes.',
         ['2 balls starting well left of the target on purpose.', '2 balls starting well right of the target on purpose.', '1 ball starting just left, then 1 just right.', '5 balls switching left, right, left, right, left.', '4 balls starting dead on the target.'],
-        'Balls that started where you intended (inside a 2-finger window around the intended line, 1 finger either side), out of 15.', 15),
+        'Balls that started where you intended (inside a ' + T(10) + ' window around the intended line, ' + T(5) + ' either side), out of 15.', 15),
       GC('Curve spectrum',
         'A mid-iron and one target.',
         'Same club and target. Only the amount and direction of curve changes.',
@@ -164,24 +183,24 @@
         ['2 balls with a very closed face feel, 2 with a slightly closed feel.', '1 ball with a neutral feel.', '2 balls with a slightly open feel, 2 with a very open feel.', '2 balls back at neutral, aiming at the target.'],
         'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer), out of 11, plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
       SH(GC('Landing window shrink',
-        'A mid-iron and one target. Markers to set the width of a landing window in fingers.',
+        '{{Club}} and one target. Markers to set the width of a landing window in yards.',
         'Same club and target. Only the width of the landing window changes.',
-        ['2 balls into a window 8 fingers wide (4 either side of the target).', '2 balls at 6 fingers, then 2 at 4 fingers, 2 at 3 fingers and 2 at 2 fingers.'],
+        ['2 balls into a window ' + T(40) + ' wide (' + T(20) + ' either side of the target).', '2 balls at ' + T(30) + ', then 2 at ' + T(20) + ', 2 at ' + T(15) + ' and 2 at ' + T(10) + '.'],
         'Balls landing inside the window, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
       SH(GC('Bias check and correct',
-        'A mid-iron and one target. A notepad or phone to tally.',
+        '{{Club}} and one target. A notepad or phone to tally.',
         'Same club and target.',
         ['6 balls at the target with your normal intention. Tally each as starting left, centre or right.', 'Work out your bias: the side where most balls start.', '5 more balls with a small intended correction against your bias.'],
-        'Balls starting inside a 2-finger window around the line, out of 11 (compare the first 6 with the 5 correction balls), plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
+        'Balls starting inside a ' + T(10) + ' window around the line, out of 11 (compare the first 6 with the 5 correction balls), plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
       SH(GC('Face call before you look',
         'A mid-iron and one target.',
         'Same club and target for the whole game.',
         ['10 balls. After impact, and before the ball lands, call where it will finish: left of, on or right of the target.', 'Then watch the result and note whether your call was right.'],
         'Correct calls, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14. Calibration is about knowing what the face did, not just hitting the target.', 14)),
       GC('Left and right switch',
-        'A mid-iron, one target and an alignment stick. Film if you can.',
+        '{{Club}}, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the start line changes, left or right of the same target, and it switches on every ball.',
-        ['6 balls switching between starting the ball left of the target and right of it, about 2 fingers off the line each way, starting left.', '5 balls switching left, target, right, target, then repeating.', '4 balls starting on the target.'],
+        ['6 balls switching between starting the ball left of the target and right of it, about ' + T(10) + ' off the line each way, starting left.', '5 balls switching left, target, right, target, then repeating.', '4 balls starting on the target.'],
         'Balls that started where you called, out of 15.', 15),
       GC('Draw and fade switch',
         'A mid-iron and one target. Both shapes start from the target line: the draw curves left and the fade curves right.',
@@ -231,7 +250,7 @@
       'Balls on target, out of 10 (your points left equal your balls on target). Mark it passed at 6 or more.',
       'Pressure game', 10),
     G('Three targets, random order',
-      'Choose three targets, each with a 4-finger window, and three clubs. Write down a random order for hitting the targets, and change the order every round.',
+      'Choose three targets, each with a ' + T(20) + ' wide window, and three clubs. Write down a random order for hitting the targets, and change the order every round.',
       'Hit each target once, in the random order, with a different club each time. Missing any window means you start the round again. Maximum 15 balls.',
       'Target order is reshuffled after every round, and the club for each target changes each round.',
       '10 for a clean first round, minus 2 for each restart. 0 if you do not finish in 15 balls. The slider goes to 10. Mark it passed if you finish.',
@@ -243,7 +262,7 @@
       'Balls that finish inside the window, out of 8. Mark it passed at 6 or more.',
       'Pressure game', 8),
     G('Range Stableford',
-      'Choose three targets. Size an outer window 4 fingers wide and an inner window 2 fingers wide (see the finger guide).',
+      'Choose three targets. Size an outer window ' + T(20) + ' wide and an inner window ' + T(10) + ' wide.',
       '12 balls. Before every ball, draw the target and a club. Score 2 points for inside the inner window, 1 point for inside the outer window and 0 for a miss.',
       'Target and club change on every ball, never the same club twice in a row.',
       'Total points, out of 24 (the slider goes to 24). Mark it passed at 12 points or more.',
@@ -267,52 +286,52 @@
       'Balls inside their window, out of 10. Mark it passed at 7 or more.',
       'Course simulation', 10),
     G('Infinity levels',
-      'One driver, one mid-iron and one wedge, each with its own target on the range and an 8-finger window. Levels: level 1 is one shot with each club. Each new level adds one shot, in this order: another wedge, another iron, another driver, and so on.',
+      'One driver, one mid-iron and one wedge, each with its own target on the range. Size each window for its club: ' + BY_CLUB(40) + '. Levels: level 1 is one shot with each club. Each new level adds one shot, in this order: another wedge, another iron, another driver, and so on.',
       'Hit the level in rotation (driver, iron, wedge, then repeat). You pass a level when every shot lands inside its window with no mistakes. You get three attempts at each level; if you fail all three, drop back a level. Play until your 10 minutes are up. Next time, start from the level you reached.',
       'Rotate between the clubs and never hit the same shot twice in a row.',
       'Levels passed in 10 minutes, doubled (maximum 10). The slider goes to 10. Mark it passed if you pass level 3 or higher.',
       'Scoring game', 12, 10),
     G('Perfection ladder',
-      'A full set of clubs from wedge to driver, one target and a window 8 fingers wide (see the finger guide). After 6 balls, narrow the window to 6 fingers.',
+      'A full set of clubs from wedge to driver and one target. Size the window for the club: ' + BY_CLUB(40) + ', and clubs in between in proportion to how far they go. After 6 balls, use three-quarters of each width.',
       '12 balls. Start with your wedge. If the ball lands inside the window, move up one club for the next ball; if it misses, move down one club. When you reach the end of the set, turn around.',
       'The club changes after every ball by design, because you always move up or down the set.',
       'Balls inside the window, out of 12. Mark it passed at 7 or more.',
       'Scoring game', 12),
     G('Two-ball test',
-      'Two clubs and a target with an 8-finger window. Windows to move to: 6, 4, 3 and 2 fingers.',
+      'Two clubs and a target with a window ' + T(40) + ' wide. Windows to move to: ' + T(30) + ', ' + T(20) + ', ' + T(15) + ' and ' + T(10) + '.',
       'Hit two balls at the window, each with a different club. Two out of two: shrink the window one step. One out of two: stay the same. None: widen the window one step. Play until your 10 minutes are up.',
       'Use a different club for each of the two balls, and swap the two clubs for different ones every few rounds.',
-      'Narrowest window reached: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if you ended wider than 8). The slider goes to 10. Mark it passed at 6 fingers or narrower.',
+      'Narrowest window reached: ' + T(40) + ' = 4, ' + T(30) + ' = 6, ' + T(20) + ' = 8, ' + T(15) + ' = 9, ' + T(10) + ' = 10 (0 if you ended wider than ' + T(40) + '). The slider goes to 10. Mark it passed at ' + T(30) + ' or narrower.',
       'Pressure game', 14, 10),
     G('Gambler',
-      'Four clubs, three targets and a notepad. Window widths you can choose are 1 to 8 fingers (see the finger guide).',
-      '10 balls. Before every ball, draw the club and the target, then choose your window width before you hit. Landing inside the window earns points equal to its width in fingers. A miss adds 10 points. Lower is better.',
+      'Four clubs, three targets and a notepad. Window widths you can choose are ' + T(5) + ' to ' + T(40) + '.',
+      '10 balls. Before every ball, draw the club and the target, then choose your window width before you hit. Landing inside the window earns points equal to its width in yards. A miss adds ' + N(50) + ' points. Lower is better.',
       'The club and target are drawn fresh for every ball, so you cannot settle on a favourite shot.',
       'Balls inside the window you chose, out of 10. Also add up your points to compare over time. Mark it passed at 6 or more.',
       'Pressure game', 10),
     G('Worst shot',
-      'A target with a window 4 fingers wide (see the finger guide), three clubs and a notepad.',
-      '9 balls: three rounds of three balls, each ball with a different club. After each round, note how many fingers your worst ball finished from the target.',
+      'A target with a window ' + T(20) + ' wide, three clubs and a notepad.',
+      '9 balls: three rounds of three balls, each ball with a different club. After each round, note how many yards your worst ball finished from the target.',
       'A different club for each of the three balls, and a new target for each round.',
       'Balls inside the window, out of 9. Mark it passed at 5 or more.',
       'Scoring game', 9),
     G('Danger side',
-      'Work out which side you miss more often. Pick a flag, and set a window 2 fingers wide on the safe side of it (see the finger guide). The danger side is the other side of the flag.',
+      'Work out which side you miss more often. Pick a flag, and set a window ' + T(10) + ' wide on the safe side of it. The danger side is the other side of the flag.',
       '10 balls. Full routine every ball, no re-hits. Count a hit when the ball lands inside the window, and note any ball that lands on the danger side.',
       'Draw a new club for every ball and change the flag after five balls.',
       'Balls inside the window, out of 10. Mark it passed at 5 or more with no balls on the danger side.',
       'Pressure game', 10),
     G('Wide or narrow',
-      'Two targets: one wide (4 fingers) and one narrow (2 fingers), for example range poles or two pairs of yardage markers. A scorecard for six par 4 holes.',
-      '12 balls. Each hole: hit your driver at the wide target. If you hit it, play your 7-iron at the wide target; if you miss, play your 7-iron at the narrow target. Note the hole score: drive hit and approach hit = 3, drive hit and approach missed = 4, drive missed and approach hit = 4, both missed = 5.',
+      'Three targets, for example range poles or pairs of yardage markers: a driver target (about 250 yards) ' + Yd(20) + ' wide, and two 7-iron targets (about 150 yards), one wide at ' + Y(20) + ' and one narrow at ' + Y(10) + '. A scorecard for six par 4 holes.',
+      '12 balls. Each hole: hit your driver at the driver target. If you hit it, play your 7-iron at the wide target; if you miss, play your 7-iron at the narrow target. Note the hole score: drive hit and approach hit = 3, drive hit and approach missed = 4, drive missed and approach hit = 4, both missed = 5.',
       'Driver and 7-iron alternate every shot, the targets change with the result of the drive, and you move to a new pair of markers every two holes.',
       'Balls that hit their target, out of 12. Mark it passed at 7 or more.',
       'Course simulation', 12),
     G('Weakest link, mixed',
-      'Two targets and four clubs. An 8-finger window. Windows to move to: 6, 4, 3 and 2 fingers.',
+      'Two targets and four clubs. A window ' + T(40) + ' wide. Windows to move to: ' + T(30) + ', ' + T(20) + ', ' + T(15) + ' and ' + T(10) + '.',
       'Count how many balls in a row land inside the window. Alternate between the two targets and change the club on every ball. A miss takes your count back to zero. When you reach five in a row, shrink the window one step. Play until your 10 minutes are up.',
       'Targets alternate and the club changes on every ball. This is a mixed version of a game normally played at one target.',
-      'Narrowest window completed: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if none). The slider goes to 10. Mark it passed at 6 fingers or narrower.',
+      'Narrowest window completed: ' + T(40) + ' = 4, ' + T(30) + ' = 6, ' + T(20) + ' = 8, ' + T(15) + ' = 9, ' + T(10) + ' = 10 (0 if none). The slider goes to 10. Mark it passed at ' + T(30) + ' or narrower.',
       'Pressure game', 15, 10)
   ];
 
@@ -320,10 +339,10 @@
   const FOCUS = 'Focus: use your full routine on every ball and keep your attention on the target and the ball flight, not on body positions.';
   const ANCHOR = 'New move under pressure';
   TRANSFER_BASE.push(G(ANCHOR,
-    'Use the mechanic from your latest technique protocol. Three targets with 4-finger windows (see the finger guide), three clubs and, if you can, your phone to film.',
+    'Use the mechanic from your latest technique protocol. Three targets with ' + T(20) + ' wide windows, three clubs and, if you can, your phone to film.',
     '12 balls. Before each ball, draw the target and the club. Take one smoothie rehearsal swing with the new move beside the ball, step in, then hit with your attention on the target. Film as many as you can.',
     'Target and club change on every ball, never the same club twice in a row.',
-    'Balls where the new move showed up and the ball finished inside a 4-finger window, out of 12. Mark it passed at 6 or more.',
+    'Balls where the new move showed up and the ball finished inside a ' + T(20) + ' window, out of 12. Mark it passed at 6 or more.',
     'Pattern transfer', 12));
   const TRANSFER = TRANSFER_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + FOCUS }));
 
@@ -482,7 +501,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], settings: { scratchPct: 90 } });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [] });
 
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
@@ -492,6 +511,7 @@
     minutes: num(i.minutes, 0, 120),
     max: i.max == null ? null : Math.round(num(i.max, 1, 100)), // top of the score slider; null on older sessions scored out of 10
     unit: i.unit === 'points' ? 'points' : 'balls',
+    dist: i.dist == null ? 150 : Math.round(num(i.dist, 30, 400)), // distance the window sizes are scaled to
     balls: i.balls == null ? null : Math.round(num(i.balls, 1, 100)), // balls played, used to weight a points game in the trends
     score: i.score == null ? null : Math.min(Math.round(num(i.score, 0, 100)), i.max == null ? 10 : Math.round(num(i.max, 1, 100))),
     passed: i.passed === true,
@@ -525,7 +545,6 @@
         improve: str(t.improve, 3000)
       });
     }
-    if (d.settings && d.settings.scratchPct != null) out.settings.scratchPct = Math.round(num(d.settings.scratchPct, 50, 100));
     const seenMech = new Set();
     (Array.isArray(d.mechanics) ? d.mechanics : []).slice(0, 100).forEach((m) => {
       const v = str(m, 200).trim();
@@ -559,7 +578,7 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -695,6 +714,7 @@
       h('label', { class: 'field' }, h('span', { class: 'lbl', text: 'Repeat passphrase' }), p2),
       msg, btn);
     return h('div', { class: 'lock' },
+      appIcon(),
       h('h1', { text: 'Golf practice log' }),
       h('p', { text: 'Create a passphrase. Your log is encrypted on this device with it and nothing is uploaded. If you forget the passphrase, the data cannot be recovered.' }),
       form);
@@ -751,6 +771,7 @@
       h('button', { type: 'button', class: 'link', text: 'Forgot the passphrase? Erase everything', onclick: eraseAll }));
 
     const view = h('div', { class: 'lock' },
+      appIcon(),
       h('h1', { text: 'Golf practice log' }),
       h('p', { text: 'Enter your passphrase to open your log.' }),
       form);
@@ -761,7 +782,37 @@
   /* ==========================================================
      App shell
      ========================================================== */
+  const ICONS = {
+    technique: ['M4 7h9', 'M17 7h3', 'M4 17h3', 'M11 17h9', 'M15 4.5v5', 'M9 14.5v5'],
+    calibration: ['M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18', 'M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8', 'M12 2v3', 'M12 19v3', 'M2 12h3', 'M19 12h3'],
+    transfer: ['M6 21V3.5', 'M6 4.5h12l-3 4l3 4H6'],
+    trends: ['M3.5 20.5h17', 'M4.5 16l5-6l4 3.5l6-8'],
+    log: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4.2 6h.1', 'M4.2 12h.1', 'M4.2 18h.1']
+  };
+  const tabIcon = (id) => {
+    const svg = s('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false' });
+    (ICONS[id] || []).forEach((d) => svg.append(s('path', { d })));
+    return svg;
+  };
+  // App icon for the lock screen: a golf flag on a rounded square.
+  function appIcon() {
+    return s('svg', { viewBox: '0 0 84 84', class: 'app-icon', role: 'img', 'aria-label': 'Golf practice log' },
+      s('rect', { width: 84, height: 84, rx: 19 }),
+      s('path', { d: 'M33 64V20' }),
+      s('path', { class: 'flag', d: 'M33 21l24 9.5l-24 9.5z' }),
+      s('path', { d: 'M22 64h24' }));
+  }
+
   const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['trends', 'Practice trends'], ['log', 'Practice log']];
+
+  // Fill the left part of each slider track, as iOS does. Runs after each render and whenever a slider moves.
+  function paintRange(el) {
+    const min = Number(el.min) || 0;
+    const max = Number(el.max) || 100;
+    el.style.setProperty('--p', (max > min ? ((Number(el.value) - min) / (max - min)) * 100 : 0) + '%');
+  }
+  function syncRanges() { document.querySelectorAll('input[type="range"]').forEach(paintRange); }
+  document.addEventListener('input', (e) => { if (e.target && e.target.type === 'range') paintRange(e.target); });
 
   function renderApp(toTop) {
     clearTimer();
@@ -774,21 +825,21 @@
     else view = sessionsView(ui.tab);
 
     const header = h('header', { class: 'top' },
+      h('button', { type: 'button', class: 'bar-btn', text: 'Lock', onclick: lock }),
       h('h1', { text: 'Golf practice log' }),
-      h('div', { class: 'top-actions' },
-        h('button', { type: 'button', class: 'ghost', text: 'Settings', onclick: () => { ui.tab = 'settings'; renderApp(true); } }),
-        h('button', { type: 'button', class: 'ghost', text: 'Lock', onclick: lock })));
+      h('button', { type: 'button', class: 'bar-btn', text: 'Settings', onclick: () => { ui.tab = 'settings'; renderApp(true); } }));
     const nav = h('nav', { class: 'tabs', 'aria-label': 'Sections' },
       TABS.map(([id, label]) => h('button', {
-        type: 'button', class: 'tab', text: label,
+        type: 'button', class: 'tab',
         'aria-current': ui.tab === id ? 'page' : false,
         onclick: () => { ui.tab = id; renderApp(true); }
-      })));
-    const reminder = backupDue() ? h('div', { class: 'stack' },
+      }, tabIcon(id), h('span', { text: label }))));
+    const reminder = backupDue() ? h('div', { class: 'stack reminder' },
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: 'Back up now', onclick: async () => { if (await exportBackup()) { toast('Backup saved'); renderApp(); } } }))) : null;
     root.replaceChildren(header, h('main', null, reminder, view), nav);
+    syncRanges();
     if (toTop) window.scrollTo(0, 0);
   }
 
@@ -843,13 +894,21 @@
       para('Next session', rec.next)
     ];
   }
+  // Show a drill's text as labelled lines (Setup, Steps, Score and so on) instead of one block.
+  function howNodes(text) {
+    return text.split('\n').filter(Boolean).map((line) => {
+      const m = line.match(/^(Setup|Keep constant|Steps|Switch|Score|Play|Interleave|Focus):\s*(.*)$/);
+      if (m) return h('p', { class: 'how-line' }, h('strong', { text: m[1] + ':' }), m[2] ? ' ' + m[2] : null);
+      return h('p', { class: /^\d+\. /.test(line) ? 'how-line how-step' : 'how-line', text: line });
+    });
+  }
   const scoreText = (kind, it) => (it.score == null ? 'Not scored'
     : (it.max == null ? 'Score ' + it.score + ' / 10' : it.score + ' of ' + it.max + (it.unit === 'points' ? ' points' : ' balls'))
       + (kind === 'transfer' ? (it.passed ? ', passed' : ', not passed') : ''));
   function sessionBody(kind, rec) {
-    const ph = predictedHandicap(rec);
+    const r = hitShare(rec.items);
     return [
-      ph ? h('p', { class: 'hcp' }, h('strong', { text: 'Predicted handicap: ' + handicapLabel(ph) }), ' (from a ' + Math.round(ph.pct) + '% hit rate. A rough estimate, not an official handicap.)') : null,
+      r ? h('p', { class: 'avg' }, h('strong', { text: 'Average score: ' + Math.round(r.pct) + '% of the maximum' }), ' (each drill is scored against its own maximum, then averaged)') : null,
       rec.items.map((it) => h('div', { class: 'hist-item' },
         h('strong', { text: it.name }),
         h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
@@ -858,14 +917,6 @@
     ];
   }
 
-  // Predicted handicap: a straight line from 36 at a 0% hit rate down to scratch at the hit rate set in Settings (90% by default).
-  function predictedHandicap(rec) {
-    const r = hitShare(rec.items);
-    if (!r) return null;
-    const hcp = Math.min(36, Math.max(0, 36 * (1 - r.pct / session.data.settings.scratchPct)));
-    return { hcp, pct: r.pct };
-  }
-  const handicapLabel = (ph) => (ph.hcp <= 0 ? 'scratch or better' : ph.hcp.toFixed(1));
 
   function entryShell(summary, body, onEdit, onDelete) {
     return h('details', { class: 'entry' },
@@ -1048,17 +1099,23 @@
 
   // Share of balls that hit, for the items that pass `filter`. Older sessions scored out of 10 count as a share of 10.
   function hitShare(items, filter) {
+    // Each drill is scored against its own maximum, then the drills are averaged, so pct is the average score as a percentage of the maximum.
     let hit = 0;
     let total = 0;
+    let sum = 0;
+    let n = 0;
     for (const it of items) {
       if (it.score == null || (filter && !filter(it))) continue;
-      if (it.unit === 'points' && it.balls && it.max) { hit += (it.score * it.balls) / it.max; total += it.balls; } // points game counts as its ball equivalent
-      else { hit += it.score; total += it.max == null ? 10 : it.max; }
+      const top = it.max == null ? 10 : it.max;
+      hit += it.score;
+      total += top;
+      sum += it.score / top;
+      n += 1;
     }
-    return total ? { hit, total, pct: (hit / total) * 100 } : null;
+    return n ? { hit, total, pct: (sum / n) * 100 } : null;
   }
 
-  // Line chart of a hit rate (0 to 100 percent) over your sessions, oldest to newest.
+  // Line chart of the average score as a percentage of the maximum (0 to 100) over your sessions, oldest to newest.
   function progressChart(dates, series, label) {
     const W = 320, H = 170, L = 30, R = 8, T = 8, B = 24;
     const x = (i) => L + (dates.length === 1 ? 0 : (i * (W - L - R)) / (dates.length - 1));
@@ -1070,8 +1127,9 @@
     });
     series.forEach((sr, si) => {
       const pts = sr.vals.map((v, i) => (v == null ? null : { x: x(i), y: y(v) })).filter(Boolean);
-      if (pts.length > 1) svg.append(s('polyline', { points: pts.map((q) => q.x.toFixed(1) + ',' + q.y.toFixed(1)).join(' '), class: 'line l' + si }));
-      pts.forEach((q) => svg.append(s('circle', { cx: q.x.toFixed(1), cy: q.y.toFixed(1), r: 3, class: 'pt l' + si })));
+      const cls = sr.cls || 'l' + si;
+      if (pts.length > 1) svg.append(s('polyline', { points: pts.map((q) => q.x.toFixed(1) + ',' + q.y.toFixed(1)).join(' '), class: 'line ' + cls }));
+      pts.forEach((q) => svg.append(s('circle', { cx: q.x.toFixed(1), cy: q.y.toFixed(1), r: 3, class: 'pt ' + cls })));
     });
     svg.append(s('text', { x: L, y: H - 8, class: 'axis' }, shortDate(dates[0])),
       s('text', { x: W - R, y: H - 8, class: 'axis', 'text-anchor': 'end' }, shortDate(dates[dates.length - 1])));
@@ -1086,18 +1144,19 @@
         const r = hitShare(rec.items, def.filter);
         return r ? r.pct : null;
       });
-      return { name: def.name, vals };
+      return { name: def.name, cls: def.cls, vals };
     });
     const has = series.some((sr) => sr.vals.some((v) => v != null));
-    if (!has) return h('div', { class: 'stack' }, h('h3', { text: title }), h('p', { class: 'empty', text: emptyText }));
+    if (!has) return h('div', { class: 'stack card' }, h('h3', { text: title }), h('p', { class: 'empty', text: emptyText }));
     const rows = series.map((sr, si) => {
       const got = sr.vals.filter((v) => v != null);
       if (!got.length) return null;
       const latest = got[got.length - 1];
       const best = Math.max(...got);
-      return h('li', null, h('span', { class: 'swatch l' + si }), sr.name + ': ' + Math.round(latest) + '% latest, ' + Math.round(best) + '% best');
+      const avg = got.reduce((a, b) => a + b, 0) / got.length;
+      return h('li', null, h('span', { class: 'swatch ' + (sr.cls || 'l' + si) }), sr.name + ': ' + Math.round(latest) + '% latest, ' + Math.round(best) + '% best, ' + Math.round(avg) + '% average');
     });
-    return h('div', { class: 'stack' },
+    return h('div', { class: 'stack card' },
       h('h3', { text: title }),
       sorted.length > 1
         ? progressChart(sorted.map((r) => r.date), series, title + '. ' + series.map((sr) => sr.name + ' latest ' + Math.round(sr.vals.filter((v) => v != null).slice(-1)[0] || 0) + ' percent').join('. '))
@@ -1110,25 +1169,28 @@
     const total = rows.reduce((a, r) => a + r.hours, 0);
     const legend = [['rd', 'Under 10 hours'], ['am', '10 to 15 hours'], ['lg', '15 to 20 hours'], ['dg', 'Over 20 hours: Course Ready']];
     const hours = rows.length
-      ? h('div', { class: 'stack' },
+      ? h('div', { class: 'stack card' },
         h('h3', { text: 'Technique hours' }),
         h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
         h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
         trackingChart(rows),
         h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, and a session on several mechanics adds its full time to each. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }))
-      : h('div', { class: 'stack' }, h('h3', { text: 'Technique hours' }),
+      : h('div', { class: 'stack card' }, h('h3', { text: 'Technique hours' }),
         h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
 
-    const calSeries = Object.keys(CAL).map((c) => ({ name: c, filter: (it) => it.cat === c }));
+    const calSeries = [...Object.keys(CAL).map((c, i) => ({ name: c, cls: 'l' + i, filter: (it) => it.cat === c })), { name: 'All drills', cls: 'l3', filter: null }];
     return h('section', { class: 'stack' },
       h('h2', { text: 'Practice trends' }),
       hours,
-      trendBlock('Calibration progress', session.data.calibration, calSeries, 'No calibration sessions scored yet. Your hit rate for each category appears here, as balls hit out of balls played.'),
+      trendBlock('Calibration progress', session.data.calibration, calSeries, 'No calibration sessions scored yet. Your average score as a percentage of the maximum appears here for each category.'),
       trendBlock('Transfer progress', session.data.transfer, [
-        { name: 'All games', filter: null },
-        { name: ANCHOR, filter: (it) => it.name === ANCHOR }
-      ], 'No transfer sessions scored yet. Your hit rate appears here, as balls hit out of balls played.'),
-      h('p', { class: 'hint', text: 'Calibration and transfer progress is the share of balls that hit. Sessions scored out of 10 before this change count as a share of 10.' }));
+        { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
+        { name: 'Pressure game', cls: 'l1', filter: (it) => it.cat === 'Pressure game' },
+        { name: 'Scoring game', cls: 'l2', filter: (it) => it.cat === 'Scoring game' },
+        { name: ANCHOR, cls: 'l4', filter: (it) => it.name === ANCHOR },
+        { name: 'All games', cls: 'l3', filter: null }
+      ], 'No transfer sessions scored yet. Your average score as a percentage of the maximum appears here, for each type of game.'),
+      h('p', { class: 'hint', text: 'Calibration and transfer progress is your average score as a percentage of the maximum: each drill is scored against its own maximum (balls hit or points) and the drills in a session are averaged. Sessions scored out of 10 before ball counts count as a percentage of 10. A transfer line only has a point for sessions that included that type of game, so lines can skip some sessions.' }));
   }
 
   const lenText = (n) => (n === 60 ? '1 hour' : n + ' minutes');
@@ -1233,7 +1295,7 @@
         h('span', { class: 'idx', text: String(i + 1) }),
         h('h3', { text: item.name }),
         h('span', { class: 'tag', text: item.cat + ', ' + item.minutes + ' min' })),
-      h('p', { class: 'how', text: item.how }),
+      h('div', { class: 'how' }, howNodes(item.how)),
       tracked ? h('div', { class: 'stepper' },
         h('span', { text: 'Sets of five attempted' }),
         h('button', { type: 'button', class: 'ghost', text: '\u2212', 'aria-label': 'One fewer set', onclick: step(-1) }),
@@ -1341,13 +1403,13 @@
           () => removeRecord('protocols', rec.id)));
       }
     });
-    return h('div', null, nodes);
+    return h('div', { class: 'stack' }, nodes[0], h('div', { class: 'group' }, nodes.slice(1)));
   }
 
   /* ==========================================================
      Sections 2 and 3: timed sessions
      ========================================================== */
-  const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, max: x.pointsMax || x.balls, unit: x.pointsMax ? 'points' : 'balls', balls: x.balls, score: null, passed: false, notes: '' });
+  const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, dist: 150, max: x.pointsMax || x.balls, unit: x.pointsMax ? 'points' : 'balls', balls: x.balls, score: null, passed: false, notes: '' });
 
   // Names of games used in your two most recent sessions, so a new plan avoids repeating them.
   function recentNames(kind) {
@@ -1427,6 +1489,15 @@
     range.value = item.score == null ? 0 : item.score;
     range.addEventListener('input', () => { item.score = Number(range.value); out.textContent = item.score + unit; });
 
+    const howEl = h('div', { class: 'how' }, howNodes(renderHow(item.how, item.dist)));
+    let sizePicker = null;
+    if (/\{\{(?:y|n):/.test(item.how)) {
+      const sel = h('select', { 'aria-label': 'Club the window sizes are for in ' + item.name }, CLUBS.map(([label, d]) => h('option', { value: String(d), text: label })));
+      sel.value = String(item.dist || 150);
+      sel.addEventListener('change', () => { item.dist = Number(sel.value); howEl.replaceChildren(...howNodes(renderHow(item.how, item.dist))); });
+      sizePicker = field('Name your club to size the windows', sel);
+    }
+
     let passed = null;
     if (kind === 'transfer') {
       const cb = h('input', { type: 'checkbox' });
@@ -1442,7 +1513,8 @@
         h('span', { class: 'idx', text: String(i + 1) }),
         h('h3', { text: item.name }),
         h('span', { class: 'tag', text: item.cat + ', ' + item.minutes + ' min' })),
-      h('p', { class: 'how', text: item.how }),
+      howEl,
+      sizePicker,
       h('div', { class: 'score-row' }, range, out),
       passed, notes);
   }
@@ -1503,36 +1575,38 @@
 
     if (t.startedAt) startTick();
     paint();
-    return h('div', null, clock, h('div', { class: 'timeline', 'aria-hidden': 'true' }, segs), nowLabel, h('div', { class: 'actions' }, toggle, reset));
+    return h('div', { class: 'card' }, clock, h('div', { class: 'timeline', 'aria-hidden': 'true' }, segs), nowLabel, h('div', { class: 'actions' }, toggle, reset));
   }
 
-  // Converter: type your shot distance and a target width in yards to get the width in fingers.
-  // One finger is about 3.3 yards at 100 yards, 5 at 150 and 6.6 at 200 (10, 15 and 20 feet).
-  function fingerCalc(d) {
-    const out = h('p', { class: 'hint' });
-    const dist = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, placeholder: '150', 'aria-label': 'Shot distance in yards', value: d.dist || '' });
-    const width = h('input', { type: 'text', inputmode: 'decimal', maxlength: 5, placeholder: '20', 'aria-label': 'Target width in yards', value: d.width || '' });
+  // At the range: slide the shot distance and the target width (in yards) to see how many fingers wide the target looks.
+  // One finger is about 3.3 percent of the shot distance: 3.3 yards at 100, 5 at 150 and 6.6 at 200.
+  function fingerCalc() {
+    const c = ui.conv;
+    const out = h('p', { class: 'conv-out', role: 'status' });
+    const distOut = h('output', { class: 'len-out' });
+    const widthOut = h('output', { class: 'len-out' });
     function update() {
-      const D = Number(dist.value);
-      if (!dist.value || !Number.isFinite(D) || D < 20 || D > 400) { out.textContent = 'Enter a shot distance to see how wide a finger is.'; return; }
-      const f = Math.round(D * 0.33) / 10; // yards per finger at this distance
-      let text = 'At ' + D + ' yards, 1 finger is about ' + Math.round(f * 3) + ' feet (' + f.toFixed(1) + ' yards).';
-      const W = Number(width.value);
-      if (width.value && Number.isFinite(W) && W > 0 && W <= 300) {
-        text += ' A target ' + W + ' yards (' + Math.round(W * 3) + ' feet) wide is ' + (W / f).toFixed(1) + ' fingers.';
-      } else {
-        text += ' Enter a target width in yards to see it in fingers.';
-      }
-      out.textContent = text;
+      const f = Math.round(c.dist * 0.33) / 10; // yards per finger at this distance
+      distOut.textContent = c.dist + ' yards';
+      widthOut.textContent = Y(c.width);
+      out.textContent = Y(c.width) + ' wide at ' + c.dist + ' yards is about ' + (c.width / f).toFixed(1) + ' fingers. 1 finger is about ' + Y(f) + ' at this distance.';
     }
-    dist.addEventListener('input', () => { d.dist = dist.value.replace(/[^0-9]/g, ''); update(); });
-    width.addEventListener('input', () => { d.width = width.value.replace(/[^0-9.]/g, ''); update(); });
+    const dist = h('input', { type: 'range', min: 30, max: 300, step: 5, 'aria-label': 'Shot distance in yards' });
+    dist.value = String(c.dist);
+    dist.addEventListener('input', () => { c.dist = Number(dist.value); update(); });
+    const width = h('input', { type: 'range', min: 1, max: 60, step: 1, 'aria-label': 'Target width in yards' });
+    width.value = String(c.width);
+    width.addEventListener('input', () => { c.width = Number(width.value); update(); });
     update();
-    return h('div', { class: 'stack' },
-      h('strong', { text: 'Converter: yards to finger widths' }),
-      field('Shot distance (yards)', dist, '1 finger is about 10 feet (3.3 yards) at 100 yards, 15 feet (5 yards) at 150 and 20 feet (6.6 yards) at 200.'),
-      field('Target width (yards)', width),
-      out);
+    return h('details', { class: 'guide' },
+      h('summary', { text: 'Yards to fingers (for the range)' }),
+      h('div', { class: 'entry-body' },
+        h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Shot distance' }), distOut),
+        dist,
+        h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Target width' }), widthOut),
+        width,
+        out,
+        h('p', { class: 'hint', text: 'Drills with target sizes have a club picker (wedge about 100 yards, short iron 125, mid-iron 150, long iron or hybrid 200, driver 250) that scales the sizes. Set the distance you are hitting here, and hold your fingers up against the target to check a width.' })));
   }
 
   function sessionForm(kind) {
@@ -1546,7 +1620,7 @@
       upsert(session.data[kind], {
         id: d.id || uid(),
         date: isDate(d.date) ? d.date : today(),
-        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, max: i.max, unit: i.unit, balls: i.balls, score: i.score, passed: !!i.passed, notes: i.notes.trim() }))
+        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, max: i.max, unit: i.unit, balls: i.balls, dist: i.dist, score: i.score, passed: !!i.passed, notes: i.notes.trim() }))
       });
       await persist();
       drafts[kind] = null;
@@ -1569,7 +1643,7 @@
     return h('div', { class: 'stack' },
       editing ? h('p', { class: 'banner', text: 'Editing an earlier session' }) : null,
       field('Date', dateInput(d)),
-      editing ? null : fingerCalc(d),
+      editing ? null : fingerCalc(),
       editing ? null : timerWidget(d, cards),
       h('ol', { class: 'drills' }, cards),
       h('div', { class: 'actions' },
@@ -1580,22 +1654,21 @@
 
   const itemMax = (it) => (it.max == null ? 10 : it.max);
 
-  // Summary cell for a calibration or transfer session: hit rate, then the predicted handicap on its own line.
+  // Summary cell for a calibration or transfer session.
   function sessionSum(kind, rec) {
-    const ph = predictedHandicap(rec);
-    return h('span', { class: 'sum' }, sessionSummary(kind, rec), ph ? h('br') : null, ph ? 'Predicted handicap ' + handicapLabel(ph) : null);
+    return h('span', { class: 'sum', text: sessionSummary(kind, rec) });
   }
 
   function sessionSummary(kind, rec) {
+    const r = hitShare(rec.items);
+    if (!r) return 'No scores';
     const scored = rec.items.filter((i) => i.score != null);
-    if (!scored.length) return 'No scores';
-    const hit = scored.reduce((a, i) => a + i.score, 0);
-    const total = scored.reduce((a, i) => a + itemMax(i), 0);
-    const pct = Math.round((hit / total) * 100);
+    const pct = Math.round(r.pct) + '% of the maximum';
+    let base;
+    if (scored.every((i) => i.max == null)) base = 'Average ' + avgArr(scored.map((i) => i.score)).toFixed(1) + ' / 10, ' + pct;
+    else if (scored.some((i) => i.unit === 'points')) base = pct;
+    else base = r.hit + ' of ' + r.total + ' balls, ' + pct;
     const passed = rec.items.filter((i) => i.passed).length;
-    const hasPoints = scored.some((i) => i.unit === 'points');
-    const base = scored.every((i) => i.max == null) ? 'Average ' + avgArr(scored.map((i) => i.score)).toFixed(1) + ' / 10'
-      : hasPoints ? pct + '% overall' : hit + ' of ' + total + ' balls, ' + pct + '%';
     return kind === 'transfer' ? base + ', ' + passed + ' of ' + rec.items.length + ' passed' : base;
   }
 
@@ -1610,7 +1683,7 @@
         () => { drafts[kind] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
         () => removeRecord(kind, rec.id)));
     });
-    return h('div', null, nodes);
+    return h('div', { class: 'group' }, nodes);
   }
 
   /* ==========================================================
@@ -1629,8 +1702,8 @@
     entries.sort((a, b) => b.rec.date.localeCompare(a.rec.date));
 
     const latest = (kind) => {
-      const rec = [...session.data[kind]].sort(byDateDesc).find((r) => predictedHandicap(r));
-      return rec ? handicapLabel(predictedHandicap(rec)) : null;
+      const rec = [...session.data[kind]].sort(byDateDesc).find((r) => hitShare(r.items));
+      return rec ? Math.round(hitShare(rec.items).pct) + '%' : null;
     };
     const lc = latest('calibration');
     const lt = latest('transfer');
@@ -1660,9 +1733,9 @@
           type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(f === id),
           onclick: () => { ui.logFilter = id; renderApp(); }
         }))),
-      (lc || lt) ? h('p', { class: 'lead', text: 'Latest predicted handicap: ' + [lc ? 'calibration ' + lc : null, lt ? 'transfer ' + lt : null].filter(Boolean).join(', ') + '.' }) : null,
-      h('p', { class: 'hint', text: 'Predicted handicap is a rough estimate from the share of balls that hit in a calibration or transfer session. It is not an official handicap, and you can adjust the scale in Settings. To edit or delete a session, open it in the History of its own tab.' }),
-      entries.length ? h('div', null, nodes) : h('p', { class: 'empty', text: 'Nothing logged here yet. Sessions appear as you save them.' }));
+      (lc || lt) ? h('p', { class: 'lead', text: 'Latest average score: ' + [lc ? 'calibration ' + lc : null, lt ? 'transfer ' + lt : null].filter(Boolean).join(', ') + ' of the maximum.' }) : null,
+      h('p', { class: 'hint', text: 'Each calibration and transfer session shows its average score as a percentage of the maximum. Each drill is scored against its own maximum and the drills are averaged. See Practice trends for how it moves over time. To edit or delete a session, open it in the History of its own tab.' }),
+      entries.length ? h('div', { class: 'group' }, nodes) : h('p', { class: 'empty', text: 'Nothing logged here yet. Sessions appear as you save them.' }));
   }
 
   /* ==========================================================
@@ -1762,19 +1835,6 @@
       pwBtn.disabled = false;
     });
 
-    // Handicap estimate
-    const scratchInput = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, 'aria-label': 'Hit rate that equals scratch', value: String(session.data.settings.scratchPct) });
-    const scratchMsg = status();
-    async function saveScratch() {
-      scratchMsg.className = 'msg';
-      const v = Number(scratchInput.value);
-      if (!Number.isFinite(v) || v < 50 || v > 100) { scratchMsg.textContent = 'Enter a number from 50 to 100.'; return; }
-      session.data.settings.scratchPct = Math.round(v);
-      await persist();
-      scratchMsg.className = 'msg ok';
-      scratchMsg.textContent = 'Saved. Predicted handicaps now use ' + Math.round(v) + '%.';
-    }
-
     // Mechanic options
     const mechInput = h('input', { type: 'text', maxlength: 200, placeholder: 'For example: lead wrist flat at the top', 'aria-label': 'New mechanic' });
     const mechMsg = status();
@@ -1807,12 +1867,6 @@
 
     return h('section', { class: 'stack' },
       h('h2', { text: 'Settings' }),
-      h('div', { class: 'panel' },
-        h('h3', { text: 'Handicap estimate' }),
-        h('p', { text: 'Predicted handicap runs in a straight line: a 0% hit rate is 36, and the hit rate below counts as scratch (0), so half of it is 18. If your estimates come out better than your real handicap, raise this number. If they come out worse, lower it.' }),
-        field('Hit rate that equals scratch (percent)', scratchInput),
-        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', text: 'Save', onclick: saveScratch })),
-        scratchMsg),
       h('div', { class: 'panel' },
         h('h3', { text: 'Mechanic options' }),
         h('p', { text: 'These fill the Mechanic dropdown on the Technique tab, so every session is logged under the same name and your trends stay consistent. Removing an option does not change past sessions.' }),

@@ -7,11 +7,13 @@ A private practice tracker with these sections:
 - **Transfer**: generated sessions of range-friendly games, from three (30 minutes) up to six (1 hour), drawn from seventeen. Clubs and targets change on every ball, and the first game always tests your new move under pressure. Your score is the number of balls that hit (five games keep their own point scores: Range Stableford goes to 24, and Three targets, Infinity levels, Two-ball test and Weakest link go to 10), and you tick Passed at the pass mark.
 - **Practice trends**: the hours spent on each technique change as a bar chart (under 10 hours red, 10 to 15 amber, 15 to 20 light green, over 20 dark green and labelled Course Ready), plus calibration and transfer progress over time as the share of balls that hit.
 
-- **Practice log**: every session in one place, newest first, with the drills, notes and scores for each. Filter by Technique, Calibration or Transfer. Each calibration and transfer session shows a predicted handicap.
+- **Practice log**: every session in one place, newest first, with the drills, notes and scores for each. Filter by Technique, Calibration or Transfer. Each calibration and transfer session shows its average score as a percentage of the maximum.
 
-Each practice tab has a session length slider from 30 minutes to 1 hour in 10 minute steps, which changes the number of drills. Settings has a **Handicap estimate** scale and a **Mechanic options** list: add the mechanics you work on there, and they appear in the Mechanic dropdown so every session is logged under the same name.
+Each practice tab has a session length slider from 30 minutes to 1 hour in 10 minute steps, which changes the number of drills. Settings has a **Mechanic options** list: add the mechanics you work on there, and they appear in the Mechanic dropdown so every session is logged under the same name.
 
 The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations and are not their official programmes.
+
+The look follows Apple's iOS design: system fonts and colours, grouped lists, a translucent top bar and tab bar with icons, iOS-style sliders and switches between light and dark mode automatically.
 
 Plain HTML, CSS and JavaScript. No build step, no server, no third-party code.
 
@@ -25,13 +27,17 @@ Plain HTML, CSS and JavaScript. No build step, no server, no third-party code.
 
 Open the link on your phone and use Add to Home Screen to keep it handy.
 
-## Finger widths
+## Target sizes and the range converter
 
-Targets are sized in fingers, as in Adam Young's transference games. In the drills a finger is shown in feet with yards in brackets: about 10 feet (3.3 yards) at 100 yards, 15 feet (5 yards) at 150 yards and 20 feet (6.6 yards) at 200 yards. Each calibration and transfer session has a converter: type your shot distance and a target width in yards, and it shows the width in fingers.
+Drill target sizes are written in yards with feet in brackets. Games that name their clubs (Infinity levels, Perfection ladder, Wide or narrow) have fixed sizes for a wedge of about 100 yards, a mid-iron of about 150 yards and a driver of about 250 yards.
 
-## Predicted handicap
+Every other drill with target sizes has a "Name your club to size the windows" picker on its card: wedge (about 100 yards), short iron (125), mid-iron (150, the default), long iron or hybrid (200) or driver (250). Picking a club rescales the windows to that distance, and the choice is saved with the session. A drill that begins "A mid-iron" names the club you picked instead.
 
-Each calibration and transfer session gets a predicted handicap from its hit rate (balls hit out of balls played). It is a straight line: a 0% hit rate is 36, and the hit rate set in Settings counts as scratch (90% by default), so half of that is 18. It is a rough guide for watching the trend, not an official handicap. If the estimates come out better than your real handicap, raise the scratch hit rate in Settings; if worse, lower it.
+If you want to judge a width by eye, each calibration and transfer session has a "Yards to fingers" slider: set your shot distance and a target width in yards, and it shows how many fingers wide that target looks. One finger is about 3.3% of the shot distance, which is 3.3 yards at 100 yards, 5 yards at 150 yards and 6.6 yards at 200 yards.
+
+## Scores as a percentage of the maximum
+
+Each calibration and transfer session shows its average score as a percentage of the maximum. Every drill is scored against its own maximum (balls hit, or points for the games scored in points), and the drills in a session are averaged. Practice trends charts that percentage over time for each calibration category and for all drills, and for transfer by game type (Course simulation, Pressure game and Scoring game), for the new-move game and for all games. The charts are line charts over your sessions, oldest to newest.
 
 ## How the login and security work
 
