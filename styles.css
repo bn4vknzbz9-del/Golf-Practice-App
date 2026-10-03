@@ -262,3 +262,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* Practice log */
 .entry .d .tag { font-weight: 400; }
 .hcp { background: var(--sand); color: var(--sand-ink); padding: 8px 12px; border-radius: 6px; }
+
+/* Mechanic picker (tick one or more) */
+.picker { border: 1px solid var(--line); border-radius: 6px; background: var(--card); max-height: 240px; overflow-y: auto; padding: 4px 12px; }
+.pick { display: flex; align-items: center; gap: 12px; min-height: 44px; }

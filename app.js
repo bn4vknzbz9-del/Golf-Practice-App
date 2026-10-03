@@ -10,8 +10,8 @@
      EDIT ME: drill and test libraries
      Add your own drills by copying a line inside any list.
      ========================================================== */
-  // One finger width is about 3.3 yards at 100 yards, 5 at 150 and 6.6 at 200 (distance x 0.033).
-  const FINGER_NOTE = 'Fingers: 1 finger is about 3.3 yards at 100 yards, 5 yards at 150 and 6.6 yards at 200. An 8-finger window is 4 fingers either side of the line. Use the calculator on this page.';
+  // One finger width is about 3.3 yards (10 feet) at 100 yards, 5 yards (15 feet) at 150 and 6.6 yards (20 feet) at 200 (distance x 0.033).
+  const FINGER_NOTE = 'Fingers: 1 finger is about 10 feet (3.3 yards) at 100 yards, 15 feet (5 yards) at 150 yards and 20 feet (6.6 yards) at 200 yards. An 8-finger window is 4 fingers either side of the line. Use the converter on this page to turn a width in yards into fingers at your distance.';
   const addFingers = (lines) => (/finger/i.test(lines.join(' ')) ? lines.concat(FINGER_NOTE) : lines);
 
   // G(name, setup, play, interleave rule, scoring) builds a practice game.
@@ -149,9 +149,9 @@
         ['2 big draws, then 2 big fades.', '1 small draw, then 1 small fade.', '5 balls switching draw, fade, draw, fade, draw.', '4 balls aiming to start and finish on the target line.'],
         'Balls that curved the way you intended, out of 15. Note how the face felt for each shape.', 15),
       SH(GC('Gate narrowing',
-        'Two tees set as a gate about two metres ahead of the ball, on the line to your target. A mid-iron.',
+        'Two tees set as a gate about 6 feet (2 yards) ahead of the ball, on the line to your target. A mid-iron.',
         'Same club and target. Only the gate width changes.',
-        ['2 balls through a gate about 1 metre wide.', '2 balls at 80 cm, then 2 at 60 cm, 2 at 40 cm and 2 at 20 cm.'],
+        ['2 balls through a gate about 3 feet (1 yard) wide.', '2 balls at 2.5 feet (0.8 yards), then 2 at 2 feet (0.7 yards), 2 at 1.5 feet (0.5 yards) and 2 at 1 foot (0.3 yards).'],
         'Balls through the gate, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
       GC('Hook to slice spectrum',
         'A mid-iron, one target and plenty of room either side.',
@@ -500,6 +500,18 @@
     rounds: Math.round(num(i.rounds, 0, 99))
   });
 
+  // A session can cover several mechanics. Older records had one, kept as a one-item list.
+  function cleanMechList(list, fallback) {
+    const src = Array.isArray(list) ? list : (fallback ? [fallback] : []);
+    const out = [];
+    const seen = new Set();
+    for (const m of src.slice(0, 10)) {
+      const v = str(m, 200).trim();
+      if (v && !seen.has(v.toLowerCase())) { seen.add(v.toLowerCase()); out.push(v); }
+    }
+    return out;
+  }
+
   function cleanData(d) {
     const out = emptyData();
     if (!d || typeof d !== 'object') return out;
@@ -507,7 +519,8 @@
       out.technique.push({
         id: str(t.id, 64) || uid(),
         date: isDate(t.date) ? t.date : today(),
-        mechanics: str(t.mechanics, 200),
+        mechList: cleanMechList(t.mechList, str(t.mechanics, 200).trim()),
+        mechanics: cleanMechList(t.mechList, str(t.mechanics, 200).trim()).join(', ').slice(0, 200),
         notes: str(t.notes, 3000),
         improve: str(t.improve, 3000)
       });
@@ -522,7 +535,8 @@
       out.protocols.push({
         id: str(p.id, 64) || uid(),
         date: isDate(p.date) ? p.date : today(),
-        mechanic: str(p.mechanic, 200),
+        mechList: cleanMechList(p.mechList, str(p.mechanic, 200).trim()),
+        mechanic: cleanMechList(p.mechList, str(p.mechanic, 200).trim()).join(', ').slice(0, 200),
         target: str(p.target, 500),
         items: arr(p.items).slice(0, 12).map(cleanItem),
         notes: str(p.notes, 3000),
@@ -553,7 +567,7 @@
   let writeChain = Promise.resolve();
 
   function freshDrafts() {
-    return { technique: { id: null, date: today(), mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null };
+    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null };
   }
   function clearTimer() {
     if (tickHandle) clearInterval(tickHandle);
@@ -883,18 +897,31 @@
       if (v && !seen.has(mechKey(v))) { seen.add(mechKey(v)); out.push(v); }
     };
     session.data.mechanics.forEach(add);
-    session.data.protocols.forEach((p) => add(p.mechanic));
-    session.data.technique.forEach((r) => add(r.mechanics));
+    session.data.protocols.forEach((p) => p.mechList.forEach(add));
+    session.data.technique.forEach((r) => r.mechList.forEach(add));
     return out;
   }
-  function mechanicSelect(obj, key, onChange) {
+  // Tick one or more mechanics. The ticked names are kept in obj[key] as a list, in the same order as the options.
+  function mechanicPicker(obj, key, onChange) {
     const opts = mechanicOptions();
-    const sel = h('select', { 'aria-label': 'Mechanic' },
-      h('option', { value: '', text: opts.length ? 'Choose a mechanic' : 'No mechanics added yet' }),
-      opts.map((m) => h('option', { value: m, text: m })));
-    sel.value = obj[key] || '';
-    sel.addEventListener('change', () => { obj[key] = sel.value; if (onChange) onChange(); });
-    return sel;
+    if (!Array.isArray(obj[key])) obj[key] = [];
+    const summary = h('p', { class: 'hint' });
+    const paint = () => { summary.textContent = obj[key].length ? 'Selected: ' + obj[key].join(', ') : 'None selected yet.'; };
+    const box = h('div', { class: 'picker', role: 'group', 'aria-label': 'Mechanics' });
+    opts.forEach((m) => {
+      const cb = h('input', { type: 'checkbox' });
+      cb.checked = obj[key].some((x) => mechKey(x) === mechKey(m));
+      cb.addEventListener('change', () => {
+        const next = cb.checked ? [...obj[key], m] : obj[key].filter((x) => mechKey(x) !== mechKey(m));
+        obj[key] = opts.filter((o) => next.some((x) => mechKey(x) === mechKey(o)));
+        paint();
+        if (onChange) onChange();
+      });
+      box.append(h('label', { class: 'pick' }, cb, m));
+    });
+    if (!opts.length) box.append(h('p', { class: 'hint', text: 'No mechanics added yet.' }));
+    paint();
+    return h('div', null, box, summary);
   }
   const mechanicHint = () => (mechanicOptions().length ? null : h('p', { class: 'hint' },
     'Add the mechanics you work on in Settings first. ',
@@ -903,13 +930,15 @@
   function progressByMechanic() {
     const map = new Map();
     for (const p of session.data.protocols) {
-      const k = mechKey(p.mechanic);
-      if (!k) continue;
-      let e = map.get(k);
-      if (!e) { e = { name: p.mechanic.trim(), furthest: -1, last: p.date, sessions: 0 }; map.set(k, e); }
-      e.sessions += 1;
-      if (p.date >= e.last) { e.last = p.date; e.name = p.mechanic.trim(); }
-      for (const it of p.items) if (it.stage >= 0 && it.stage <= 4 && it.passed) e.furthest = Math.max(e.furthest, it.stage);
+      for (const name of (p.mechList.length ? p.mechList : [p.mechanic])) {
+        const k = mechKey(name);
+        if (!k) continue;
+        let e = map.get(k);
+        if (!e) { e = { name: name.trim(), furthest: -1, last: p.date, sessions: 0 }; map.set(k, e); }
+        e.sessions += 1;
+        if (p.date >= e.last) { e.last = p.date; e.name = name.trim(); }
+        for (const it of p.items) if (it.stage >= 0 && it.stage <= 4 && it.passed) e.furthest = Math.max(e.furthest, it.stage);
+      }
     }
     return [...map.values()].sort((a, b) => b.last.localeCompare(a.last));
   }
@@ -917,8 +946,12 @@
     const e = progressByMechanic().find((x) => mechKey(x.name) === mechKey(mech));
     return !e || e.furthest < 0 ? 0 : Math.min(4, e.furthest + 1);
   }
+  // With several mechanics ticked, start at the stage of the one furthest behind.
+  function suggestedStartMany(list) {
+    return list.length ? Math.min(...list.map(suggestedStart)) : 0;
+  }
   function freshProtocol() {
-    return { id: null, date: today(), mechanic: '', target: '', start: 0, startTouched: false, items: [], notes: '', next: '', timer: { base: 0, startedAt: null } };
+    return { id: null, date: today(), mechList: [], mechanic: '', target: '', start: 0, startTouched: false, items: [], notes: '', next: '', timer: { base: 0, startedAt: null } };
   }
   // Spread `total` minutes across blocks in proportion to the 30-minute plan, in whole minutes.
   function scaleMinutes(bases, total) {
@@ -961,13 +994,16 @@
   function techniqueHours() {
     const map = new Map();
     for (const p of session.data.protocols) {
-      const k = mechKey(p.mechanic);
-      if (!k) continue;
-      let e = map.get(k);
-      if (!e) { e = { name: p.mechanic.trim(), minutes: 0, sessions: 0, last: p.date }; map.set(k, e); }
-      e.minutes += p.items.reduce((a, it) => a + it.minutes, 0);
-      e.sessions += 1;
-      if (p.date >= e.last) { e.last = p.date; e.name = p.mechanic.trim(); }
+      const mins = p.items.reduce((a, it) => a + it.minutes, 0);
+      for (const name of (p.mechList.length ? p.mechList : [p.mechanic])) {
+        const k = mechKey(name);
+        if (!k) continue;
+        let e = map.get(k);
+        if (!e) { e = { name: name.trim(), minutes: 0, sessions: 0, last: p.date }; map.set(k, e); }
+        e.minutes += mins; // a session on several mechanics adds its full time to each
+        e.sessions += 1;
+        if (p.date >= e.last) { e.last = p.date; e.name = name.trim(); }
+      }
     }
     return [...map.values()].map((e) => ({ ...e, hours: e.minutes / 60 })).sort((a, b) => b.hours - a.hours);
   }
@@ -1079,7 +1115,7 @@
         h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
         h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
         trackingChart(rows),
-        h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }))
+        h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, and a session on several mechanics adds its full time to each. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }))
       : h('div', { class: 'stack' }, h('h3', { text: 'Technique hours' }),
         h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
 
@@ -1143,17 +1179,18 @@
   }
 
   function protocolSetup(d) {
-    const known = () => progressByMechanic().some((e) => mechKey(e.name) === mechKey(d.mechanic));
+    const known = () => d.mechList.some((m) => progressByMechanic().some((e) => mechKey(e.name) === mechKey(m)));
     const sel = h('select', null, STAGE_NAMES.map((n, i) => h('option', { value: String(i), text: n })));
     sel.value = String(d.start);
     const hint = h('p', { class: 'hint' });
     function updateHint() {
       hint.textContent = known()
-        ? 'Suggested start: ' + STAGE_NAMES[suggestedStart(d.mechanic)] + ', based on your progress. Change it to repeat an earlier stage.'
+        ? 'Suggested start: ' + STAGE_NAMES[suggestedStartMany(d.mechList)] + ', based on your progress' + (d.mechList.length > 1 ? ' with the mechanic furthest behind' : '') + '. Change it to repeat an earlier stage.'
         : 'New mechanic, so the suggested start is No club.';
     }
-    const mech = mechanicSelect(d, 'mechanic', () => {
-      if (!d.startTouched) { d.start = suggestedStart(d.mechanic); sel.value = String(d.start); }
+    const mech = mechanicPicker(d, 'mechList', () => {
+      d.mechanic = d.mechList.join(', ');
+      if (!d.startTouched) { d.start = suggestedStartMany(d.mechList); sel.value = String(d.start); }
       updateHint();
     });
     sel.addEventListener('change', () => { d.start = Number(sel.value); d.startTouched = true; });
@@ -1164,7 +1201,7 @@
       h('p', { class: 'hint', text: 'The goal is to change your pattern, not to hit good shots. Film yourself to check each swing hits the position. If one is wrong, start that set of five again.' }),
       progressBlock(),
       field('Date', dateInput(d)),
-      field('Mechanic I am working on', mech),
+      field('Mechanics I am working on (tick one or more)', mech),
       mechanicHint(),
       field('Position I am aiming for', textInput(d, 'target', 500, 'For example: lead wrist flat at the top')),
       field('Start at', sel),
@@ -1172,7 +1209,8 @@
       h('button', {
         type: 'button', class: 'primary', text: 'Generate ' + lenLabel(ui.len.technique) + ' protocol',
         onclick: () => {
-          if (!d.mechanic.trim()) { toast('Choose the mechanic you are working on'); return; }
+          if (!d.mechList.length) { toast('Choose at least one mechanic'); return; }
+          d.mechanic = d.mechList.join(', ');
           d.items = buildProtocol(d.start, ui.len.technique);
           d.len = ui.len.technique;
           d.timer = { base: 0, startedAt: null };
@@ -1212,7 +1250,8 @@
       upsert(session.data.protocols, {
         id: d.id || uid(),
         date: isDate(d.date) ? d.date : today(),
-        mechanic: d.mechanic.trim().slice(0, 200),
+        mechList: d.mechList.slice(0, 10),
+        mechanic: d.mechList.join(', ').slice(0, 200),
         target: d.target.trim().slice(0, 500),
         items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, score: null, passed: !!i.passed, notes: i.notes.trim(), stage: i.stage, rounds: i.rounds })),
         notes: d.notes.trim().slice(0, 3000),
@@ -1237,7 +1276,7 @@
     }
     return h('div', { class: 'stack' },
       editing ? h('p', { class: 'banner', text: 'Editing an earlier session' }) : null,
-      h('p', { class: 'banner', text: 'Mechanic: ' + d.mechanic + (d.target ? '. Target position: ' + d.target : '') }),
+      h('p', { class: 'banner', text: (d.mechList.length > 1 ? 'Mechanics: ' : 'Mechanic: ') + d.mechList.join(', ') + (d.target ? '. Target position: ' + d.target : '') }),
       field('Date', dateInput(d)),
       editing ? null : timerWidget(d, cards),
       h('ol', { class: 'drills' }, cards),
@@ -1252,11 +1291,12 @@
   function techniqueForm() {
     const d = drafts.technique;
     async function save() {
-      if (!d.mechanics.trim()) { toast('Add the mechanics you worked on'); return; }
+      if (!d.mechList.length) { toast('Choose at least one mechanic'); return; }
       upsert(session.data.technique, {
         id: d.id || uid(),
         date: isDate(d.date) ? d.date : today(),
-        mechanics: d.mechanics.trim().slice(0, 200),
+        mechList: d.mechList.slice(0, 10),
+        mechanics: d.mechList.join(', ').slice(0, 200),
         notes: d.notes.trim().slice(0, 3000),
         improve: d.improve.trim().slice(0, 3000)
       });
@@ -1269,7 +1309,7 @@
     return h('div', { class: 'stack' },
       d.id ? h('p', { class: 'banner', text: 'Editing an earlier entry' }) : null,
       field('Date', dateInput(d)),
-      field('Mechanics I worked on', mechanicSelect(d, 'mechanics')),
+      field('Mechanics I worked on (tick one or more)', mechanicPicker(d, 'mechList')),
       mechanicHint(),
       field('How the practice went', textArea(d, 'notes', 5, 3000)),
       field('How to improve the next practice', textArea(d, 'improve', 5, 3000)),
@@ -1297,7 +1337,7 @@
         nodes.push(entryShell(
           [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') })],
           protocolBody(rec),
-          () => { drafts.protocol = { id: rec.id, date: rec.date, mechanic: rec.mechanic, target: rec.target, start: 0, startTouched: true, items: rec.items.map((i) => ({ ...i })), notes: rec.notes, next: rec.next, timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
+          () => { drafts.protocol = { id: rec.id, date: rec.date, mechList: rec.mechList.slice(), mechanic: rec.mechanic, target: rec.target, start: 0, startTouched: true, items: rec.items.map((i) => ({ ...i })), notes: rec.notes, next: rec.next, timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
           () => removeRecord('protocols', rec.id)));
       }
     });
@@ -1466,19 +1506,33 @@
     return h('div', null, clock, h('div', { class: 'timeline', 'aria-hidden': 'true' }, segs), nowLabel, h('div', { class: 'actions' }, toggle, reset));
   }
 
-  // Converts a shot distance into the width of one finger: about 3.3 yards at 100, 5 at 150 and 6.6 at 200.
+  // Converter: type your shot distance and a target width in yards to get the width in fingers.
+  // One finger is about 3.3 yards at 100 yards, 5 at 150 and 6.6 at 200 (10, 15 and 20 feet).
   function fingerCalc(d) {
     const out = h('p', { class: 'hint' });
-    const input = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, placeholder: '150', 'aria-label': 'Shot distance in yards', value: d.dist || '' });
+    const dist = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, placeholder: '150', 'aria-label': 'Shot distance in yards', value: d.dist || '' });
+    const width = h('input', { type: 'text', inputmode: 'decimal', maxlength: 5, placeholder: '20', 'aria-label': 'Target width in yards', value: d.width || '' });
     function update() {
-      const dist = Number(input.value);
-      if (!input.value || !Number.isFinite(dist) || dist < 20 || dist > 400) { out.textContent = 'Enter a shot distance to see how wide a finger is.'; return; }
-      const f = Math.round(dist * 0.33) / 10;
-      out.textContent = 'At ' + dist + ' yards, 1 finger = ' + f.toFixed(1) + ' yards. 2 fingers = ' + (2 * f).toFixed(1) + ', 4 = ' + (4 * f).toFixed(1) + ', 6 = ' + (6 * f).toFixed(1) + ', 8 = ' + (8 * f).toFixed(1) + ' yards wide.';
+      const D = Number(dist.value);
+      if (!dist.value || !Number.isFinite(D) || D < 20 || D > 400) { out.textContent = 'Enter a shot distance to see how wide a finger is.'; return; }
+      const f = Math.round(D * 0.33) / 10; // yards per finger at this distance
+      let text = 'At ' + D + ' yards, 1 finger is about ' + Math.round(f * 3) + ' feet (' + f.toFixed(1) + ' yards).';
+      const W = Number(width.value);
+      if (width.value && Number.isFinite(W) && W > 0 && W <= 300) {
+        text += ' A target ' + W + ' yards (' + Math.round(W * 3) + ' feet) wide is ' + (W / f).toFixed(1) + ' fingers.';
+      } else {
+        text += ' Enter a target width in yards to see it in fingers.';
+      }
+      out.textContent = text;
     }
-    input.addEventListener('input', () => { d.dist = input.value.replace(/[^0-9]/g, ''); update(); });
+    dist.addEventListener('input', () => { d.dist = dist.value.replace(/[^0-9]/g, ''); update(); });
+    width.addEventListener('input', () => { d.width = width.value.replace(/[^0-9.]/g, ''); update(); });
     update();
-    return h('div', null, field('Finger calculator: shot distance in yards', input, '1 finger is about 3.3 yards at 100 yards, 5 at 150 and 6.6 at 200.'), out);
+    return h('div', { class: 'stack' },
+      h('strong', { text: 'Converter: yards to finger widths' }),
+      field('Shot distance (yards)', dist, '1 finger is about 10 feet (3.3 yards) at 100 yards, 15 feet (5 yards) at 150 and 20 feet (6.6 yards) at 200.'),
+      field('Target width (yards)', width),
+      out);
   }
 
   function sessionForm(kind) {

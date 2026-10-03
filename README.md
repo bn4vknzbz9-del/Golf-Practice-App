@@ -2,7 +2,7 @@
 
 A private practice tracker with these sections:
 
-- **Technique**: a protocol generator (30 to 60 minutes) that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You pick the mechanic from a dropdown, log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log is there too.
+- **Technique**: a protocol generator (30 to 60 minutes) that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You tick one or more mechanics from your Settings list (each one gets the stages you pass and the full session time), log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log is there too.
 - **Calibration**: generated sessions of structured games, one club and one target throughout, from three games (30 minutes) up to six (1 hour), drawn from 32 games that are each 15 balls or fewer. Extra games go to the category you have practised least. Your score for each game is the number of balls that hit.
 - **Transfer**: generated sessions of range-friendly games, from three (30 minutes) up to six (1 hour), drawn from seventeen. Clubs and targets change on every ball, and the first game always tests your new move under pressure. Your score is the number of balls that hit (five games keep their own point scores: Range Stableford goes to 24, and Three targets, Infinity levels, Two-ball test and Weakest link go to 10), and you tick Passed at the pass mark.
 - **Practice trends**: the hours spent on each technique change as a bar chart (under 10 hours red, 10 to 15 amber, 15 to 20 light green, over 20 dark green and labelled Course Ready), plus calibration and transfer progress over time as the share of balls that hit.
@@ -27,7 +27,7 @@ Open the link on your phone and use Add to Home Screen to keep it handy.
 
 ## Finger widths
 
-Targets are sized in fingers, as in Adam Young's transference games. One finger width is about 3.3 yards at 100 yards, 5 yards at 150 yards and 6.6 yards at 200 yards. Each session page has a calculator: type your shot distance to see how wide a finger is.
+Targets are sized in fingers, as in Adam Young's transference games. In the drills a finger is shown in feet with yards in brackets: about 10 feet (3.3 yards) at 100 yards, 15 feet (5 yards) at 150 yards and 20 feet (6.6 yards) at 200 yards. Each calibration and transfer session has a converter: type your shot distance and a target width in yards, and it shows the width in fingers.
 
 ## Predicted handicap
 
