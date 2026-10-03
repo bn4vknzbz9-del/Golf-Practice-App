@@ -161,14 +161,14 @@
         '{{Club}}, one target and an alignment stick on the ground pointing at it. Film from behind if you can.',
         'Same club and target. Only your intended start line changes.',
         ['2 balls starting well left of the target on purpose.', '2 balls starting well right of the target on purpose.', '1 ball starting just left, then 1 just right.', '5 balls switching left, right, left, right, left.', '4 balls starting dead on the target.'],
-        'Balls that started where you intended (inside a ' + T(10) + ' window around the intended line, ' + T(5) + ' either side), out of 15.', 15),
+        'Balls that finished inside the window around the line you intended (' + T(10) + ' wide, ' + T(5) + ' either side), out of 15.', 15),
       GC('Curve spectrum',
         'A mid-iron and one target.',
         'Same club and target. Only the amount and direction of curve changes.',
         ['2 big draws, then 2 big fades.', '1 small draw, then 1 small fade.', '5 balls switching draw, fade, draw, fade, draw.', '4 balls aiming to start and finish on the target line.'],
         'Balls that curved the way you intended, out of 15. Note how the face felt for each shape.', 15),
       SH(GC('Gate narrowing',
-        'Two tees set as a gate about 6 feet (2 yards) ahead of the ball, on the line to your target. A mid-iron.',
+        '{{Club}} and two tees set as a gate about 6 feet (2 yards) ahead of the ball, on the line to your target.',
         'Same club and target. Only the gate width changes.',
         ['2 balls through a gate about 3 feet (1 yard) wide.', '2 balls at 2.5 feet (0.8 yards), then 2 at 2 feet (0.7 yards), 2 at 1.5 feet (0.5 yards) and 2 at 1 foot (0.3 yards).'],
         'Balls through the gate, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
@@ -178,10 +178,10 @@
         ['3 big hooks on purpose.', '3 big slices on purpose.', '5 balls switching hook and slice on every ball, starting with a hook.', '4 balls aiming to start and finish on the target line.'],
         'Balls that curved the way you intended, out of 15. Notice how much you had to change to go from one extreme to the other.', 15),
       SH(GC('Face feel ladder',
-        'A mid-iron, one target and an alignment stick. Film if you can.',
+        '{{Club}}, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the face you intend to present at impact changes (by feel).',
         ['2 balls with a very closed face feel, 2 with a slightly closed feel.', '1 ball with a neutral feel.', '2 balls with a slightly open feel, 2 with a very open feel.', '2 balls back at neutral, aiming at the target.'],
-        'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer), out of 11, plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
+        'Balls that finished inside the window around the line you intended for that face feel (' + T(10) + ' wide, ' + T(5) + ' either side). Very closed: far left of the target, slightly closed: a little left, neutral: on the target, slightly open: a little right, very open: far right, for a right-handed golfer. Out of 11, plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
       SH(GC('Landing window shrink',
         '{{Club}} and one target. Markers to set the width of a landing window in yards.',
         'Same club and target. Only the width of the landing window changes.',
@@ -190,10 +190,10 @@
       SH(GC('Bias check and correct',
         '{{Club}} and one target. A notepad or phone to tally.',
         'Same club and target.',
-        ['6 balls at the target with your normal intention. Tally each as starting left, centre or right.', 'Work out your bias: the side where most balls start.', '5 more balls with a small intended correction against your bias.'],
-        'Balls starting inside a ' + T(10) + ' window around the line, out of 11 (compare the first 6 with the 5 correction balls), plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
+        ['6 balls at the target with your normal intention, aiming for the shape you want (for example straight). Tally each ball: the shape you got (draw, straight or fade) and where it finished (left, centre or right).', 'Work out your bias: the shape or side you miss to most often.', '5 more balls with a small intended correction against your bias.'],
+        'A ball scores 1 when it shows the shape you intended and finishes inside the window around the line you intended (' + T(10) + ' wide, ' + T(5) + ' either side). Out of 11 (compare the first 6 with the 5 correction balls), plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
       SH(GC('Face call before you look',
-        'A mid-iron and one target.',
+        '{{Club}} and one target.',
         'Same club and target for the whole game.',
         ['10 balls. After impact, and before the ball lands, call where it will finish: left of, on or right of the target.', 'Then watch the result and note whether your call was right.'],
         'Correct calls, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14. Calibration is about knowing what the face did, not just hitting the target.', 14)),
@@ -201,22 +201,22 @@
         '{{Club}}, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the start line changes, left or right of the same target, and it switches on every ball.',
         ['6 balls switching between starting the ball left of the target and right of it, about ' + T(10) + ' off the line each way, starting left.', '5 balls switching left, target, right, target, then repeating.', '4 balls starting on the target.'],
-        'Balls that started where you called, out of 15.', 15),
+        'Balls that finished inside the window around the line you called (' + T(10) + ' wide, ' + T(5) + ' either side), out of 15.', 15),
       GC('Draw and fade switch',
         'A mid-iron and one target. Both shapes start from the target line: the draw curves left and the fade curves right.',
         'Same club and target. Only the shape changes, and it switches on every ball.',
         ['6 balls switching between a draw and a fade, starting with a draw.', '5 balls switching draw, straight, fade, straight, then repeating.', '4 balls aiming to start and finish on the target line.'],
         'Balls that showed the shape you called or aimed for, out of 15.', 15),
       GC('Shape and start line grid',
-        'A mid-iron and one target. A notepad for a grid of three start lines (left, on target, right) by three shapes (draw, straight, fade).',
+        '{{Club}} and one target. A notepad for a grid of three start lines (left, on target, right) by three shapes (draw, straight, fade).',
         'Same club and target. Only the start line and the shape change.',
         ['Work through the nine combinations in this order, one ball each: left-draw, left-straight, left-fade, target-draw, target-straight, target-fade, right-draw, right-straight, right-fade.', 'Repeat the first six combinations once more (15 balls in total).', 'Mark the combinations you found easiest and hardest.'],
-        'Balls that matched both the start line and the shape, out of 15.', 15),
+        'Balls that showed the shape and finished inside the window around the line you intended (' + T(10) + ' wide, ' + T(5) + ' either side), out of 15.', 15),
       GC('Shape and line on call',
-        'A mid-iron, one target and a die or random-number app. First roll picks the start line (1 or 2 = left, 3 or 4 = on target, 5 or 6 = right). Second roll picks the shape (1 or 2 = draw, 3 or 4 = straight, 5 or 6 = fade).',
+        '{{Club}}, one target and a die or random-number app. First roll picks the start line (1 or 2 = left, 3 or 4 = on target, 5 or 6 = right). Second roll picks the shape (1 or 2 = draw, 3 or 4 = straight, 5 or 6 = fade).',
         'Same club and target. Only the start line and the shape change, and they are called before every ball.',
         ['15 balls. Before each ball, roll for the start line and the shape, then play that combination.', 'If the combination matches the previous ball, roll again so it always switches.'],
-        'Balls where both the start line and the shape were right, out of 15.', 15)
+        'Balls where the shape was right and the ball finished inside the window around the line you rolled (' + T(10) + ' wide, ' + T(5) + ' either side), out of 15.', 15)
     ]
   };
 
@@ -225,7 +225,7 @@
   const SWITCH = {
     'Face strike': '4 balls switching where you strike the face on every ball, never the same spot twice in a row. Call the spot before you hit, for example heel, toe, high, low. A ball struck where you called counts as a hit. Same club and target. Keep this block even if you have to shorten the earlier ones.',
     'Low point': '4 balls switching your contact on every ball in a pattern you call first, for example fat, clean, thin, clean. A ball with the contact you called counts as a hit. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-    'Clubface direction': '4 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw. A ball that matched both your calls counts as a hit. Same club and target. Keep this block even if you have to shorten the earlier ones.'
+    'Clubface direction': '4 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw. A ball counts as a hit when it showed the shape you called and finished inside the window around the line you called (' + T(10) + ' wide). Same club and target. Keep this block even if you have to shorten the earlier ones.'
   };
   for (const cat of Object.keys(CAL)) {
     CAL[cat] = CAL[cat].map((g) => {
