@@ -132,7 +132,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   left: 0; right: 0; bottom: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   background: var(--card);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
@@ -144,7 +144,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border-top: 3px solid transparent;
   color: var(--muted);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.74rem;
+  line-height: 1.2;
+  padding: 4px 1px;
 }
 .tab[aria-current="page"] { color: var(--turf); border-top-color: var(--brass); }
 
@@ -236,11 +238,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .stepper .ghost { padding: 0; min-width: 44px; }
 .stepper .score-out { min-width: 2ch; text-align: center; font-weight: 600; }
 
-/* Session length slider */
-.length { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin-bottom: 16px; }
-.length input[type="range"] { min-height: 44px; }
-.len-label { color: var(--muted); font-weight: 600; }
-.len-label.on { color: var(--ink); }
+/* Session length slider (30 to 60 minutes in 10 minute steps) */
+.length { margin-bottom: 16px; }
+.len-top { display: flex; justify-content: space-between; align-items: baseline; }
+.len-out { font-weight: 600; font-variant-numeric: tabular-nums; }
+.length input[type="range"] { width: 100%; min-height: 44px; }
+.len-ticks { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.8rem; padding: 0 2px; }
+
+/* Mechanic options in Settings */
+.mech-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.mech-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); min-height: 48px; }
+.mech-list .ghost { min-height: 40px; }
 
 /* Tracking chart */
 .chart .guide-line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
@@ -250,3 +258,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .st-am { fill: var(--st-amber); background: var(--st-amber); }
 .st-lg { fill: var(--st-lgreen); background: var(--st-lgreen); }
 .st-dg { fill: var(--st-dgreen); background: var(--st-dgreen); }
+
+/* Practice log */
+.entry .d .tag { font-weight: 400; }
+.hcp { background: var(--sand); color: var(--sand-ink); padding: 8px 12px; border-radius: 6px; }

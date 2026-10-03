@@ -482,7 +482,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [] });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], settings: { scratchPct: 90 } });
 
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
@@ -512,6 +512,7 @@
         improve: str(t.improve, 3000)
       });
     }
+    if (d.settings && d.settings.scratchPct != null) out.settings.scratchPct = Math.round(num(d.settings.scratchPct, 50, 100));
     const seenMech = new Set();
     (Array.isArray(d.mechanics) ? d.mechanics : []).slice(0, 100).forEach((m) => {
       const v = str(m, 200).trim();
@@ -544,7 +545,7 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -746,7 +747,7 @@
   /* ==========================================================
      App shell
      ========================================================== */
-  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['trends', 'Practice trends']];
+  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['trends', 'Practice trends'], ['log', 'Practice log']];
 
   function renderApp(toTop) {
     clearTimer();
@@ -755,6 +756,7 @@
     if (ui.tab === 'settings') view = settingsView();
     else if (ui.tab === 'technique') view = techniqueView();
     else if (ui.tab === 'trends') view = trendsView();
+    else if (ui.tab === 'log') view = logView();
     else view = sessionsView(ui.tab);
 
     const header = h('header', { class: 'top' },
@@ -808,6 +810,49 @@
     const i = list.findIndex((x) => x.id === rec.id);
     if (i >= 0) list[i] = rec; else list.push(rec);
   }
+  /* Shared record bodies, used by each tab's History and by the Practice log. */
+  const protocolMinutes = (rec) => rec.items.reduce((a, i) => a + i.minutes, 0);
+  const para = (label, text) => (text ? h('div', null, h('strong', { text: label }), h('p', { class: 'notes', text })) : null);
+
+  function logBody(rec) {
+    return [para('Mechanics', rec.mechanics), para('How it went', rec.notes), para('Improve next time', rec.improve)];
+  }
+  function protocolBody(rec) {
+    return [
+      h('div', null, h('strong', { text: protocolMinutes(rec) + '-minute protocol' }), rec.target ? h('p', { class: 'notes', text: 'Target position: ' + rec.target }) : null),
+      rec.items.map((it) => h('div', { class: 'hist-item' },
+        h('strong', { text: it.name }),
+        h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
+        it.stage >= 0 && it.stage <= 4 ? h('p', { text: it.rounds + ' set' + (it.rounds === 1 ? '' : 's') + ' attempted, ' + (it.passed ? 'five in a row completed' : 'not completed') }) : null,
+        it.notes ? h('p', { class: 'notes', text: it.notes }) : null)),
+      para('How it went', rec.notes),
+      para('Next session', rec.next)
+    ];
+  }
+  const scoreText = (kind, it) => (it.score == null ? 'Not scored'
+    : (it.max == null ? 'Score ' + it.score + ' / 10' : it.score + ' of ' + it.max + (it.unit === 'points' ? ' points' : ' balls'))
+      + (kind === 'transfer' ? (it.passed ? ', passed' : ', not passed') : ''));
+  function sessionBody(kind, rec) {
+    const ph = predictedHandicap(rec);
+    return [
+      ph ? h('p', { class: 'hcp' }, h('strong', { text: 'Predicted handicap: ' + handicapLabel(ph) }), ' (from a ' + Math.round(ph.pct) + '% hit rate. A rough estimate, not an official handicap.)') : null,
+      rec.items.map((it) => h('div', { class: 'hist-item' },
+        h('strong', { text: it.name }),
+        h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
+        h('p', { text: scoreText(kind, it) }),
+        it.notes ? h('p', { class: 'notes', text: it.notes }) : null))
+    ];
+  }
+
+  // Predicted handicap: a straight line from 36 at a 0% hit rate down to scratch at the hit rate set in Settings (90% by default).
+  function predictedHandicap(rec) {
+    const r = hitShare(rec.items);
+    if (!r) return null;
+    const hcp = Math.min(36, Math.max(0, 36 * (1 - r.pct / session.data.settings.scratchPct)));
+    return { hcp, pct: r.pct };
+  }
+  const handicapLabel = (ph) => (ph.hcp <= 0 ? 'scratch or better' : ph.hcp.toFixed(1));
+
   function entryShell(summary, body, onEdit, onDelete) {
     return h('details', { class: 'entry' },
       h('summary', null, summary),
@@ -1244,27 +1289,14 @@
       if (type === 'log') {
         nodes.push(entryShell(
           [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanics })],
-          [
-            h('div', null, h('strong', { text: 'Mechanics' }), h('p', { class: 'notes', text: rec.mechanics })),
-            rec.notes ? h('div', null, h('strong', { text: 'How it went' }), h('p', { class: 'notes', text: rec.notes })) : null,
-            rec.improve ? h('div', null, h('strong', { text: 'Improve next time' }), h('p', { class: 'notes', text: rec.improve })) : null
-          ],
+          logBody(rec),
           () => { drafts.technique = { ...rec }; ui.mode = 'log'; renderApp(true); },
           () => removeRecord('technique', rec.id)));
       } else {
         const fp = furthestPassed(rec);
         nodes.push(entryShell(
           [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') })],
-          [
-            h('div', null, h('strong', { text: '30-minute protocol' }), rec.target ? h('p', { class: 'notes', text: 'Target position: ' + rec.target }) : null),
-            rec.items.map((it) => h('div', { class: 'hist-item' },
-              h('strong', { text: it.name }),
-              h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
-              it.stage >= 0 && it.stage <= 4 ? h('p', { text: it.rounds + ' set' + (it.rounds === 1 ? '' : 's') + ' attempted, ' + (it.passed ? 'five in a row completed' : 'not completed') }) : null,
-              it.notes ? h('p', { class: 'notes', text: it.notes }) : null)),
-            rec.notes ? h('div', null, h('strong', { text: 'How it went' }), h('p', { class: 'notes', text: rec.notes })) : null,
-            rec.next ? h('div', null, h('strong', { text: 'Next session' }), h('p', { class: 'notes', text: rec.next })) : null
-          ],
+          protocolBody(rec),
           () => { drafts.protocol = { id: rec.id, date: rec.date, mechanic: rec.mechanic, target: rec.target, start: 0, startTouched: true, items: rec.items.map((i) => ({ ...i })), notes: rec.notes, next: rec.next, timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
           () => removeRecord('protocols', rec.id)));
       }
@@ -1494,6 +1526,12 @@
 
   const itemMax = (it) => (it.max == null ? 10 : it.max);
 
+  // Summary cell for a calibration or transfer session: hit rate, then the predicted handicap on its own line.
+  function sessionSum(kind, rec) {
+    const ph = predictedHandicap(rec);
+    return h('span', { class: 'sum' }, sessionSummary(kind, rec), ph ? h('br') : null, ph ? 'Predicted handicap ' + handicapLabel(ph) : null);
+  }
+
   function sessionSummary(kind, rec) {
     const scored = rec.items.filter((i) => i.score != null);
     if (!scored.length) return 'No scores';
@@ -1513,16 +1551,64 @@
     const nodes = [];
     list.forEach((rec) => {
       nodes.push(entryShell(
-        [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: sessionSummary(kind, rec) })],
-        rec.items.map((it) => h('div', { class: 'hist-item' },
-          h('strong', { text: it.name }),
-          h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
-          h('p', { text: it.score == null ? 'Not scored' : (it.max == null ? 'Score ' + it.score + ' / 10' : it.score + ' of ' + it.max + (it.unit === 'points' ? ' points' : ' balls')) + (kind === 'transfer' ? (it.passed ? ', passed' : ', not passed') : '') }),
-          it.notes ? h('p', { class: 'notes', text: it.notes }) : null)),
+        [h('span', { class: 'd', text: fmtDate(rec.date) }), sessionSum(kind, rec)],
+        sessionBody(kind, rec),
         () => { drafts[kind] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
         () => removeRecord(kind, rec.id)));
     });
     return h('div', null, nodes);
+  }
+
+  /* ==========================================================
+     Practice log: every session, with its drills, notes and scores
+     ========================================================== */
+  function logView() {
+    const f = ui.logFilter;
+    const filters = [['all', 'All'], ['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer']];
+    const entries = [];
+    if (f === 'all' || f === 'technique') {
+      session.data.protocols.forEach((rec) => entries.push({ type: 'protocol', rec }));
+      session.data.technique.forEach((rec) => entries.push({ type: 'log', rec }));
+    }
+    if (f === 'all' || f === 'calibration') session.data.calibration.forEach((rec) => entries.push({ type: 'calibration', rec }));
+    if (f === 'all' || f === 'transfer') session.data.transfer.forEach((rec) => entries.push({ type: 'transfer', rec }));
+    entries.sort((a, b) => b.rec.date.localeCompare(a.rec.date));
+
+    const latest = (kind) => {
+      const rec = [...session.data[kind]].sort(byDateDesc).find((r) => predictedHandicap(r));
+      return rec ? handicapLabel(predictedHandicap(rec)) : null;
+    };
+    const lc = latest('calibration');
+    const lt = latest('transfer');
+
+    const nodes = entries.map(({ type, rec }) => {
+      let tag; let sum; let body;
+      if (type === 'log') { tag = 'Quick log'; sum = h('span', { class: 'sum', text: rec.mechanics }); body = logBody(rec); }
+      else if (type === 'protocol') {
+        const fp = furthestPassed(rec);
+        tag = 'Technique protocol, ' + protocolMinutes(rec) + ' min';
+        sum = h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') });
+        body = protocolBody(rec);
+      } else {
+        tag = (type === 'calibration' ? 'Calibration' : 'Transfer') + ', ' + protocolMinutes(rec) + ' min';
+        sum = sessionSum(type, rec);
+        body = sessionBody(type, rec);
+      }
+      return h('details', { class: 'entry' },
+        h('summary', null, h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
+        h('div', { class: 'entry-body' }, body));
+    });
+
+    return h('section', { class: 'stack' },
+      h('h2', { text: 'Practice log' }),
+      h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Show' },
+        filters.map(([id, label]) => h('button', {
+          type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(f === id),
+          onclick: () => { ui.logFilter = id; renderApp(); }
+        }))),
+      (lc || lt) ? h('p', { class: 'lead', text: 'Latest predicted handicap: ' + [lc ? 'calibration ' + lc : null, lt ? 'transfer ' + lt : null].filter(Boolean).join(', ') + '.' }) : null,
+      h('p', { class: 'hint', text: 'Predicted handicap is a rough estimate from the share of balls that hit in a calibration or transfer session. It is not an official handicap, and you can adjust the scale in Settings. To edit or delete a session, open it in the History of its own tab.' }),
+      entries.length ? h('div', null, nodes) : h('p', { class: 'empty', text: 'Nothing logged here yet. Sessions appear as you save them.' }));
   }
 
   /* ==========================================================
@@ -1622,6 +1708,19 @@
       pwBtn.disabled = false;
     });
 
+    // Handicap estimate
+    const scratchInput = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, 'aria-label': 'Hit rate that equals scratch', value: String(session.data.settings.scratchPct) });
+    const scratchMsg = status();
+    async function saveScratch() {
+      scratchMsg.className = 'msg';
+      const v = Number(scratchInput.value);
+      if (!Number.isFinite(v) || v < 50 || v > 100) { scratchMsg.textContent = 'Enter a number from 50 to 100.'; return; }
+      session.data.settings.scratchPct = Math.round(v);
+      await persist();
+      scratchMsg.className = 'msg ok';
+      scratchMsg.textContent = 'Saved. Predicted handicaps now use ' + Math.round(v) + '%.';
+    }
+
     // Mechanic options
     const mechInput = h('input', { type: 'text', maxlength: 200, placeholder: 'For example: lead wrist flat at the top', 'aria-label': 'New mechanic' });
     const mechMsg = status();
@@ -1654,6 +1753,12 @@
 
     return h('section', { class: 'stack' },
       h('h2', { text: 'Settings' }),
+      h('div', { class: 'panel' },
+        h('h3', { text: 'Handicap estimate' }),
+        h('p', { text: 'Predicted handicap runs in a straight line: a 0% hit rate is 36, and the hit rate below counts as scratch (0), so half of it is 18. If your estimates come out better than your real handicap, raise this number. If they come out worse, lower it.' }),
+        field('Hit rate that equals scratch (percent)', scratchInput),
+        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', text: 'Save', onclick: saveScratch })),
+        scratchMsg),
       h('div', { class: 'panel' },
         h('h3', { text: 'Mechanic options' }),
         h('p', { text: 'These fill the Mechanic dropdown on the Technique tab, so every session is logged under the same name and your trends stay consistent. Removing an option does not change past sessions.' }),

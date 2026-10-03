@@ -1,13 +1,15 @@
 # Golf practice log
 
-A private practice tracker with three sections:
+A private practice tracker with these sections:
 
 - **Technique**: a protocol generator (30 to 60 minutes) that moves one mechanic from no club to freezer swings, smoothie swings, a foam ball and then real balls. You pick the mechanic from a dropdown, log sets attempted and whether you completed five good swings in a row at each stage, and a progress ladder shows how far each mechanic has got. A quick log is there too.
 - **Calibration**: generated sessions of structured games, one club and one target throughout, from three games (30 minutes) up to six (1 hour), drawn from 32 games that are each 15 balls or fewer. Extra games go to the category you have practised least. Your score for each game is the number of balls that hit.
 - **Transfer**: generated sessions of range-friendly games, from three (30 minutes) up to six (1 hour), drawn from seventeen. Clubs and targets change on every ball, and the first game always tests your new move under pressure. Your score is the number of balls that hit (five games keep their own point scores: Range Stableford goes to 24, and Three targets, Infinity levels, Two-ball test and Weakest link go to 10), and you tick Passed at the pass mark.
 - **Practice trends**: the hours spent on each technique change as a bar chart (under 10 hours red, 10 to 15 amber, 15 to 20 light green, over 20 dark green and labelled Course Ready), plus calibration and transfer progress over time as the share of balls that hit.
 
-Each practice tab has a session length slider from 30 minutes to 1 hour in 10 minute steps, which changes the number of drills. Settings has a **Mechanic options** list: add the mechanics you work on there, and they appear in the Mechanic dropdown so every session is logged under the same name.
+- **Practice log**: every session in one place, newest first, with the drills, notes and scores for each. Filter by Technique, Calibration or Transfer. Each calibration and transfer session shows a predicted handicap.
+
+Each practice tab has a session length slider from 30 minutes to 1 hour in 10 minute steps, which changes the number of drills. Settings has a **Handicap estimate** scale and a **Mechanic options** list: add the mechanics you work on there, and they appear in the Mechanic dropdown so every session is logged under the same name.
 
 The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations and are not their official programmes.
 
@@ -26,6 +28,10 @@ Open the link on your phone and use Add to Home Screen to keep it handy.
 ## Finger widths
 
 Targets are sized in fingers, as in Adam Young's transference games. One finger width is about 3.3 yards at 100 yards, 5 yards at 150 yards and 6.6 yards at 200 yards. Each session page has a calculator: type your shot distance to see how wide a finger is.
+
+## Predicted handicap
+
+Each calibration and transfer session gets a predicted handicap from its hit rate (balls hit out of balls played). It is a straight line: a 0% hit rate is 36, and the hit rate set in Settings counts as scratch (90% by default), so half of that is 18. It is a rough guide for watching the trend, not an official handicap. If the estimates come out better than your real handicap, raise the scratch hit rate in Settings; if worse, lower it.
 
 ## How the login and security work
 
