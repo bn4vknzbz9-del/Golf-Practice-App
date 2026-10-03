@@ -13,7 +13,7 @@ Each practice tab has a session length slider from 30 minutes to 1 hour in 10 mi
 
 The methods draw on Dr Luke Benoit's freezer, smoothie and foam-ball progression, his Impact Opposites idea (learn the edges to find the centre) and his advice to add variety and pressure for transfer, plus Adam Young's Diagnose, Intervene, Refine, Transfer structure, his strike boundaries, and his transference games (Infinity, Perfection, Two-ball test, Gambler, Worst shot, Danger side, Weakest link and the wide-or-narrow target game). The games are my adaptations and are not their official programmes.
 
-The look follows Apple's iOS design: system fonts and colours, grouped lists, a translucent top bar and tab bar with icons, iOS-style sliders and switches between light and dark mode automatically.
+The look follows Apple's iOS design: system fonts and colours, grouped lists, a translucent top bar and tab bar with icons, iOS-style sliders and switches between light and dark mode automatically. Each area has its own colour (Technique purple, Calibration blue, Transfer orange, Practice trends teal, Practice log indigo), and drill cards are colour-coded by category using the same colours as the chart lines.
 
 Plain HTML, CSS and JavaScript. No build step, no server, no third-party code.
 

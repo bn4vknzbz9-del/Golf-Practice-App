@@ -794,6 +794,18 @@
     (ICONS[id] || []).forEach((d) => svg.append(s('path', { d })));
     return svg;
   };
+  // Each area has its own colour. A small tile (white icon on a coloured square) marks it, as in Apple's Settings.
+  const iconTile = (id) => h('span', { class: 'tile tile-' + id, 'aria-hidden': 'true' }, tabIcon(id));
+  const pageTitle = (id, text) => h('div', { class: 'page-title' }, iconTile(id), h('h2', { text }));
+  const sectionHead = (id, text) => h('div', { class: 'section-head' }, iconTile(id), h('h3', { text }));
+  // Drill categories share the colours used for the chart lines: blue, orange, green, and purple for technique.
+  const CAT_CLASS = {
+    'Face strike': 'cat-blue', 'Low point': 'cat-orange', 'Clubface direction': 'cat-green',
+    'Course simulation': 'cat-blue', 'Pressure game': 'cat-orange', 'Scoring game': 'cat-green', 'Pattern transfer': 'cat-purple',
+    Diagnose: 'cat-purple', Refine: 'cat-purple'
+  };
+  const catClass = (cat) => CAT_CLASS[cat] || (/^Stage \d of 5$/.test(cat || '') ? 'cat-purple' : '');
+
   // App icon for the lock screen: a golf flag on a rounded square.
   function appIcon() {
     return s('svg', { viewBox: '0 0 84 84', class: 'app-icon', role: 'img', 'aria-label': 'Golf practice log' },
@@ -830,7 +842,7 @@
       h('button', { type: 'button', class: 'bar-btn', text: 'Settings', onclick: () => { ui.tab = 'settings'; renderApp(true); } }));
     const nav = h('nav', { class: 'tabs', 'aria-label': 'Sections' },
       TABS.map(([id, label]) => h('button', {
-        type: 'button', class: 'tab',
+        type: 'button', class: 'tab t-' + id,
         'aria-current': ui.tab === id ? 'page' : false,
         onclick: () => { ui.tab = id; renderApp(true); }
       }, tabIcon(id), h('span', { text: label }))));
@@ -1137,7 +1149,7 @@
   }
 
   // One trend block: chart plus a line per series with the latest and best hit rate.
-  function trendBlock(title, sessions, seriesDefs, emptyText) {
+  function trendBlock(areaId, title, sessions, seriesDefs, emptyText) {
     const sorted = [...sessions].sort((a, b) => a.date.localeCompare(b.date)).slice(-20);
     const series = seriesDefs.map((def) => {
       const vals = sorted.map((rec) => {
@@ -1147,7 +1159,7 @@
       return { name: def.name, cls: def.cls, vals };
     });
     const has = series.some((sr) => sr.vals.some((v) => v != null));
-    if (!has) return h('div', { class: 'stack card' }, h('h3', { text: title }), h('p', { class: 'empty', text: emptyText }));
+    if (!has) return h('div', { class: 'stack card' }, sectionHead(areaId, title), h('p', { class: 'empty', text: emptyText }));
     const rows = series.map((sr, si) => {
       const got = sr.vals.filter((v) => v != null);
       if (!got.length) return null;
@@ -1157,7 +1169,7 @@
       return h('li', null, h('span', { class: 'swatch ' + (sr.cls || 'l' + si) }), sr.name + ': ' + Math.round(latest) + '% latest, ' + Math.round(best) + '% best, ' + Math.round(avg) + '% average');
     });
     return h('div', { class: 'stack card' },
-      h('h3', { text: title }),
+      sectionHead(areaId, title),
       sorted.length > 1
         ? progressChart(sorted.map((r) => r.date), series, title + '. ' + series.map((sr) => sr.name + ' latest ' + Math.round(sr.vals.filter((v) => v != null).slice(-1)[0] || 0) + ' percent').join('. '))
         : h('p', { class: 'hint', text: 'Log two or more sessions to see a line over time.' }),
@@ -1170,20 +1182,20 @@
     const legend = [['rd', 'Under 10 hours'], ['am', '10 to 15 hours'], ['lg', '15 to 20 hours'], ['dg', 'Over 20 hours: Course Ready']];
     const hours = rows.length
       ? h('div', { class: 'stack card' },
-        h('h3', { text: 'Technique hours' }),
+        sectionHead('technique', 'Technique hours'),
         h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
         h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
         trackingChart(rows),
         h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, and a session on several mechanics adds its full time to each. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }))
-      : h('div', { class: 'stack card' }, h('h3', { text: 'Technique hours' }),
+      : h('div', { class: 'stack card' }, sectionHead('technique', 'Technique hours'),
         h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
 
     const calSeries = [...Object.keys(CAL).map((c, i) => ({ name: c, cls: 'l' + i, filter: (it) => it.cat === c })), { name: 'All drills', cls: 'l3', filter: null }];
     return h('section', { class: 'stack' },
-      h('h2', { text: 'Practice trends' }),
+      pageTitle('trends', 'Practice trends'),
       hours,
-      trendBlock('Calibration progress', session.data.calibration, calSeries, 'No calibration sessions scored yet. Your average score as a percentage of the maximum appears here for each category.'),
-      trendBlock('Transfer progress', session.data.transfer, [
+      trendBlock('calibration', 'Calibration progress', session.data.calibration, calSeries, 'No calibration sessions scored yet. Your average score as a percentage of the maximum appears here for each category.'),
+      trendBlock('transfer', 'Transfer progress', session.data.transfer, [
         { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
         { name: 'Pressure game', cls: 'l1', filter: (it) => it.cat === 'Pressure game' },
         { name: 'Scoring game', cls: 'l2', filter: (it) => it.cat === 'Scoring game' },
@@ -1234,7 +1246,7 @@
     else body = drafts.protocol.items.length ? protocolSession(drafts.protocol) : protocolSetup(drafts.protocol);
     const showLength = ui.mode === 'new' && !drafts.protocol.id;
     return h('section', null,
-      h('h2', { text: 'Technique practice' }),
+      pageTitle('technique', 'Technique practice'),
       modeBar([['new', 'Protocol'], ['log', 'Quick log'], ['history', 'History']]),
       showLength ? lengthControl('technique', setTechniqueLength) : null,
       body);
@@ -1290,7 +1302,7 @@
     cb.addEventListener('change', () => { item.passed = cb.checked; });
     const notes = h('textarea', { rows: 2, maxlength: 3000, placeholder: 'Notes', 'aria-label': 'Notes for ' + item.name, value: item.notes });
     notes.addEventListener('input', () => { item.notes = notes.value; });
-    return h('li', { class: 'drill' },
+    return h('li', { class: 'drill ' + catClass(item.cat) },
       h('div', { class: 'drill-head' },
         h('span', { class: 'idx', text: String(i + 1) }),
         h('h3', { text: item.name }),
@@ -1461,7 +1473,7 @@
     const meta = META[kind];
     if (ui.mode === 'log') ui.mode = 'new';
     return h('section', null,
-      h('h2', { text: meta.title }),
+      pageTitle(kind, meta.title),
       modeBar('New session'),
       ui.mode !== 'history' && !(drafts[kind] && drafts[kind].id) ? lengthControl(kind, (len) => setSessionLength(kind, len)) : null,
       ui.mode === 'history' ? sessionHistory(kind) : sessionNew(kind));
@@ -1508,7 +1520,7 @@
     const notes = h('textarea', { rows: 2, maxlength: 3000, placeholder: 'Notes', 'aria-label': 'Notes for ' + item.name, value: item.notes });
     notes.addEventListener('input', () => { item.notes = notes.value; });
 
-    return h('li', { class: 'drill' },
+    return h('li', { class: 'drill ' + catClass(item.cat) },
       h('div', { class: 'drill-head' },
         h('span', { class: 'idx', text: String(i + 1) }),
         h('h3', { text: item.name }),
@@ -1533,7 +1545,7 @@
     const segs = d.items.map((it) => {
       const f = h('span', { class: 'fill' });
       fills.push(f);
-      const seg = h('span', { class: 'tseg' }, f);
+      const seg = h('span', { class: 'tseg ' + catClass(it.cat) }, f);
       seg.style.flexGrow = String(it.minutes);
       return seg;
     });
@@ -1722,12 +1734,12 @@
         body = sessionBody(type, rec);
       }
       return h('details', { class: 'entry' },
-        h('summary', null, h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
+        h('summary', null, iconTile(type === 'calibration' || type === 'transfer' ? type : 'technique'), h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
         h('div', { class: 'entry-body' }, body));
     });
 
     return h('section', { class: 'stack' },
-      h('h2', { text: 'Practice log' }),
+      pageTitle('log', 'Practice log'),
       h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Show' },
         filters.map(([id, label]) => h('button', {
           type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(f === id),
