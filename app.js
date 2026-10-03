@@ -16,16 +16,16 @@
 
   // G(name, setup, play, interleave rule, scoring) builds a practice game.
   // Every game must have an interleave rule: change club, target, shot or set-up from ball to ball.
-  const G = (name, setup, play, interleave, score, cat) => ({
-    name, cat,
+  const G = (name, setup, play, interleave, score, cat, balls, pointsMax) => ({
+    name, cat, balls, pointsMax,
     how: addFingers(['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score]).join('\n')
   });
   const PICK = 'Use a die, a deck of cards or a random-number app to choose.';
 
   // GC builds a calibration game. Calibration is structured and blocked on purpose:
   // one club and one target, with a single variable stepped through a fixed order. Nothing is randomised.
-  const GC = (name, setup, constant, steps, score) => ({
-    name,
+  const GC = (name, setup, constant, steps, score, balls) => ({
+    name, balls,
     how: addFingers(['Setup: ' + setup, 'Keep constant: ' + constant, 'Steps:\n' + steps.map((x, i) => (i + 1) + '. ' + x).join('\n'), 'Score: ' + score]).join('\n')
   });
 
@@ -38,304 +38,294 @@
         'Spray or tape on one mid-iron. One target.',
         'Club, target and ball position stay the same for the whole game.',
         ['2 balls struck toward the heel on purpose.', '2 balls struck toward the toe on purpose.', '1 ball high on the face, then 1 low.', '5 balls switching between heel and toe on every ball, starting with heel.', '4 balls aiming for dead centre.'],
-        'Check the mark after every ball and say what it felt like. Centre strikes in the final 4, scaled to 10.'),
+        'Balls struck where you aimed (heel, toe, high, low or centre), out of 15. Check the mark after every ball and say what it felt like.', 15),
       GC('Heel/Toe ladder',
         'Spray or tape on a wedge. Use a clear ruler or a pen to mark a centre line, and lines every 5 mm toward the heel and the toe, on the tape. One target.',
         'Same club and target. Only the strike position on the face changes.',
         ['One ball per rung, working across the face: 10 mm toward the heel, 5 mm, centre, 5 mm toward the toe, 10 mm.', 'Then one ball per rung back the other way.', '5 balls aiming for centre.'],
-        'A rung scores 1 if the strike lands within 3 mm of where you aimed (maximum 10), plus 1 for each centre strike in the final 5. Total out of 15, scaled to 10.'),
+        'Balls struck within 3 mm of the position you aimed for, out of 15.', 15),
       GC('Find your edges',
         'Spray or tape on a mid-iron. Count the grooves up from the bottom edge. One target.',
         'Same club, target and ball position.',
         ['2 balls struck low on the face, around the 2nd groove. Notice where the shot stops being useful.', '2 balls struck high on the face, around the 5th groove. Notice the same.', '3 balls switching between the low edge and the high edge, starting low.', '8 balls switching between the 2nd groove, 3rd groove and the 4th groove on every ball, starting with the 2nd.'],
-        'Strikes in the final 8 on the groove you called, scaled to 10. Write down which edge you drift toward.'),
+        'Balls struck on the groove or edge you called, out of 15. Write down which edge you drift toward.', 15),
       GC('Tee height staircase',
         'Spray or tape on your driver. One club for the whole game, one tee and one target.',
         'Same club and target. Only the tee height changes, and only in this order.',
         ['2 balls on a low tee.', '2 balls on a medium tee.', '2 balls on a high tee.', '2 balls on medium, then 2 on low, then 2 on high.', '3 balls on the tee height that gave your best strikes.'],
-        'Centre strikes in the final 3, scaled to 10. Write down which tee height gave your best strikes.'),
+        'Centre strikes, out of 15. Write down which tee height gave your best strikes.', 15),
       GC('Ball position staircase',
         'Spray or tape on a mid-iron. Mark five ball positions from well back to well forward in your stance. One target.',
         'Same club and target. Only the ball position changes, in order.',
         ['3 balls with the ball well back.', '3 balls slightly back, 3 in the middle, 3 slightly forward, then 3 well forward.', 'Note which position gives your most central strikes.'],
-        'Centre strikes out of 15, scaled to 10.'),
+        'Centre strikes, out of 15.', 15),
       GC('Wedge length staircase',
         'Spray or tape on a wedge. One target.',
         'Same club and target. Only the swing length changes.',
         ['3 half swings.', '3 three-quarter swings, then 3 full swings.', 'Come back down: 3 three-quarter swings, then 3 half swings.'],
-        'Centre strikes out of 15, scaled to 10. Note whether strike quality changes with swing length.'),
+        'Centre strikes, out of 15. Note whether strike quality changes with swing length.', 15),
       GC('Effort staircase',
         'Spray or tape on a mid-iron. One target.',
         'Same club and target. Only your effort level changes.',
         ['2 balls at about 50 percent effort.', '3 balls at 70 percent.', '3 balls at 85 percent.', '3 balls at 100 percent.', '4 balls moving from 50 percent, 70 percent, 85 percent and 100 percent.'],
-        'Centre strikes out of 15, scaled to 10. Note the effort level where your strikes are best.'),
+        'Centre strikes, out of 15. Note the effort level where your strikes are best.', 15),
       GC('Strike map',
         'Spray or tape on a mid-iron. Draw a grid on paper or your phone: three columns (heel, centre, toe) by three rows (high, middle, low). One target.',
         'Everything stays the same for all 15 balls.',
         ['Hit 15 balls with your normal swing and intention.', 'After every ball, tally the strike in the grid.', 'Try and adjust your strike feel to stay in the centre of the face.', 'Look at the grid: where is the middle of your pattern, and how wide is it?'],
-        'Share of strikes in the centre cell, out of 15, scaled to 10. Write down the direction your pattern leans.'),
+        'Strikes in the centre cell, out of 15. Write down the direction your pattern leans.', 15),
       GC('Strike, then predict',
         'Spray or tape on a mid-iron. One target.',
         'Same club and target for the whole game.',
         ['12 balls. After impact, and before you look at the face, call the strike (toe, centre or heel, and high, middle or low).', 'Check the mark and note whether your call was right.'],
-        '1 point for each centre strike and 1 point for each correct call. Maximum 24, scaled to 10.'),
+        'Balls where your call matched the mark, out of 12. Also note how many were centre strikes.', 12),
       GC('High and low switch',
         'Spray or tape on a mid-iron. Count the grooves up from the bottom edge. One target.',
         'Same club, target and ball position. Only the strike height on the face changes, and it switches on every ball.',
         ['5 balls switching between high on the face (around the 5th groove) and low (around the 2nd groove), starting low.', '5 balls switching low, middle, high, middle, then repeating.', '5 balls aiming for the middle, around the 3rd to 4th groove.', 'Note how this affects your low point.'],
-        'A ball scores 1 if the strike lands in the zone you called (first 10 balls), plus 1 for each strike between the 3rd and 4th groove in the final 5. Out of 15, scaled to 10.'),
+        'Balls struck in the zone you called or aimed for, out of 15.', 15),
       GC('Four corners switch',
         'Spray or tape on a mid-iron. Think of the face as four quarters: heel-high, toe-high, toe-low and heel-low. One target.',
         'Same club, target and ball position. Only the strike zone changes, on every ball.',
         ['Work around the face one ball per zone: heel-high, toe-high, toe-low, heel-low, then centre. Repeat the cycle 2 times (10 balls).', '5 balls aiming for centre.'],
-        'Balls struck in the zone you called, out of 15, scaled to 10.')
+        'Balls struck in the zone you called, out of 15.', 15)
     ],
     'Low point': [
       GC('Fat to thin spectrum',
         'A mid-iron and a line on the turf. Ball on or just ahead of the line. One target.',
         'Same club, target and ball position.',
         ['2 balls hit deliberately fat (divot well behind the ball).', '2 balls hit deliberately thin (clip the ball, almost no divot).', '4 balls switching fat, thin, fat, thin.', '1 slightly fat, then 1 slightly thin.', '5 balls with ball-first contact and the divot starting at or just ahead of the line.'],
-        'Look at every divot and say where you felt the low point. Clean strikes in the final 5, scaled to 10.'),
+        'Balls with the contact you aimed for (fat, thin or clean), out of 15. Look at every divot and say where you felt the low point.', 15),
       SH(GC('Towel gate progression',
         'An 8-iron (one club for the whole game), a towel or headcover and one target.',
         'Same club and target. Only the gap between the towel and the ball changes.',
         ['2 balls with the towel about 6 inches behind the ball.', 'Then 2 balls each at 4, 3, 2 and 1 inch, moving the towel closer each time.'],
-        'Balls with clean ball-first contact and no towel contact, out of 10, scaled to 10.')),
+        'Balls with clean ball-first contact and no towel contact, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
       SH(GC('Ball position staircase',
         'A mid-iron and a line on the turf. Five ball positions from well back to well forward. One target.',
         'Same club and target. Only the ball position changes, in order.',
         ['2 balls with the ball well back.', '2 balls slightly back, 2 in the middle, 2 slightly forward, then 2 well forward.', 'Look at where each divot starts relative to the ball.'],
-        'Balls with ball-first contact, out of 10, scaled to 10. Note which position gave you the cleanest contact.')),
+        'Balls with ball-first contact, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14. Note which position gave you the cleanest contact.', 14)),
       SH(GC('Shaft lean staircase',
         'A mid-iron and one target.',
         'Same club and target. Only the amount of shaft lean at impact changes (by feel).',
         ['3 balls with very little shaft lean.', '3 balls with a moderate amount.', '3 balls with a lot of shaft lean.', '2 balls back at the moderate amount.'],
-        'Balls with ball-first contact, out of 11, scaled to 10. Note which amount gave your cleanest contact.')),
+        'Balls with ball-first contact, out of 11, plus the switch balls that matched your call, out of 4. Total out of 15. Note which amount gave your cleanest contact.', 15)),
       SH(GC('Divot depth staircase',
         'A mid-iron, one target and a divot board.',
         'Same club and target. Only the depth of the divot changes.',
         ['2 balls brushing the grass with almost no divot.', '2 balls with a shallow divot, then 2 with a deeper divot.', '2 balls back at shallow, then 2 back at brushing.'],
-        'Balls with ball-first contact and the divot depth you intended, out of 10, scaled to 10.')),
+        'Balls with ball-first contact and the divot depth you intended, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
       SH(GC('Tempo staircase',
         'A mid-iron and one target. A metronome app is helpful.',
         'Same club and target. Only the tempo changes.',
         ['3 balls at a slow tempo.', '3 balls at your normal tempo, then 3 at a quick tempo.', '2 balls back at normal.'],
-        'Balls with ball-first contact, out of 11, scaled to 10. Note which tempo gave you the cleanest contact.')),
+        'Balls with ball-first contact, out of 11, plus the switch balls that matched your call, out of 4. Total out of 15. Note which tempo gave you the cleanest contact.', 15)),
       SH(GC('Weight staircase',
         'A mid-iron and one target. Judge your weight by feel in the lead foot.',
         'Same club and target. Only the pressure in your lead foot at impact changes.',
         ['3 balls with weight about even between your feet.', '3 balls with a bit more on the lead foot, then 3 with most of it on the lead foot.', '2 balls back at a bit more on the lead foot.'],
-        'Balls with ball-first contact, out of 11, scaled to 10. Note which amount of pressure gave your cleanest contact.')),
+        'Balls with ball-first contact, out of 11, plus the switch balls that matched your call, out of 4. Total out of 15. Note which amount of pressure gave your cleanest contact.', 15)),
       GC('Fat and thin switch',
         'A mid-iron and a line on the turf or a divot board. Ball on or just ahead of the line. One target.',
         'Same club, target and ball position. Only the contact changes, and it switches on every ball.',
         ['6 balls switching between deliberately fat and deliberately thin, starting with fat.', '5 balls switching fat, clean, thin, clean, then repeating.', '4 balls with ball-first contact and the divot starting at or just ahead of the line.'],
-        'A ball scores 1 if the contact matches what you called (first 11 balls), plus 1 for each clean strike in the final 4. Out of 15, scaled to 10.'),
+        'Balls where the contact matched what you called or aimed for, out of 15.', 15),
       GC('Brush and dig switch',
         'A mid-iron and one target.',
         'Same club and target. Only the depth of the divot changes, and it switches on every ball.',
         ['6 balls switching between brushing the grass with almost no divot and taking a deep divot, starting with the brush.', '5 balls switching brush, medium, deep, medium, then repeating.', '4 balls with a shallow divot and ball-first contact.'],
-        'A ball scores 1 if the divot matches what you called (first 11 balls), plus 1 for each ball in the final 4 with a shallow divot and ball-first contact. Out of 15, scaled to 10.')
+        'Balls where the divot matched what you called or aimed for, out of 15.', 15)
     ],
     'Clubface direction': [
       GC('Start line spectrum',
         'A mid-iron, one target and an alignment stick on the ground pointing at it. Film from behind if you can.',
         'Same club and target. Only your intended start line changes.',
         ['2 balls starting well left of the target on purpose.', '2 balls starting well right of the target on purpose.', '1 ball starting just left, then 1 just right.', '5 balls switching left, right, left, right, left.', '4 balls starting dead on the target.'],
-        'Balls in the final 4 that start inside a 2-finger window around the target line (1 finger either side), scaled to 10.'),
+        'Balls that started where you intended (inside a 2-finger window around the intended line, 1 finger either side), out of 15.', 15),
       GC('Curve spectrum',
         'A mid-iron and one target.',
         'Same club and target. Only the amount and direction of curve changes.',
         ['2 big draws, then 2 big fades.', '1 small draw, then 1 small fade.', '5 balls switching draw, fade, draw, fade, draw.', '4 balls aiming to start and finish on the target line.'],
-        'Balls in the final 4 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Note how the face felt for each shape.'),
+        'Balls that curved the way you intended, out of 15. Note how the face felt for each shape.', 15),
       SH(GC('Gate narrowing',
         'Two tees set as a gate about two metres ahead of the ball, on the line to your target. A mid-iron.',
         'Same club and target. Only the gate width changes.',
         ['2 balls through a gate about 1 metre wide.', '2 balls at 80 cm, then 2 at 60 cm, 2 at 40 cm and 2 at 20 cm.'],
-        'Balls through the gate, out of 10, scaled to 10.')),
+        'Balls through the gate, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
       GC('Hook to slice spectrum',
         'A mid-iron, one target and plenty of room either side.',
         'Same club and target. Only the amount and direction of curve changes.',
         ['3 big hooks on purpose.', '3 big slices on purpose.', '5 balls switching hook and slice on every ball, starting with a hook.', '4 balls aiming to start and finish on the target line.'],
-        'Balls in the final 4 finishing inside a 4-finger window around the target (2 fingers either side), scaled to 10. Notice how much you had to change to go from one extreme to the other.'),
+        'Balls that curved the way you intended, out of 15. Notice how much you had to change to go from one extreme to the other.', 15),
       SH(GC('Face feel ladder',
         'A mid-iron, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the face you intend to present at impact changes (by feel).',
         ['2 balls with a very closed face feel, 2 with a slightly closed feel.', '1 ball with a neutral feel.', '2 balls with a slightly open feel, 2 with a very open feel.', '2 balls back at neutral, aiming at the target.'],
-        'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer). Out of 11, scaled to 10.')),
+        'Balls that started the way you intended (closed starts the ball left of the line, open starts it right, for a right-handed golfer), out of 11, plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
       SH(GC('Landing window shrink',
         'A mid-iron and one target. Markers to set the width of a landing window in fingers.',
         'Same club and target. Only the width of the landing window changes.',
         ['2 balls into a window 8 fingers wide (4 either side of the target).', '2 balls at 6 fingers, then 2 at 4 fingers, 2 at 3 fingers and 2 at 2 fingers.'],
-        'Balls landing inside the window, out of 10, scaled to 10.')),
+        'Balls landing inside the window, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14.', 14)),
       SH(GC('Bias check and correct',
         'A mid-iron and one target. A notepad or phone to tally.',
         'Same club and target.',
         ['6 balls at the target with your normal intention. Tally each as starting left, centre or right.', 'Work out your bias: the side where most balls start.', '5 more balls with a small intended correction against your bias.'],
-        'Balls starting inside a 2-finger window around the line in the 5 correction balls, scaled to 10. Compare with the first 6 and note what the correction felt like.')),
+        'Balls starting inside a 2-finger window around the line, out of 11 (compare the first 6 with the 5 correction balls), plus the switch balls that matched your call, out of 4. Total out of 15.', 15)),
       SH(GC('Face call before you look',
         'A mid-iron and one target.',
         'Same club and target for the whole game.',
         ['10 balls. After impact, and before the ball lands, call where it will finish: left of, on or right of the target.', 'Then watch the result and note whether your call was right.'],
-        'Correct calls out of 10, scaled to 10. Calibration is about knowing what the face did, not just hitting the target.')),
+        'Correct calls, out of 10, plus the switch balls that matched your call, out of 4. Total out of 14. Calibration is about knowing what the face did, not just hitting the target.', 14)),
       GC('Left and right switch',
         'A mid-iron, one target and an alignment stick. Film if you can.',
         'Same club and target. Only the start line changes, left or right of the same target, and it switches on every ball.',
         ['6 balls switching between starting the ball left of the target and right of it, about 2 fingers off the line each way, starting left.', '5 balls switching left, target, right, target, then repeating.', '4 balls starting on the target.'],
-        'A ball scores 1 if it starts where you called (first 11 balls), plus 1 for each on-target ball in the final 4. Out of 15, scaled to 10.'),
+        'Balls that started where you called, out of 15.', 15),
       GC('Draw and fade switch',
         'A mid-iron and one target. Both shapes start from the target line: the draw curves left and the fade curves right.',
         'Same club and target. Only the shape changes, and it switches on every ball.',
         ['6 balls switching between a draw and a fade, starting with a draw.', '5 balls switching draw, straight, fade, straight, then repeating.', '4 balls aiming to start and finish on the target line.'],
-        'A ball scores 1 if it shows the shape you called (first 11 balls), plus 1 for each ball in the final 4 finishing inside a 4-finger window. Out of 15, scaled to 10.'),
+        'Balls that showed the shape you called or aimed for, out of 15.', 15),
       GC('Shape and start line grid',
         'A mid-iron and one target. A notepad for a grid of three start lines (left, on target, right) by three shapes (draw, straight, fade).',
         'Same club and target. Only the start line and the shape change.',
         ['Work through the nine combinations in this order, one ball each: left-draw, left-straight, left-fade, target-draw, target-straight, target-fade, right-draw, right-straight, right-fade.', 'Repeat the first six combinations once more (15 balls in total).', 'Mark the combinations you found easiest and hardest.'],
-        'Balls that matched both the start line and the shape, out of 15, scaled to 10.'),
+        'Balls that matched both the start line and the shape, out of 15.', 15),
       GC('Shape and line on call',
         'A mid-iron, one target and a die or random-number app. First roll picks the start line (1 or 2 = left, 3 or 4 = on target, 5 or 6 = right). Second roll picks the shape (1 or 2 = draw, 3 or 4 = straight, 5 or 6 = fade).',
         'Same club and target. Only the start line and the shape change, and they are called before every ball.',
         ['15 balls. Before each ball, roll for the start line and the shape, then play that combination.', 'If the combination matches the previous ball, roll again so it always switches.'],
-        '2 points if both the start line and the shape are right, 1 if one is right, 0 if neither. Maximum 30, scaled to 10.')
+        'Balls where both the start line and the shape were right, out of 15.', 15)
     ]
   };
 
   // Switch blocks: club and target never change in calibration. Drills tagged shared get their category's
   // 4-ball block after their steps; its score is averaged with the drill's own score.
   const SWITCH = {
-    'Face strike': {
-      play: '4 balls switching where you strike the face on every ball, never the same spot twice in a row. Call the spot before you hit, for example heel, toe, high, low. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-      score: 'Switch balls struck where you called, out of 4, scaled to 10. Your game score is the average of that and the score above.'
-    },
-    'Low point': {
-      play: '4 balls switching your contact on every ball in a pattern you call first, for example fat, clean, thin, clean. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-      score: 'Switch balls that matched your call, out of 4, scaled to 10. Your game score is the average of that and the score above.'
-    },
-    'Clubface direction': {
-      play: '4 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw. Same club and target. Keep this block even if you have to shorten the earlier ones.',
-      score: 'Switch balls where both the start line and the shape matched your call, out of 4, scaled to 10. Your game score is the average of that and the score above.'
-    }
+    'Face strike': '4 balls switching where you strike the face on every ball, never the same spot twice in a row. Call the spot before you hit, for example heel, toe, high, low. A ball struck where you called counts as a hit. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+    'Low point': '4 balls switching your contact on every ball in a pattern you call first, for example fat, clean, thin, clean. A ball with the contact you called counts as a hit. Same club and target. Keep this block even if you have to shorten the earlier ones.',
+    'Clubface direction': '4 balls switching shot shape and start line on every ball, changing both from the ball before. For example: right start with a draw, left start with a fade, on target and straight, left start with a draw. A ball that matched both your calls counts as a hit. Same club and target. Keep this block even if you have to shorten the earlier ones.'
   };
   for (const cat of Object.keys(CAL)) {
     CAL[cat] = CAL[cat].map((g) => {
-      if (!g.shared) return { name: g.name, how: g.how };
+      if (!g.shared) return { name: g.name, how: g.how, balls: g.balls };
       const parts = g.how.split('\nScore: ');
-      const scoreLine = parts.slice(1).join('\nScore: ').split('\nFingers: ');
-      const fingers = scoreLine.length > 1 ? '\nFingers: ' + scoreLine.slice(1).join('\nFingers: ') : '';
-      return { name: g.name, how: parts[0] + '\nSwitch: ' + SWITCH[cat].play + '\nScore: ' + scoreLine[0] + ' ' + SWITCH[cat].score + fingers };
+      return { name: g.name, how: parts[0] + '\nSwitch: ' + SWITCH[cat] + '\nScore: ' + parts.slice(1).join('\nScore: '), balls: g.balls };
     });
   }
 
+  // Transfer games: every game has a fixed number of balls, and your score is the number of balls that hit.
   const TRANSFER_BASE = [
     G('Range round, six holes',
-      'Write six holes on a card. For each, pick a tee shot (driver or 3-wood to a 4-finger landing window between two range markers) and an approach (a flag distance and a club, with a 3-finger window around the flag). Use a different flag and club on every hole.',
+      'Write six holes on a card. For each, pick a tee shot (driver or 3-wood to a landing window between two range markers) and an approach (a flag distance and a club). Use a different flag and club on every hole.',
       '12 balls: tee shot, then approach, for each hole. One ball per shot, no re-hits, full routine every ball. Play the holes in a random order you draw.',
       'Random hole order, and a different club and target on each shot, as on a real course.',
-      'Shots finishing inside the window or on the flag, out of 12, scaled to 10. Mark it passed if you score 7 or higher.',
-      'Course simulation'),
+      'Shots finishing inside the window or on the flag, out of 12. Mark it passed at 8 or more.',
+      'Course simulation', 12),
     G('Protect your points',
-      'Choose four targets at different distances and four clubs. Use a 4-finger window for every target. Start with 10 points.',
-      '10 balls. Before every ball, draw the target and the club. Each ball that misses the window costs 1 point. Full routine every ball, no re-hits.',
+      'Choose four targets at different distances and four clubs. Start with 10 points.',
+      '10 balls. Before every ball, draw the target and the club. Each ball that misses the target costs 1 point. Full routine every ball, no re-hits.',
       'Target and club both change on every ball, never the same club twice in a row.',
-      'Points left at the end. Mark it passed if you finish with 6 or more.',
-      'Pressure game'),
+      'Balls on target, out of 10 (your points left equal your balls on target). Mark it passed at 6 or more.',
+      'Pressure game', 10),
     G('Three targets, random order',
       'Choose three targets, each with a 4-finger window, and three clubs. Write down a random order for hitting the targets, and change the order every round.',
       'Hit each target once, in the random order, with a different club each time. Missing any window means you start the round again. Maximum 15 balls.',
       'Target order is reshuffled after every round, and the club for each target changes each round.',
-      '10 for a clean first round, minus 2 for each restart. 0 if you do not finish in 15 balls. Mark it passed if you finish.',
-      'Pressure game'),
+      '10 for a clean first round, minus 2 for each restart. 0 if you do not finish in 15 balls. The slider goes to 10. Mark it passed if you finish.',
+      'Pressure game', 15, 10),
     G('Routine under pressure',
-      'Four targets with 4-finger windows, four clubs and a phone timer. Decide your pre-shot routine and its length.',
+      'Four targets, four clubs and a phone timer. Decide your pre-shot routine and its length.',
       '8 balls with your full routine every ball. A ball hit without the full routine counts as a miss, and so does a ball that takes longer than 45 seconds from start of routine to contact.',
       'Random target, club and shape on every ball, drawn before the routine starts.',
-      'Balls that finish inside the window out of 8, scaled to 10. Mark it passed if you score 7 or higher.',
-      'Pressure game'),
+      'Balls that finish inside the window, out of 8. Mark it passed at 6 or more.',
+      'Pressure game', 8),
     G('Range Stableford',
-      'Choose three targets. Each has an outer window 4 fingers wide and an inner window 2 fingers wide.',
-      '12 balls. Before every ball, draw the target and a club. Score 2 for inside the inner window, 1 for inside the outer window and 0 for a miss.',
+      'Choose three targets. Size an outer window 4 fingers wide and an inner window 2 fingers wide (see the finger guide).',
+      '12 balls. Before every ball, draw the target and a club. Score 2 points for inside the inner window, 1 point for inside the outer window and 0 for a miss.',
       'Target and club change on every ball, never the same club twice in a row.',
-      'Total points out of 24, scaled to 10. Mark it passed if you reach 12 points or more.',
-      'Scoring game'),
+      'Total points, out of 24 (the slider goes to 24). Mark it passed at 12 points or more.',
+      'Scoring game', 12, 24),
     G('Clock pressure',
-      'A phone timer set to 40 seconds per ball, three targets with 4-finger windows and three clubs.',
+      'A phone timer set to 40 seconds per ball, three targets and three clubs.',
       '10 balls. Draw the target and the club, start the timer, and finish your routine and hit within the 40 seconds. A ball hit after the timer counts as a miss.',
       'Draw a new target and club for every ball, before the timer starts.',
-      'Balls inside the window out of 10. Mark it passed if you score 6 or higher.',
-      'Pressure game'),
+      'Balls inside the window within the time, out of 10. Mark it passed at 6 or more.',
+      'Pressure game', 10),
     G('Beat your number',
-      'Choose your own target set (each with a 4-finger window) and clubs. Look at your last result for this game and write down the number you need to beat.',
+      'Choose your own target set and clubs. Look at your last score for this game and write down the number you need to beat.',
       '10 balls. Draw the target and the club for each ball, then play it with full routine and no re-hits. Count balls inside the window.',
       'Target and club change on every ball. Write the sequence down first so you cannot choose easy targets.',
-      'Balls inside the window out of 10. Mark it passed only if you beat your previous number.',
-      'Scoring game'),
+      'Balls inside the window, out of 10. Mark it passed only if you beat your previous score.',
+      'Scoring game', 10),
     G('Tee shot and approach pairs',
-      'A 4-finger landing window for driver or 3-wood, and a flag with a 3-finger window for approach shots. Five pairs.',
+      'A landing window for driver or 3-wood, and a flag for approach shots. Five pairs.',
       '10 balls: five tee shots alternating with five approach shots, as one hole after another. Draw the approach club and distance for each pair. No re-hits.',
       'Alternate long and short clubs, with a new approach club, flag and shape each pair.',
-      'Balls inside their window out of 10. Mark it passed if you score 7 or higher.',
-      'Course simulation'),
+      'Balls inside their window, out of 10. Mark it passed at 7 or more.',
+      'Course simulation', 10),
     G('Infinity levels',
       'One driver, one mid-iron and one wedge, each with its own target on the range and an 8-finger window. Levels: level 1 is one shot with each club. Each new level adds one shot, in this order: another wedge, another iron, another driver, and so on.',
       'Hit the level in rotation (driver, iron, wedge, then repeat). You pass a level when every shot lands inside its window with no mistakes. You get three attempts at each level; if you fail all three, drop back a level. Play until your 10 minutes are up. Next time, start from the level you reached.',
       'Rotate between the clubs and never hit the same shot twice in a row.',
-      'Levels passed in 10 minutes, doubled (maximum 10). Mark it passed if you pass level 3 or higher.',
-      'Scoring game'),
+      'Levels passed in 10 minutes, doubled (maximum 10). The slider goes to 10. Mark it passed if you pass level 3 or higher.',
+      'Scoring game', 12, 10),
     G('Perfection ladder',
-      'A full set of clubs from wedge to driver, one target and an 8-finger window. Windows to move to later: 6 fingers, then 4 fingers.',
-      'Start with your wedge. If the ball lands inside the window, move up one club for the next ball; if it misses, move down one club. Keep going through the set. When you reach the driver, repeat with a narrower window. Play until your 10 minutes are up.',
+      'A full set of clubs from wedge to driver, one target and a window 8 fingers wide (see the finger guide). After 6 balls, narrow the window to 6 fingers.',
+      '12 balls. Start with your wedge. If the ball lands inside the window, move up one club for the next ball; if it misses, move down one club. When you reach the end of the set, turn around.',
       'The club changes after every ball by design, because you always move up or down the set.',
-      'Balls inside the window out of your first 12, scaled to 10. Mark it passed if you reach your 7-iron or a longer club.',
-      'Scoring game'),
+      'Balls inside the window, out of 12. Mark it passed at 7 or more.',
+      'Scoring game', 12),
     G('Two-ball test',
       'Two clubs and a target with an 8-finger window. Windows to move to: 6, 4, 3 and 2 fingers.',
       'Hit two balls at the window, each with a different club. Two out of two: shrink the window one step. One out of two: stay the same. None: widen the window one step. Play until your 10 minutes are up.',
       'Use a different club for each of the two balls, and swap the two clubs for different ones every few rounds.',
-      'Narrowest window reached: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if you ended wider than 8). Mark it passed at 6 fingers or narrower.',
-      'Pressure game'),
+      'Narrowest window reached: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if you ended wider than 8). The slider goes to 10. Mark it passed at 6 fingers or narrower.',
+      'Pressure game', 14, 10),
     G('Gambler',
-      'Four clubs, three targets and a notepad. Window widths you can choose are 2 to 10 fingers.',
-      '10 balls. Before every ball, draw the club and the target, then choose your window width before you hit. Landing inside the window scores points equal to its width in fingers. A miss adds 10 points. The lowest total wins.',
+      'Four clubs, three targets and a notepad. Window widths you can choose are 1 to 8 fingers (see the finger guide).',
+      '10 balls. Before every ball, draw the club and the target, then choose your window width before you hit. Landing inside the window earns points equal to its width in fingers. A miss adds 10 points. Lower is better.',
       'The club and target are drawn fresh for every ball, so you cannot settle on a favourite shot.',
-      'Your total over 10 balls: 25 or less = 10, 40 = 7, 60 = 4, 80 or more = 0. Mark it passed at 40 or less.',
-      'Pressure game'),
+      'Balls inside the window you chose, out of 10. Also add up your points to compare over time. Mark it passed at 6 or more.',
+      'Pressure game', 10),
     G('Worst shot',
-      'A target, three clubs and a notepad. Measure misses in fingers from the target line.',
-      'Hit three balls at the target, each with a different club. Find the worst of the three and count how many fingers it finished from the target. Repeat for three rounds and add up the three worst shots.',
+      'A target with a window 4 fingers wide (see the finger guide), three clubs and a notepad.',
+      '9 balls: three rounds of three balls, each ball with a different club. After each round, note how many fingers your worst ball finished from the target.',
       'A different club for each of the three balls, and a new target for each round.',
-      'Total fingers for your three worst shots: 3 or less = 10, 6 = 7, 9 = 4, 12 or more = 0. Mark it passed at 6 or less.',
-      'Scoring game'),
+      'Balls inside the window, out of 9. Mark it passed at 5 or more.',
+      'Scoring game', 9),
     G('Danger side',
-      'Work out which side you miss more often. Pick a flag, and set a 4-finger window on the safe side of it. The danger side is the other side of the flag. Scoring: 1 point inside the window, 0 points on the safe side outside it, minus 3 points on the danger side.',
-      '10 balls, tallying points as you go. Full routine every ball, no re-hits.',
+      'Work out which side you miss more often. Pick a flag, and set a window 2 fingers wide on the safe side of it (see the finger guide). The danger side is the other side of the flag.',
+      '10 balls. Full routine every ball, no re-hits. Count a hit when the ball lands inside the window, and note any ball that lands on the danger side.',
       'Draw a new club for every ball and change the flag after five balls.',
-      'Points after 10 balls (maximum 10). Mark it passed at 5 points or more.',
-      'Pressure game'),
+      'Balls inside the window, out of 10. Mark it passed at 5 or more with no balls on the danger side.',
+      'Pressure game', 10),
     G('Wide or narrow',
-      'Two targets set with range markers: one wide (4 fingers) and one narrow (2 fingers), for example range poles or two pairs of yardage markers. A scorecard for six par 4 holes.',
-      'Each hole: hit your driver at the wide target. If you hit it, play your 7-iron at the wide target; if you miss, play your 7-iron at the narrow target. Hole score: drive hit and approach hit = 3. Drive hit and approach missed = 4. Drive missed and approach hit = 4. Both missed = 5.',
+      'Two targets: one wide (4 fingers) and one narrow (2 fingers), for example range poles or two pairs of yardage markers. A scorecard for six par 4 holes.',
+      '12 balls. Each hole: hit your driver at the wide target. If you hit it, play your 7-iron at the wide target; if you miss, play your 7-iron at the narrow target. Note the hole score: drive hit and approach hit = 3, drive hit and approach missed = 4, drive missed and approach hit = 4, both missed = 5.',
       'Driver and 7-iron alternate every shot, the targets change with the result of the drive, and you move to a new pair of markers every two holes.',
-      '10 for 18 strokes or fewer over six holes, minus 1 for each stroke over. Mark it passed at 24 or fewer.',
-      'Course simulation'),
+      'Balls that hit their target, out of 12. Mark it passed at 7 or more.',
+      'Course simulation', 12),
     G('Weakest link, mixed',
       'Two targets and four clubs. An 8-finger window. Windows to move to: 6, 4, 3 and 2 fingers.',
       'Count how many balls in a row land inside the window. Alternate between the two targets and change the club on every ball. A miss takes your count back to zero. When you reach five in a row, shrink the window one step. Play until your 10 minutes are up.',
       'Targets alternate and the club changes on every ball. This is a mixed version of a game normally played at one target.',
-      'Narrowest window completed: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if none). Mark it passed at 6 fingers or narrower.',
-      'Pressure game')
+      'Narrowest window completed: 8 fingers = 4, 6 = 6, 4 = 8, 3 = 9, 2 = 10 (0 if none). The slider goes to 10. Mark it passed at 6 fingers or narrower.',
+      'Pressure game', 15, 10)
   ];
 
   // Focus line added to every transfer game. Both coaches favour an external focus under pressure.
   const FOCUS = 'Focus: use your full routine on every ball and keep your attention on the target and the ball flight, not on body positions.';
   const ANCHOR = 'New move under pressure';
   TRANSFER_BASE.push(G(ANCHOR,
-    'Use the mechanic from your latest technique protocol. Three targets with 4-finger windows, three clubs and, if you can, your phone to film.',
+    'Use the mechanic from your latest technique protocol. Three targets with 4-finger windows (see the finger guide), three clubs and, if you can, your phone to film.',
     '12 balls. Before each ball, draw the target and the club. Take one smoothie rehearsal swing with the new move beside the ball, step in, then hit with your attention on the target. Film as many as you can.',
     'Target and club change on every ball, never the same club twice in a row.',
-    'Balls where the new move showed up and the ball finished inside a 4-finger window, out of 12, scaled to 10. Mark it passed if you score 6 or higher.',
-    'Pattern transfer'));
-  const TRANSFER = TRANSFER_BASE.map((g) => ({ name: g.name, cat: g.cat, how: g.how + '\n' + FOCUS }));
+    'Balls where the new move showed up and the ball finished inside a 4-finger window, out of 12. Mark it passed at 6 or more.',
+    'Pattern transfer', 12));
+  const TRANSFER = TRANSFER_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + FOCUS }));
 
   /* Technique protocol: no club -> freezer -> smoothie -> foam ball -> real ball.
      Progression from Dr Luke Benoit's 5x5 method. The Set the target and Refine blocks follow
@@ -492,7 +482,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], calibration: [], transfer: [] });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [] });
 
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
@@ -500,7 +490,10 @@
     name: str(i.name, 120),
     how: str(i.how, 1500),
     minutes: num(i.minutes, 0, 120),
-    score: i.score == null ? null : Math.round(num(i.score, 0, 10)),
+    max: i.max == null ? null : Math.round(num(i.max, 1, 100)), // top of the score slider; null on older sessions scored out of 10
+    unit: i.unit === 'points' ? 'points' : 'balls',
+    balls: i.balls == null ? null : Math.round(num(i.balls, 1, 100)), // balls played, used to weight a points game in the trends
+    score: i.score == null ? null : Math.min(Math.round(num(i.score, 0, 100)), i.max == null ? 10 : Math.round(num(i.max, 1, 100))),
     passed: i.passed === true,
     notes: str(i.notes, 3000),
     stage: Math.round(num(i.stage, -1, 5)),
@@ -519,6 +512,11 @@
         improve: str(t.improve, 3000)
       });
     }
+    const seenMech = new Set();
+    (Array.isArray(d.mechanics) ? d.mechanics : []).slice(0, 100).forEach((m) => {
+      const v = str(m, 200).trim();
+      if (v && !seenMech.has(v.toLowerCase())) { seenMech.add(v.toLowerCase()); out.mechanics.push(v); }
+    });
     for (const p of arr(d.protocols)) {
       out.protocols.push({
         id: str(p.id, 64) || uid(),
@@ -748,7 +746,7 @@
   /* ==========================================================
      App shell
      ========================================================== */
-  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['tracking', 'Tracking']];
+  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['trends', 'Practice trends']];
 
   function renderApp(toTop) {
     clearTimer();
@@ -756,7 +754,7 @@
     let view;
     if (ui.tab === 'settings') view = settingsView();
     else if (ui.tab === 'technique') view = techniqueView();
-    else if (ui.tab === 'tracking') view = trackingView();
+    else if (ui.tab === 'trends') view = trendsView();
     else view = sessionsView(ui.tab);
 
     const header = h('header', { class: 'top' },
@@ -831,6 +829,32 @@
      ========================================================== */
   const mechKey = (m) => m.trim().toLowerCase();
 
+  // Options for the mechanic dropdowns: the list kept in Settings, plus any mechanic already used in your history.
+  function mechanicOptions() {
+    const seen = new Set();
+    const out = [];
+    const add = (m) => {
+      const v = (m || '').trim();
+      if (v && !seen.has(mechKey(v))) { seen.add(mechKey(v)); out.push(v); }
+    };
+    session.data.mechanics.forEach(add);
+    session.data.protocols.forEach((p) => add(p.mechanic));
+    session.data.technique.forEach((r) => add(r.mechanics));
+    return out;
+  }
+  function mechanicSelect(obj, key, onChange) {
+    const opts = mechanicOptions();
+    const sel = h('select', { 'aria-label': 'Mechanic' },
+      h('option', { value: '', text: opts.length ? 'Choose a mechanic' : 'No mechanics added yet' }),
+      opts.map((m) => h('option', { value: m, text: m })));
+    sel.value = obj[key] || '';
+    sel.addEventListener('change', () => { obj[key] = sel.value; if (onChange) onChange(); });
+    return sel;
+  }
+  const mechanicHint = () => (mechanicOptions().length ? null : h('p', { class: 'hint' },
+    'Add the mechanics you work on in Settings first. ',
+    h('button', { type: 'button', class: 'link', text: 'Open Settings', onclick: () => { ui.tab = 'settings'; renderApp(true); } })));
+
   function progressByMechanic() {
     const map = new Map();
     for (const p of session.data.protocols) {
@@ -851,10 +875,21 @@
   function freshProtocol() {
     return { id: null, date: today(), mechanic: '', target: '', start: 0, startTouched: false, items: [], notes: '', next: '', timer: { base: 0, startedAt: null } };
   }
+  // Spread `total` minutes across blocks in proportion to the 30-minute plan, in whole minutes.
+  function scaleMinutes(bases, total) {
+    const sum = bases.reduce((a, b) => a + b, 0);
+    const raw = bases.map((b) => (b * total) / sum);
+    const out = raw.map(Math.floor);
+    let rem = total - out.reduce((a, b) => a + b, 0);
+    const order = raw.map((r, i) => [r - Math.floor(r), i]).sort((a, b) => b[0] - a[0]);
+    for (let k = 0; rem > 0; k += 1, rem -= 1) out[order[k % order.length][1]] += 1;
+    return out;
+  }
   function buildProtocol(start, len) {
-    const scale = (len || 30) / 30;
-    return PROTO_PLANS[start].map(([st, base]) => {
-      const minutes = base * scale;
+    const plan = PROTO_PLANS[start];
+    const mins = scaleMinutes(plan.map((p) => p[1]), len || 30);
+    return plan.map(([st], idx) => {
+      const minutes = mins[idx];
       const def = st === -1 ? SET_BLOCK : st === 5 ? REFINE_BLOCK : STAGES[st];
       const cat = st === -1 ? 'Diagnose' : st === 5 ? 'Refine' : 'Stage ' + (st + 1) + ' of 5';
       return { id: uid(), cat, name: def.name, how: def.how, minutes, stage: st, rounds: 0, passed: false, score: null, notes: '' };
@@ -930,37 +965,107 @@
     return svg;
   }
 
-  function trackingView() {
-    const rows = techniqueHours();
-    const total = rows.reduce((a, r) => a + r.hours, 0);
-    if (!rows.length) {
-      return h('section', { class: 'stack' },
-        h('h2', { text: 'Technique tracking' }),
-        h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
+  // Share of balls that hit, for the items that pass `filter`. Older sessions scored out of 10 count as a share of 10.
+  function hitShare(items, filter) {
+    let hit = 0;
+    let total = 0;
+    for (const it of items) {
+      if (it.score == null || (filter && !filter(it))) continue;
+      if (it.unit === 'points' && it.balls && it.max) { hit += (it.score * it.balls) / it.max; total += it.balls; } // points game counts as its ball equivalent
+      else { hit += it.score; total += it.max == null ? 10 : it.max; }
     }
-    const legend = [['rd', 'Under 10 hours'], ['am', '10 to 15 hours'], ['lg', '15 to 20 hours'], ['dg', 'Over 20 hours: Course Ready']];
-    return h('section', { class: 'stack' },
-      h('h2', { text: 'Technique tracking' }),
-      h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
-      h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
-      trackingChart(rows),
-      h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, 30 minutes or 1 hour. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }));
+    return total ? { hit, total, pct: (hit / total) * 100 } : null;
   }
 
-  // Slider between a 30 minute and a 1 hour session. Changing it rebuilds an unsaved plan with fewer or more drills.
-  function lengthControl(kind, onChange) {
-    const val = ui.len[kind];
-    const left = h('span', { class: 'len-label' + (val === 30 ? ' on' : ''), text: '30 minutes' });
-    const right = h('span', { class: 'len-label' + (val === 60 ? ' on' : ''), text: '1 hour' });
-    const range = h('input', { type: 'range', min: 0, max: 1, step: 1, 'aria-label': 'Session length: 30 minutes or 1 hour' });
-    range.value = val === 60 ? '1' : '0';
-    range.addEventListener('input', () => {
-      const v = range.value === '1' ? 60 : 30;
-      left.classList.toggle('on', v === 30);
-      right.classList.toggle('on', v === 60);
+  // Line chart of a hit rate (0 to 100 percent) over your sessions, oldest to newest.
+  function progressChart(dates, series, label) {
+    const W = 320, H = 170, L = 30, R = 8, T = 8, B = 24;
+    const x = (i) => L + (dates.length === 1 ? 0 : (i * (W - L - R)) / (dates.length - 1));
+    const y = (v) => T + ((100 - v) * (H - T - B)) / 100;
+    const svg = s('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart', role: 'img', 'aria-label': label });
+    [0, 50, 100].forEach((v) => {
+      svg.append(s('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' }),
+        s('text', { x: L - 4, y: y(v) + 3, class: 'axis', 'text-anchor': 'end' }, v + '%'));
     });
-    range.addEventListener('change', () => onChange(range.value === '1' ? 60 : 30));
-    return h('div', { class: 'length' }, left, range, right);
+    series.forEach((sr, si) => {
+      const pts = sr.vals.map((v, i) => (v == null ? null : { x: x(i), y: y(v) })).filter(Boolean);
+      if (pts.length > 1) svg.append(s('polyline', { points: pts.map((q) => q.x.toFixed(1) + ',' + q.y.toFixed(1)).join(' '), class: 'line l' + si }));
+      pts.forEach((q) => svg.append(s('circle', { cx: q.x.toFixed(1), cy: q.y.toFixed(1), r: 3, class: 'pt l' + si })));
+    });
+    svg.append(s('text', { x: L, y: H - 8, class: 'axis' }, shortDate(dates[0])),
+      s('text', { x: W - R, y: H - 8, class: 'axis', 'text-anchor': 'end' }, shortDate(dates[dates.length - 1])));
+    return svg;
+  }
+
+  // One trend block: chart plus a line per series with the latest and best hit rate.
+  function trendBlock(title, sessions, seriesDefs, emptyText) {
+    const sorted = [...sessions].sort((a, b) => a.date.localeCompare(b.date)).slice(-20);
+    const series = seriesDefs.map((def) => {
+      const vals = sorted.map((rec) => {
+        const r = hitShare(rec.items, def.filter);
+        return r ? r.pct : null;
+      });
+      return { name: def.name, vals };
+    });
+    const has = series.some((sr) => sr.vals.some((v) => v != null));
+    if (!has) return h('div', { class: 'stack' }, h('h3', { text: title }), h('p', { class: 'empty', text: emptyText }));
+    const rows = series.map((sr, si) => {
+      const got = sr.vals.filter((v) => v != null);
+      if (!got.length) return null;
+      const latest = got[got.length - 1];
+      const best = Math.max(...got);
+      return h('li', null, h('span', { class: 'swatch l' + si }), sr.name + ': ' + Math.round(latest) + '% latest, ' + Math.round(best) + '% best');
+    });
+    return h('div', { class: 'stack' },
+      h('h3', { text: title }),
+      sorted.length > 1
+        ? progressChart(sorted.map((r) => r.date), series, title + '. ' + series.map((sr) => sr.name + ' latest ' + Math.round(sr.vals.filter((v) => v != null).slice(-1)[0] || 0) + ' percent').join('. '))
+        : h('p', { class: 'hint', text: 'Log two or more sessions to see a line over time.' }),
+      h('ul', { class: 'legend' }, rows));
+  }
+
+  function trendsView() {
+    const rows = techniqueHours();
+    const total = rows.reduce((a, r) => a + r.hours, 0);
+    const legend = [['rd', 'Under 10 hours'], ['am', '10 to 15 hours'], ['lg', '15 to 20 hours'], ['dg', 'Over 20 hours: Course Ready']];
+    const hours = rows.length
+      ? h('div', { class: 'stack' },
+        h('h3', { text: 'Technique hours' }),
+        h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
+        h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
+        trackingChart(rows),
+        h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }))
+      : h('div', { class: 'stack' }, h('h3', { text: 'Technique hours' }),
+        h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
+
+    const calSeries = Object.keys(CAL).map((c) => ({ name: c, filter: (it) => it.cat === c }));
+    return h('section', { class: 'stack' },
+      h('h2', { text: 'Practice trends' }),
+      hours,
+      trendBlock('Calibration progress', session.data.calibration, calSeries, 'No calibration sessions scored yet. Your hit rate for each category appears here, as balls hit out of balls played.'),
+      trendBlock('Transfer progress', session.data.transfer, [
+        { name: 'All games', filter: null },
+        { name: ANCHOR, filter: (it) => it.name === ANCHOR }
+      ], 'No transfer sessions scored yet. Your hit rate appears here, as balls hit out of balls played.'),
+      h('p', { class: 'hint', text: 'Calibration and transfer progress is the share of balls that hit. Sessions scored out of 10 before this change count as a share of 10.' }));
+  }
+
+  const lenText = (n) => (n === 60 ? '1 hour' : n + ' minutes');
+  const lenWord = (n) => ({ 30: 'Thirty minutes', 40: 'Forty minutes', 50: 'Fifty minutes', 60: 'An hour' })[n] || n + ' minutes';
+  const lenLabel = (n) => (n === 60 ? '1-hour' : n + '-minute');
+  const NUMWORD = { 3: 'three', 4: 'four', 5: 'five', 6: 'six' };
+
+  // Slider from 30 minutes to 1 hour in 10 minute steps. Changing it rebuilds an unsaved plan with more or fewer drills.
+  function lengthControl(kind, onChange) {
+    const out = h('output', { class: 'len-out', text: lenText(ui.len[kind]) });
+    const range = h('input', { type: 'range', min: 30, max: 60, step: 10, 'aria-label': 'Session length' });
+    range.value = String(ui.len[kind]);
+    range.addEventListener('input', () => { out.textContent = lenText(Number(range.value)); });
+    range.addEventListener('change', () => onChange(Number(range.value)));
+    return h('div', { class: 'length' },
+      h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Session length' }), out),
+      range,
+      h('div', { class: 'len-ticks', 'aria-hidden': 'true' }, ['30', '40', '50', '60'].map((x) => h('span', { text: x }))));
   }
   function setTechniqueLength(len) {
     const d = drafts.protocol;
@@ -994,7 +1099,6 @@
 
   function protocolSetup(d) {
     const known = () => progressByMechanic().some((e) => mechKey(e.name) === mechKey(d.mechanic));
-    const mech = h('input', { type: 'text', maxlength: 200, list: 'mech-list', autocomplete: 'off', placeholder: 'For example: backswing turn', value: d.mechanic });
     const sel = h('select', null, STAGE_NAMES.map((n, i) => h('option', { value: String(i), text: n })));
     sel.value = String(d.start);
     const hint = h('p', { class: 'hint' });
@@ -1003,8 +1107,7 @@
         ? 'Suggested start: ' + STAGE_NAMES[suggestedStart(d.mechanic)] + ', based on your progress. Change it to repeat an earlier stage.'
         : 'New mechanic, so the suggested start is No club.';
     }
-    mech.addEventListener('input', () => {
-      d.mechanic = mech.value;
+    const mech = mechanicSelect(d, 'mechanic', () => {
       if (!d.startTouched) { d.start = suggestedStart(d.mechanic); sel.value = String(d.start); }
       updateHint();
     });
@@ -1012,19 +1115,19 @@
     updateHint();
 
     return h('div', { class: 'stack' },
-      h('p', { class: 'lead', text: 'Thirty minutes to change one mechanic. You move from no club to freezer swings, smoothie swings, a foam ball and then real balls, with five good swings in a row at each stage.' }),
+      h('p', { class: 'lead', text: lenWord(ui.len.technique) + ' to change one mechanic. You move from no club to freezer swings, smoothie swings, a foam ball and then real balls, with five good swings in a row at each stage.' }),
       h('p', { class: 'hint', text: 'The goal is to change your pattern, not to hit good shots. Film yourself to check each swing hits the position. If one is wrong, start that set of five again.' }),
       progressBlock(),
-      h('datalist', { id: 'mech-list' }, progressByMechanic().map((e) => h('option', { value: e.name }))),
       field('Date', dateInput(d)),
       field('Mechanic I am working on', mech),
+      mechanicHint(),
       field('Position I am aiming for', textInput(d, 'target', 500, 'For example: lead wrist flat at the top')),
       field('Start at', sel),
       hint,
       h('button', {
-        type: 'button', class: 'primary', text: 'Generate ' + (ui.len.technique === 60 ? '1-hour' : '30-minute') + ' protocol',
+        type: 'button', class: 'primary', text: 'Generate ' + lenLabel(ui.len.technique) + ' protocol',
         onclick: () => {
-          if (!d.mechanic.trim()) { toast('Add the mechanic you are working on'); return; }
+          if (!d.mechanic.trim()) { toast('Choose the mechanic you are working on'); return; }
           d.items = buildProtocol(d.start, ui.len.technique);
           d.len = ui.len.technique;
           d.timer = { base: 0, startedAt: null };
@@ -1121,7 +1224,8 @@
     return h('div', { class: 'stack' },
       d.id ? h('p', { class: 'banner', text: 'Editing an earlier entry' }) : null,
       field('Date', dateInput(d)),
-      field('Mechanics I worked on', textInput(d, 'mechanics', 200, 'For example: shallower lead wrist at the top')),
+      field('Mechanics I worked on', mechanicSelect(d, 'mechanics')),
+      mechanicHint(),
       field('How the practice went', textArea(d, 'notes', 5, 3000)),
       field('How to improve the next practice', textArea(d, 'improve', 5, 3000)),
       h('div', { class: 'actions' },
@@ -1171,7 +1275,7 @@
   /* ==========================================================
      Sections 2 and 3: timed sessions
      ========================================================== */
-  const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, score: null, passed: false, notes: '' });
+  const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, max: x.pointsMax || x.balls, unit: x.pointsMax ? 'points' : 'balls', balls: x.balls, score: null, passed: false, notes: '' });
 
   // Names of games used in your two most recent sessions, so a new plan avoids repeating them.
   function recentNames(kind) {
@@ -1179,17 +1283,27 @@
   }
 
   function genCalibration(len) {
-    const per = (len || 30) / 30; // 1 game per category for 30 minutes, 2 for one hour
+    const n = Math.max(3, Math.round((len || 30) / CAL_BLOCK_MINUTES)); // 3 games for 30 minutes up to 6 for one hour
+    const cats = Object.keys(CAL);
+    const used = {};
+    const counts = {};
+    cats.forEach((c) => { used[c] = 0; counts[c] = 1; });
+    session.data.calibration.forEach((r) => r.items.forEach((i) => { if (i.cat in used) used[i.cat] += 1; }));
+    // Any extra games go to the category you have practised least so far.
+    for (let e = n - cats.length; e > 0; e -= 1) {
+      const c = cats.slice().sort((a, b) => (used[a] + counts[a]) - (used[b] + counts[b]))[0];
+      counts[c] += 1;
+    }
     const seen = recentNames('calibration');
     const out = [];
-    for (const c of Object.keys(CAL)) {
+    for (const c of cats) {
       const fresh = CAL[c].filter((g) => !seen.has(g.name));
-      shuffle(fresh.length >= per ? fresh : CAL[c]).slice(0, per).forEach((g) => out.push(mkItem(g, c, CAL_BLOCK_MINUTES)));
+      shuffle(fresh.length >= counts[c] ? fresh : CAL[c]).slice(0, counts[c]).forEach((g) => out.push(mkItem(g, c, CAL_BLOCK_MINUTES)));
     }
     return out;
   }
   function genTransfer(len) {
-    const n = (len || 30) / TRANSFER_BLOCK_MINUTES; // 3 games for 30 minutes, 6 for one hour
+    const n = Math.max(3, Math.round((len || 30) / TRANSFER_BLOCK_MINUTES)); // 3 games for 30 minutes up to 6 for one hour
     const anchor = TRANSFER.find((g) => g.name === ANCHOR);
     const seen = recentNames('transfer');
     let pool = TRANSFER.filter((g) => g.name !== ANCHOR && !seen.has(g.name));
@@ -1201,11 +1315,11 @@
   const META = {
     calibration: {
       title: 'Calibration practice', unit: 'drill', gen: genCalibration,
-      intro: (len) => (len === 60 ? 'An hour' : 'Thirty minutes') + ' of structured calibration: ' + (len === 60 ? 'six ten-minute games, two each' : 'three ten-minute games, one each') + ' for face strike, low point and clubface direction. You never change club or target. Instead the part of the face you strike, your contact, your shot shape and your start line step through a fixed order and then switch from ball to ball. Every game is 15 balls or fewer. Score each game out of 10.'
+      intro: (len) => lenWord(len) + ' of structured calibration: ' + NUMWORD[len / 10] + ' ten-minute games across face strike, low point and clubface direction. You never change club or target. Instead the part of the face you strike, your contact, your shot shape and your start line step through a fixed order and then switch from ball to ball. Every game is 15 balls or fewer, and your score is the number of balls that hit what the game asks for.'
     },
     transfer: {
       title: 'Transfer training', unit: 'test', gen: genTransfer,
-      intro: (len) => (len === 60 ? 'An hour' : 'Thirty minutes') + ' of course-style games you can play at a driving range: ' + (len === 60 ? 'six' : 'three') + ' ten-minute games drawn from seventeen. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Score each game out of 10 and tick Passed when you meet its pass mark.'
+      intro: (len) => lenWord(len) + ' of course-style games you can play at a driving range: ' + NUMWORD[len / 10] + ' ten-minute games drawn from seventeen. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Your score is the number of balls that hit (Range Stableford, Three targets, Infinity levels, Two-ball test and Weakest link are scored in points instead), and you tick Passed when you reach the pass mark.'
     }
   };
 
@@ -1225,7 +1339,7 @@
       return h('div', { class: 'stack' },
         h('p', { class: 'lead', text: meta.intro(ui.len[kind]) }),
         h('button', {
-          type: 'button', class: 'primary', text: 'Generate ' + (ui.len[kind] === 60 ? '1-hour' : '30-minute') + ' session',
+          type: 'button', class: 'primary', text: 'Generate ' + lenLabel(ui.len[kind]) + ' session',
           onclick: () => { const len = ui.len[kind]; drafts[kind] = { id: null, date: today(), items: meta.gen(len), timer: { base: 0, startedAt: null }, len }; renderApp(); }
         }));
     }
@@ -1233,10 +1347,13 @@
   }
 
   function itemCard(kind, item, i) {
-    const out = h('output', { class: 'score-out', text: item.score == null ? 'Not scored' : item.score + ' / 10' });
-    const range = h('input', { type: 'range', min: 0, max: 10, step: 1, 'aria-label': 'Score for ' + item.name });
-    range.value = item.score == null ? 5 : item.score;
-    range.addEventListener('input', () => { item.score = Number(range.value); out.textContent = item.score + ' / 10'; });
+    const total = item.max == null ? 10 : item.max; // older sessions were scored out of 10
+    const points = item.unit === 'points';
+    const unit = item.max == null ? ' / 10' : ' of ' + total + (points ? ' points' : ' balls');
+    const out = h('output', { class: 'score-out', text: item.score == null ? 'Not scored' : item.score + unit });
+    const range = h('input', { type: 'range', min: 0, max: total, step: 1, 'aria-label': (points ? 'Points scored in ' : 'Balls hit in ') + item.name });
+    range.value = item.score == null ? 0 : item.score;
+    range.addEventListener('input', () => { item.score = Number(range.value); out.textContent = item.score + unit; });
 
     let passed = null;
     if (kind === 'transfer') {
@@ -1343,7 +1460,7 @@
       upsert(session.data[kind], {
         id: d.id || uid(),
         date: isDate(d.date) ? d.date : today(),
-        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, score: i.score, passed: !!i.passed, notes: i.notes.trim() }))
+        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, max: i.max, unit: i.unit, balls: i.balls, score: i.score, passed: !!i.passed, notes: i.notes.trim() }))
       });
       await persist();
       drafts[kind] = null;
@@ -1375,58 +1492,37 @@
         h('button', { type: 'button', class: 'ghost', text: editing ? 'Cancel edit' : 'Discard', onclick: discard })));
   }
 
+  const itemMax = (it) => (it.max == null ? 10 : it.max);
+
   function sessionSummary(kind, rec) {
     const scored = rec.items.filter((i) => i.score != null);
     if (!scored.length) return 'No scores';
-    if (kind === 'calibration') return 'Average ' + avgArr(scored.map((i) => i.score)).toFixed(1);
-    const pts = scored.reduce((a, i) => a + i.score, 0);
+    const hit = scored.reduce((a, i) => a + i.score, 0);
+    const total = scored.reduce((a, i) => a + itemMax(i), 0);
+    const pct = Math.round((hit / total) * 100);
     const passed = rec.items.filter((i) => i.passed).length;
-    return pts + ' of ' + rec.items.length * 10 + ' points, ' + passed + ' of ' + rec.items.length + ' passed';
+    const hasPoints = scored.some((i) => i.unit === 'points');
+    const base = scored.every((i) => i.max == null) ? 'Average ' + avgArr(scored.map((i) => i.score)).toFixed(1) + ' / 10'
+      : hasPoints ? pct + '% overall' : hit + ' of ' + total + ' balls, ' + pct + '%';
+    return kind === 'transfer' ? base + ', ' + passed + ' of ' + rec.items.length + ' passed' : base;
   }
 
   function sessionHistory(kind) {
     const list = [...session.data[kind]].sort(byDateDesc);
     if (!list.length) return h('p', { class: 'empty', text: 'No sessions yet. Generate your first one under New session.' });
     const nodes = [];
-    if (kind === 'calibration') nodes.push(chartBlock(session.data.calibration));
     list.forEach((rec) => {
       nodes.push(entryShell(
         [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: sessionSummary(kind, rec) })],
         rec.items.map((it) => h('div', { class: 'hist-item' },
           h('strong', { text: it.name }),
           h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
-          h('p', { text: it.score == null ? 'Not scored' : 'Score ' + it.score + ' / 10' + (kind === 'transfer' ? (it.passed ? ', passed' : ', not passed') : '') }),
+          h('p', { text: it.score == null ? 'Not scored' : (it.max == null ? 'Score ' + it.score + ' / 10' : it.score + ' of ' + it.max + (it.unit === 'points' ? ' points' : ' balls')) + (kind === 'transfer' ? (it.passed ? ', passed' : ', not passed') : '') }),
           it.notes ? h('p', { class: 'notes', text: it.notes }) : null)),
         () => { drafts[kind] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
         () => removeRecord(kind, rec.id)));
     });
     return h('div', null, nodes);
-  }
-
-  function chartBlock(sessions) {
-    const sorted = [...sessions].sort((a, b) => a.date.localeCompare(b.date)).slice(-20);
-    if (sorted.length < 2) return h('p', { class: 'hint', text: 'Log two or more sessions to see your trend by category.' });
-    const cats = Object.keys(CAL);
-    const W = 320, H = 170, L = 24, R = 8, T = 8, B = 24;
-    const x = (i) => L + i * (W - L - R) / (sorted.length - 1);
-    const y = (v) => T + (10 - v) * (H - T - B) / 10;
-    const svg = s('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart', role: 'img', 'aria-label': 'Average score for each category across your calibration sessions' });
-    [0, 5, 10].forEach((v) => {
-      svg.append(s('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' }),
-        s('text', { x: L - 4, y: y(v) + 3, class: 'axis', 'text-anchor': 'end' }, String(v)));
-    });
-    cats.forEach((c, ci) => {
-      const pts = sorted.map((rec, i) => {
-        const sc = rec.items.filter((it) => it.cat === c && it.score != null).map((it) => it.score);
-        return sc.length ? { x: x(i), y: y(avgArr(sc)) } : null;
-      }).filter(Boolean);
-      if (pts.length > 1) svg.append(s('polyline', { points: pts.map((p) => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' '), class: 'line l' + ci }));
-      pts.forEach((p) => svg.append(s('circle', { cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: 3, class: 'pt l' + ci })));
-    });
-    svg.append(s('text', { x: L, y: H - 8, class: 'axis' }, shortDate(sorted[0].date)),
-      s('text', { x: W - R, y: H - 8, class: 'axis', 'text-anchor': 'end' }, shortDate(sorted[sorted.length - 1].date)));
-    return h('div', null, svg,
-      h('ul', { class: 'legend' }, cats.map((c, ci) => h('li', null, h('span', { class: 'swatch l' + ci }), c))));
   }
 
   /* ==========================================================
@@ -1526,8 +1622,44 @@
       pwBtn.disabled = false;
     });
 
+    // Mechanic options
+    const mechInput = h('input', { type: 'text', maxlength: 200, placeholder: 'For example: lead wrist flat at the top', 'aria-label': 'New mechanic' });
+    const mechMsg = status();
+    const mechList = h('ul', { class: 'mech-list' });
+    function paintMechanics() {
+      const list = session.data.mechanics;
+      mechList.replaceChildren(...(list.length
+        ? list.map((m) => h('li', null,
+          h('span', { text: m }),
+          h('button', {
+            type: 'button', class: 'ghost', text: 'Remove', 'aria-label': 'Remove ' + m,
+            onclick: async () => { session.data.mechanics = session.data.mechanics.filter((x) => x !== m); await persist(); paintMechanics(); }
+          })))
+        : [h('li', { class: 'empty', text: 'No mechanics added yet.' })]));
+    }
+    async function addMechanic() {
+      mechMsg.className = 'msg';
+      const v = mechInput.value.trim();
+      if (!v) { mechMsg.textContent = 'Type a mechanic first.'; return; }
+      if (session.data.mechanics.length >= 100) { mechMsg.textContent = 'You can keep up to 100 mechanics.'; return; }
+      if (session.data.mechanics.some((m) => m.toLowerCase() === v.toLowerCase())) { mechMsg.textContent = 'That mechanic is already in the list.'; return; }
+      session.data.mechanics.push(v);
+      await persist();
+      mechInput.value = '';
+      mechMsg.className = 'msg ok';
+      mechMsg.textContent = 'Added.';
+      paintMechanics();
+    }
+    paintMechanics();
+
     return h('section', { class: 'stack' },
       h('h2', { text: 'Settings' }),
+      h('div', { class: 'panel' },
+        h('h3', { text: 'Mechanic options' }),
+        h('p', { text: 'These fill the Mechanic dropdown on the Technique tab, so every session is logged under the same name and your trends stay consistent. Removing an option does not change past sessions.' }),
+        mechInput,
+        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', text: 'Add mechanic', onclick: addMechanic })),
+        mechMsg, mechList),
       h('div', { class: 'panel' },
         h('h3', { text: 'Back up' }),
         h('p', { text: 'Saves an encrypted copy of your log. On iPhone, choose Save to Files and pick iCloud Drive. It can only be opened with your passphrase, so it is safe to keep in cloud storage.' }),
