@@ -442,15 +442,21 @@ input[type="checkbox"]:checked {
 
 /* Tempo: dial, beats and the swing bar */
 .tempo-card { display: grid; gap: 12px; justify-items: center; text-align: center; }
-.dial { width: min(100%, 300px); height: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
-.dial:focus-visible { outline-offset: 4px; border-radius: 50%; }
-.dial-track { fill: none; stroke: var(--fill2); stroke-width: 14; stroke-linecap: round; }
-.dial-value { fill: none; stroke: var(--a-tempo); stroke-width: 14; stroke-linecap: round; }
-.dial-knob { fill: #ffffff; stroke: var(--a-tempo); stroke-width: 3; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25)); }
-.dial-bpm { fill: var(--label); font: 700 56px var(--font); text-anchor: middle; letter-spacing: -0.03em; }
-.dial-sub { fill: var(--label2); font: 600 13px var(--font); text-anchor: middle; letter-spacing: 0.08em; }
-.dial-tick { stroke: var(--label3); stroke-width: 2; stroke-linecap: round; }
-.dial-tick-label { fill: var(--label2); font: 600 9px var(--font); text-anchor: middle; }
+.dial { width: 100%; max-width: 380px; height: auto; margin: 0 auto; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.dial:active { cursor: grabbing; }
+.dial:focus-visible { outline-offset: 4px; border-radius: 12px; }
+.dial-scale { stroke: var(--label3); stroke-width: 1.6; stroke-linecap: round; }
+.dial-scale.major { stroke: var(--label2); stroke-width: 2.4; }
+.dial-scale.lit { stroke: var(--a-tempo); }
+.dial-num { fill: var(--label2); font: 600 11px var(--font); text-anchor: middle; }
+.dial-preset { fill: none; stroke: var(--a-tempo); stroke-width: 2; }
+.dial-preset.on { fill: var(--a-tempo); }
+.dial-shadow { opacity: 0.28; filter: blur(5px); }
+.dial-ridge { stroke: rgba(255, 255, 255, 0.2); stroke-width: 2.2; stroke-linecap: round; }
+.dial-rim { fill: none; stroke: rgba(255, 255, 255, 0.28); stroke-width: 1.5; }
+.dial-pointer { stroke: var(--a-tempo); stroke-width: 6; stroke-linecap: round; }
+.dial-bpm { fill: #ffffff; font: 700 54px var(--font); text-anchor: middle; letter-spacing: -0.03em; }
+.dial-sub { fill: rgba(255, 255, 255, 0.6); font: 600 13px var(--font); text-anchor: middle; letter-spacing: 0.08em; }
 .tempo-time { font-weight: 600; }
 .beats { display: flex; justify-content: space-around; margin-bottom: 12px; }
 .beat-col { display: grid; justify-items: center; gap: 6px; }

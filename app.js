@@ -1807,7 +1807,7 @@
      Tempo: a metronome with a dial, beat visuals and a log
      ========================================================== */
   const FPS = 30; // backswing and downswing are counted in frames of video at 30 per second
-  const BPM_MIN = 40;
+  const BPM_MIN = 80;
   const BPM_MAX = 300;
   // Backswing : downswing. Frames are backswing/downswing, slowest first. The speed is not limited to these.
   const TEMPO = {
@@ -2010,17 +2010,47 @@
 
   function metronome() {
     const st = ui.tempo;
-    const CX = 130; const CY = 130; const R = 90;
+    // The dial is a rotary knob like the one on a stereo: a knurled knob that turns, a pointer, and a printed scale around it.
+    const CX = 170; const CY = 172; const KR = 112; const CAP = 68; const VB_W = 340;
     const angleOf = (b) => -135 + ((b - BPM_MIN) / (BPM_MAX - BPM_MIN)) * 270;
-    const bpmOf = (deg) => Math.round(BPM_MIN + ((Math.min(135, Math.max(-135, deg)) + 135) / 270) * (BPM_MAX - BPM_MIN));
+    const bpmAt = (deg) => BPM_MIN + ((Math.min(135, Math.max(-135, deg)) + 135) / 270) * (BPM_MAX - BPM_MIN);
 
-    // dial
-    const svg = s('svg', { viewBox: '-26 -24 312 286', class: 'dial', role: 'slider', tabindex: 0, 'aria-label': 'Tempo in beats per minute', 'aria-valuemin': BPM_MIN, 'aria-valuemax': BPM_MAX });
-    const valueArc = s('path', { class: 'dial-value' });
-    const ticks = s('g', null);
-    const knob = s('circle', { class: 'dial-knob', r: 15 });
-    const bpmText = s('text', { class: 'dial-bpm', x: CX, y: CY + 14 });
-    svg.append(s('path', { class: 'dial-track', d: arcPath(CX, CY, R, -135, 135) }), valueArc, ticks, knob, bpmText, s('text', { class: 'dial-sub', x: CX, y: CY + 38 }, 'BPM'));
+    const svg = s('svg', { viewBox: '0 0 340 300', class: 'dial', role: 'slider', tabindex: 0, 'aria-label': 'Tempo in beats per minute', 'aria-valuemin': BPM_MIN, 'aria-valuemax': BPM_MAX });
+    const grad = (id, stops, extra) => s('radialGradient', { id, ...extra }, ...stops.map(([o, c]) => s('stop', { offset: o, 'stop-color': c })));
+    svg.append(s('defs', null,
+      grad('dial-body', [['0', '#5b5b61'], ['0.55', '#2c2c30'], ['1', '#161618']], { cx: '0.38', cy: '0.3', r: '0.9' }),
+      grad('dial-cap', [['0', '#3a3a3f'], ['1', '#0d0d0f']], { cx: '0.4', cy: '0.3', r: '0.85' })));
+
+    // the printed scale: a mark every 5 BPM, a longer one and a number every 20 BPM; marks light up as the knob passes them
+    const scale = [];
+    for (let b = BPM_MIN; b <= BPM_MAX; b += 5) {
+      const a = angleOf(b);
+      const major = (b - BPM_MIN) % 20 === 0;
+      const [x0, y0] = polar(CX, CY, KR + 10, a);
+      const [x1, y1] = polar(CX, CY, KR + (major ? 24 : 18), a);
+      const line = s('line', { class: 'dial-scale' + (major ? ' major' : ''), x1: x0.toFixed(1), y1: y0.toFixed(1), x2: x1.toFixed(1), y2: y1.toFixed(1) });
+      scale.push([b, line]);
+      svg.append(line);
+      if (major) { const [nx, ny] = polar(CX, CY, KR + 47, a); svg.append(s('text', { class: 'dial-num', x: nx.toFixed(1), y: (ny + 3.5).toFixed(1) }, String(b))); }
+    }
+    let dotEls = [];
+    const presetDots = s('g', null);
+    svg.append(presetDots);
+
+    // the knob: a dark body with a soft shadow, a ring of ridges and a pointer that turn together, and a fixed centre showing the speed
+    svg.append(s('circle', { class: 'dial-shadow', cx: CX, cy: CY + 5, r: KR, fill: '#000' }), s('circle', { cx: CX, cy: CY, r: KR, fill: 'url(#dial-body)' }));
+    const rotor = s('g', null);
+    for (let i = 0; i < 72; i++) {
+      const [x0, y0] = polar(CX, CY, KR - 11, i * 5);
+      const [x1, y1] = polar(CX, CY, KR - 1.5, i * 5);
+      rotor.append(s('line', { class: 'dial-ridge', x1: x0.toFixed(1), y1: y0.toFixed(1), x2: x1.toFixed(1), y2: y1.toFixed(1) }));
+    }
+    rotor.append(s('line', { class: 'dial-pointer', x1: CX, y1: CY - CAP - 6, x2: CX, y2: CY - KR + 14 }));
+    svg.append(rotor,
+      s('circle', { class: 'dial-rim', cx: CX, cy: CY, r: KR - 0.5 }),
+      s('circle', { cx: CX, cy: CY, r: CAP, fill: 'url(#dial-cap)', stroke: 'rgba(255,255,255,0.12)', 'stroke-width': 1.5 }));
+    const bpmText = s('text', { class: 'dial-bpm', x: CX, y: CY + 12 });
+    svg.append(bpmText, s('text', { class: 'dial-sub', x: CX, y: CY + 36 }, 'BPM'));
 
     const timeEl = h('p', { class: 'tempo-time' });
     const matchEl = h('p', { class: 'hint' });
@@ -2029,25 +2059,22 @@
 
     function drawDial() {
       const a = angleOf(st.bpm);
-      valueArc.setAttribute('d', arcPath(CX, CY, R, -135, Math.max(a, -134.5)));
-      const [kx, ky] = polar(CX, CY, R, a);
-      knob.setAttribute('cx', kx.toFixed(1));
-      knob.setAttribute('cy', ky.toFixed(1));
+      rotor.setAttribute('transform', 'rotate(' + a.toFixed(2) + ' ' + CX + ' ' + CY + ')');
+      scale.forEach(([b, line]) => line.classList.toggle('lit', b <= st.bpm + 0.01));
+      dotEls.forEach(([b, d]) => d.classList.toggle('on', Math.abs(b - st.bpm) < 0.01));
       const shown = Math.round(st.bpm);
       bpmText.textContent = String(shown);
       svg.setAttribute('aria-valuenow', String(shown));
       svg.setAttribute('aria-valuetext', shown + ' beats per minute');
     }
-    function drawTicks() {
-      ticks.replaceChildren();
-      TEMPO[st.ratio].frames.forEach(([tot, down], idx) => {
-        const a = angleOf(presetBpm(down));
-        const [x0, y0] = polar(CX, CY, R + 12, a);
-        const [x1, y1] = polar(CX, CY, R + 22, a);
-        const [tx, ty] = polar(CX, CY, R + (idx % 2 ? 46 : 34), a); // every other label sits further out
-        ticks.append(s('line', { class: 'dial-tick', x1: x0.toFixed(1), y1: y0.toFixed(1), x2: x1.toFixed(1), y2: y1.toFixed(1) }),
-          s('text', { class: 'dial-tick-label', x: tx.toFixed(1), y: (ty + 3).toFixed(1) }, tot + '/' + down));
+    function drawTicks() { // a small marker on the scale at each preset speed
+      dotEls = TEMPO[st.ratio].frames.map(([, down]) => {
+        const b = presetBpm(down);
+        const [x, y] = polar(CX, CY, KR + 35, angleOf(b));
+        return [b, s('circle', { class: 'dial-preset', cx: x.toFixed(1), cy: y.toFixed(1), r: 3.6 })];
       });
+      presetDots.replaceChildren(...dotEls.map(([, d]) => d));
+      drawDial();
     }
     function drawChips() {
       chips.replaceChildren(...TEMPO[st.ratio].frames.map(([tot, down]) => h('button', {
@@ -2066,18 +2093,35 @@
       drawDial(); drawChips(); drawReadouts();
     }
 
-    // dragging the dial
-    let lastAngle = null;
-    function fromPointer(e) {
+    // turning the knob: grab it and turn, like a real one, with no jump. A touch on the printed scale outside the knob jumps there.
+    let turn = null;
+    function pointerPos(e) {
       const r = svg.getBoundingClientRect();
-      let deg = (Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180) / Math.PI;
-      deg = Math.min(135, Math.max(-135, deg));
-      if (lastAngle !== null && Math.abs(deg - lastAngle) > 200) return; // ignore a jump across the gap at the bottom
-      lastAngle = deg;
-      setBpm(bpmOf(deg));
+      const k = (r.width || VB_W) / VB_W;
+      const dx = e.clientX - (r.left + CX * k);
+      const dy = e.clientY - (r.top + CY * k);
+      return { deg: (Math.atan2(dx, -dy) * 180) / Math.PI, dist: Math.hypot(dx, dy) / k };
     }
-    svg.addEventListener('pointerdown', (e) => { lastAngle = null; if (svg.setPointerCapture) { try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } } fromPointer(e); e.preventDefault(); });
-    svg.addEventListener('pointermove', (e) => { if (e.buttons || e.pressure > 0) fromPointer(e); });
+    svg.addEventListener('pointerdown', (e) => {
+      if (svg.setPointerCapture) { try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
+      const { deg, dist } = pointerPos(e);
+      if (dist > KR + 6 && dist > CAP) setBpm(Math.round(bpmAt(deg))); // the scale: jump to that speed
+      turn = { prev: deg, angle: angleOf(st.bpm) };
+      e.preventDefault();
+    });
+    svg.addEventListener('pointermove', (e) => {
+      if (!turn || !(e.buttons || e.pressure > 0)) return;
+      const { deg } = pointerPos(e);
+      let d = deg - turn.prev;
+      if (d > 180) d -= 360;
+      if (d < -180) d += 360;
+      turn.prev = deg;
+      turn.angle = Math.min(135, Math.max(-135, turn.angle + d)); // the knob stops at both ends
+      setBpm(Math.round(bpmAt(turn.angle)));
+    });
+    const endTurn = () => { turn = null; };
+    svg.addEventListener('pointerup', endTurn);
+    svg.addEventListener('pointercancel', endTurn);
     svg.addEventListener('keydown', (e) => {
       const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 }[e.key];
       if (step) { setBpm(Math.round(st.bpm) + step); e.preventDefault(); }
@@ -2134,7 +2178,6 @@
         timeEl, matchEl),
       h('div', { class: 'card' },
         h('strong', { text: 'Preset speeds' }),
-        h('p', { class: 'hint', text: 'Tap one to jump to it. Each is written backswing/downswing in frames of video at 30 frames per second, so at 27/9 the top of the backswing comes 27 frames, 0.9 s, after the takeaway. In the long game the impact tone comes a little after one beat from the top, and the rest is as long as the swing.' }),
         chips),
       h('div', { class: 'card stack' },
         h('label', { class: 'check' }, soundCb, 'Sound on'),
