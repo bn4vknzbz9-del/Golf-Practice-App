@@ -471,9 +471,10 @@ input[type="checkbox"]:checked {
 .beat.on { background: var(--a-tempo); transform: scale(1.18); transition: none; }
 .beat-impact.on { background: #34c759; }
 .beat-label { font-size: 13px; font-weight: 600; }
-.tempo-bar { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: 8px 5px; margin: 6px 0 10px; }
-.cell { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; justify-items: center; min-width: 0; } /* a label wider than its box spills over equally on both sides instead of stretching the box */
-.unit { position: relative; width: 100%; height: 40px; border-radius: 10px; overflow: hidden; background: var(--fill2); }
+.tempo-bar { display: flex; align-items: flex-start; gap: 4px; margin: 6px 0 10px; } /* one continuous line */
+.cell { flex: 2 1 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; justify-items: center; min-width: 0; } /* a label wider than its box spills over equally on both sides instead of stretching the box */
+.cell-rest { flex: 1 1 0; } /* the rest box is half the width of a numbered box */
+.unit { position: relative; width: 100%; height: 44px; border-radius: 10px; overflow: hidden; background: var(--fill2); }
 .unit .fill { width: 101%; opacity: 0.75; transform: scaleX(0); transform-origin: left center; will-change: transform; }
 .unit-swing .fill { background: var(--a-tempo); }
 .unit-impact .fill { background: #34c759; }

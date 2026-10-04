@@ -1867,8 +1867,9 @@
   // frames. The fit is within 0.4 ms at those three speeds and is an estimate at the others.
   const TRACK_A = 0.21846; // seconds
   const TRACK_B = 0.26255; // seconds per frame
-  // The cycle is a row of numbered boxes, one per beat. Each tone sounds exactly as its box begins, the soft clicks sound as the
-  // other boxes begin, and each box fills until the next one starts, so what you see, hear and count always agree.
+  // The cycle is a single line of numbered boxes, one per beat, ending in one small box for the rest. Each tone sounds exactly as its
+  // box begins, the soft clicks sound on the other beats, and each box fills until the next one starts, so what you see, hear and
+  // count always agree.
   function tempoCycle(ratio, bpm, rest) {
     const u = 60 / bpm; // one beat: the downswing of the ratio, e.g. 0.3 s at 27/9
     const parts = TEMPO[ratio].parts;
@@ -1888,13 +1889,17 @@
       toneBox = [0, parts, parts + 1]; // takeaway on box 1, top on box 3, impact on box 4
     }
     const total = back + down + pause; // from one takeaway to the next
-    const boxes = starts.map((start, i) => ({
+    const beats = starts.map((start, i) => ({
       start,
       end: i + 1 < starts.length ? starts[i + 1] : total,
       tone: toneBox.indexOf(i) >= 0 ? toneBox.indexOf(i) : null, // 0 takeaway, 1 top, 2 impact
       phase: i < toneBox[2] ? 'swing' : i === toneBox[2] ? 'impact' : 'rest'
     }));
-    return { u, back, down, pause, track, boxes, total };
+    // What is drawn: one numbered box for each beat up to and including the impact box, then a single small unnumbered box
+    // that stands for the whole rest and fills slowly over it.
+    const shown = beats.slice(0, toneBox[2] + 1);
+    shown.push({ start: beats[toneBox[2] + 1].start, end: total, tone: null, phase: 'rest', collapsed: true });
+    return { u, back, down, pause, track, beats, boxes: shown, total };
   }
   function presetMatch(ratio, bpm) {
     const downFrames = (60 / bpm) * FPS;
@@ -1981,7 +1986,7 @@
         beep(e.ctx, cyc.start, TONE_START, 0.1, 0.45); // takeaway
         beep(e.ctx, cyc.start + c.back, TONE_TOP, 0.1, 0.5); // top of the backswing, where the downswing starts: a little higher
         beep(e.ctx, cyc.start + c.back + c.down, TONE_IMPACT, 0.3, 0.9); // impact: a little higher again, and longer and louder to aim the strike at
-        if (st.ticks) c.boxes.forEach((bx, i) => { if (i > 0 && bx.tone === null) beep(e.ctx, cyc.start + bx.start, TONE_CLICK, 0.02, 0.12); }); // an optional soft click as each other box begins
+        if (st.ticks) c.beats.forEach((bx, i) => { if (i > 0 && bx.tone === null) beep(e.ctx, cyc.start + bx.start, TONE_CLICK, 0.02, 0.12); }); // an optional soft click on every beat that has no tone, through the rest as well
       }
       e.queue.push(cyc);
       if (e.queue.length > 6) e.queue.shift();
@@ -2199,11 +2204,13 @@
       const els = c.boxes.map((bx, i) => {
         const f = h('span', { class: 'fill' });
         cells.push(f);
+        if (bx.collapsed) { // the rest: one box half the size, no number, filling slowly
+          return h('div', { class: 'cell cell-rest' }, h('span', { class: 'unit unit-rest' }, f), h('span', { class: 'cell-label' })); // no label: the Impact label beside it needs the room
+        }
         return h('div', { class: 'cell' },
           h('span', { class: 'unit unit-' + bx.phase + (bx.tone !== null ? ' unit-tone tone-' + bx.tone : '') }, f, h('span', { class: 'unit-n', text: String(i + 1) })),
           h('span', { class: 'cell-label' + (bx.tone !== null ? ' tone-' + bx.tone : ''), text: bx.tone !== null ? beatLabels[bx.tone] : '' }));
       });
-      bar.style.setProperty('--cols', String(c.boxes.length > 8 ? 6 : 4)); // 12 boxes in two rows of 6, 7 boxes in rows of 4
       bar.replaceChildren(...els);
       if (tempoEngine.viz) tempoEngine.viz.cells = cells;
     }
