@@ -42,18 +42,20 @@ If you want to judge a width by eye, each calibration and transfer session has a
 
 Each calibration and transfer session shows its average score as a percentage of the maximum. Every drill is scored against its own maximum (balls hit, or points for the games scored in points), and the drills in a session are averaged. Practice trends charts that percentage over time for each calibration category and for all drills, and for transfer by game type (Course simulation, Pressure game and Scoring game), for the new-move game and for all games. The charts are line charts over your sessions, oldest to newest.
 
-## Who can use the app (invite codes)
+## Who can use the app (access phrase)
 
-The app is by invitation. A visitor sees only an invite screen. The app itself (`app.js`) is not loaded until a valid invite code has been entered on that device, and each person gets their own code.
+The app is private. A visitor sees only a phrase screen. The app itself (`app.js`) is not loaded until the access phrase has been entered on that phone. There is one phrase for everyone you let in, which makes it easy to keep track of. It never expires.
 
 - **Files:** `index.html`, `access-core.js`, `gate.js`, `access.json`, `admin.html`, `admin.js`, `app.js` and `styles.css` all go in the repository root.
-- **First code:** `access.json` ships with one invite for you (the owner). Its code was given to you separately. `access.json` holds only a salted hash of each code, never the code, so it is safe in a public repository.
-- **Add someone:** open `https://<you>.github.io/<repo>/admin.html`, paste your current `access.json`, type their name, tap Make an invite code, send them the code, then copy the new `access.json` back into GitHub (open the file, tap the pencil, replace everything, commit).
-- **Remove someone:** open the same page, paste the current `access.json`, tap Remove next to their name, and save the new file the same way. Their app stops opening the next time they open it online. It can take about ten minutes for GitHub to publish the change. Anything they already have open keeps working until they reload, and their saved log stays on their phone but they can no longer open the app.
-- **No signal:** an invite that was valid at its last check keeps working for 30 days without a connection.
-- **Wrong guesses:** three wrong codes in a row make the screen wait, and each code has 60 bits of randomness, so guessing is not practical.
+- **The phrase:** four short words such as `zezi-mati-nuro-lego`. Capital letters, spaces and dashes do not matter when it is typed. `access.json` holds only a salted hash of the phrase, never the phrase, so it is safe in a public repository.
+- **Give someone access:** send them the phrase. Each phone remembers it after the first time.
+- **Lock someone out, or change the phrase:** open `https://<you>.github.io/<repo>/admin.html`, tap Suggest a phrase, tap Make access.json, copy the file into GitHub (open `access.json`, tap the pencil, replace everything, commit) and send the new phrase to the people you still want. Everyone else is stopped the next time they open the app online. GitHub can take about ten minutes to publish the change. Saved logs stay on their phones, but they cannot open the app without the phrase.
+- **Not sure which phrase is live?** The second box on the admin page tests any phrase against the `access.json` on your site and tells you yes or no.
+- **If you forget the phrase:** make a new one on the admin page. You only need to be able to edit the repository.
+- **No signal:** a phone that was let in keeps working for 30 days without a connection.
+- **Wrong guesses:** three wrong tries in a row make the screen wait. A suggested phrase has about 50 bits of randomness, so guessing is not practical. If you type your own, make it at least four unrelated words, because anyone can read the file and try guesses against it.
 
-What this does and does not do: GitHub Pages is a public host, so this is a lock on the front door of your link, not a vault. It keeps casual visitors out and lets you decide who has a code. It cannot stop someone you invited from passing their code on, or someone technical from copying the public files into their own copy of the app. If you need to shut out a person immediately and for certain, move the site behind a host with sign-in, for example Cloudflare Access, which can allow only the email addresses you list.
+What this does and does not do: GitHub Pages is a public host, so this is a lock on the front door of your link, not a vault. It keeps casual visitors out and lets you decide who has the phrase. It cannot stop someone you told from passing it on, or someone technical from copying the public files into their own copy of the app. If you need to shut out one person immediately and for certain, move the site behind a host with sign-in, for example Cloudflare Access, which can allow only the email addresses you list.
 
 ## If a page is blank or stuck on "Loading"
 

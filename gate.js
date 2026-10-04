@@ -1,10 +1,10 @@
 'use strict';
-/* The front door. The app only loads after a valid invite code has been entered on this device.
-   Revoking an invite in access.json shuts the door the next time that person opens the app online. */
+/* The front door. The app only loads after the access phrase has been entered on this device.
+   If the owner changes the phrase in access.json, the door closes the next time that phone opens the app online. */
 (function () {
-  const GRANT_KEY = 'golfpractice.access.v1';
+  const GRANT_KEY = 'golfpractice.access.v2';
   const TRIES_KEY = 'golfpractice.access.tries.v1';
-  const GRACE_MS = 30 * 24 * 60 * 60 * 1000; // how long an invite is trusted when access.json cannot be reached
+  const GRACE_MS = 30 * 24 * 60 * 60 * 1000; // how long a phone is trusted when access.json cannot be reached
   const C = window.AccessCore;
   const root = document.getElementById('root');
   if (!C) { root.textContent = 'access-core.js did not load. Check it is in your GitHub repository with exactly that name, then reload this page.'; return; }
@@ -35,10 +35,11 @@
 
   const read = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
+  const drop = (k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } };
 
-  async function loadList() {
+  async function loadAccess() {
     const r = await fetch('access.json', { cache: 'no-store' });
-    if (!r.ok) throw new Error('list');
+    if (!r.ok) throw new Error('missing');
     return r.json();
   }
   function startApp() {
@@ -49,8 +50,7 @@
   }
 
   function showGate(note) {
-    const input = h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', required: true, maxlength: 19, placeholder: 'XXXX-XXXX-XXXX-XXXX', 'aria-label': 'Invite code' });
-    input.addEventListener('input', () => { input.value = C.format(input.value).slice(0, 19); });
+    const input = h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', required: true, placeholder: 'for example mako-tibe-ruso-leda', 'aria-label': 'Access phrase' });
     const msg = h('p', { class: 'msg', role: 'alert', text: note || '' });
     const btn = h('button', { type: 'submit', class: 'primary', text: 'Continue' });
     const form = h('form', {
@@ -62,26 +62,29 @@
         btn.disabled = true;
         msg.textContent = 'Checking...';
         try {
-          const list = await loadList();
-          const res = await C.verify(list, input.value);
+          const access = await loadAccess();
+          const res = await C.verify(access, input.value);
           if (res.ok) {
-            write(GRANT_KEY, { id: res.entry.id, hash: res.hash, checked: Date.now() });
-            try { localStorage.removeItem(TRIES_KEY); } catch (err) { /* ignore */ }
+            write(GRANT_KEY, { hash: res.hash, checked: Date.now() });
+            drop(TRIES_KEY);
             startApp();
             return;
           }
+          if (res.reason === 'old') { msg.textContent = 'The access file is in an old format. The owner needs to make a new one on the admin page.'; btn.disabled = false; return; }
+          if (res.reason === 'file') { msg.textContent = 'The access file could not be read. Tell the owner.'; btn.disabled = false; return; }
           tries.n += 1;
           if (tries.n >= 3) tries.until = Date.now() + Math.min(15 * 60 * 1000, Math.pow(2, tries.n - 3) * 5000);
           write(TRIES_KEY, tries);
-          msg.textContent = res.reason === 'format' ? 'An invite code has 16 letters and numbers.' : 'That invite code did not work.';
+          msg.textContent = res.reason === 'short' ? 'That phrase is too short. It has at least four words.' : 'That is not the access phrase.';
         } catch (err) {
-          msg.textContent = 'Could not check the code. Check your connection and try again.';
+          msg.textContent = 'Could not check the phrase. Check your connection and try again.';
         }
         input.value = '';
         btn.disabled = false;
       }
-    }, h('label', { class: 'field' }, h('span', { class: 'lbl', text: 'Invite code' }), input), msg, btn);
-    root.replaceChildren(h('div', { class: 'lock' }, icon(), h('h1', { text: 'Golf practice log' }), h('p', { text: 'This app is by invitation only. Enter the invite code you were given.' }), form));
+    }, h('label', { class: 'field' }, h('span', { class: 'lbl', text: 'Access phrase' }), input), msg, btn);
+    root.replaceChildren(h('div', { class: 'lock' }, icon(), h('h1', { text: 'Golf practice log' }),
+      h('p', { text: 'This app is private. Enter the access phrase you were given. Capital letters and dashes do not matter.' }), form));
     input.focus();
   }
 
@@ -89,11 +92,10 @@
     const saved = read(GRANT_KEY);
     if (!saved) { showGate(); return; }
     try {
-      const list = await loadList();
-      const entry = C.validList(list) && list.invites.find((i) => i.id === saved.id && i.hash === saved.hash);
-      if (entry) { write(GRANT_KEY, { ...saved, checked: Date.now() }); startApp(); return; }
-      try { localStorage.removeItem(GRANT_KEY); } catch (err) { /* ignore */ }
-      showGate('Your access has ended. Ask for a new invite code.');
+      const access = await loadAccess();
+      if (C.validAccess(access) && access.hash === saved.hash) { write(GRANT_KEY, { ...saved, checked: Date.now() }); startApp(); return; }
+      drop(GRANT_KEY);
+      showGate('The access phrase has changed. Ask the owner for the new one. Phrases never expire; they only stop working when the owner changes them.');
     } catch (err) {
       // access.json could not be reached, for example with no signal at the range
       if (Date.now() - (saved.checked || 0) < GRACE_MS) startApp();

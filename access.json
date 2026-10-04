@@ -1,12 +1,6 @@
 {
-  "v": 1,
+  "v": 2,
   "iter": 600000,
-  "invites": [
-    {
-      "id": "YG8D",
-      "name": "Garry Dowdle",
-      "salt": "ajM7Im0eQ9Bs+K22nGMVjQ==",
-      "hash": "m8ykOUyfQi55URb+7JeYv99I+viyf2qnQXWev8tlpIU="
-    }
-  ]
+  "salt": "VuuHiWwp1GtMFBy+VBeG7w==",
+  "hash": "FJcT8hyxnUeBSScqUnY8RMamHJ5rF6q/sk9oJ/VyMWM="
 }
