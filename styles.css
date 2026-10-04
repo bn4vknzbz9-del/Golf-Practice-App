@@ -13,6 +13,7 @@
   --tint: #1e7f34;
   --tint-fill: rgba(30, 127, 52, 0.12);
   --bar-green: #1e7f34; /* the Lock and Settings buttons stay green on every tab */
+  --go-text: #1e7b34;
   --on-tint: #ffffff;
   --red: #ff3b30;
   --orange: #ff9500;
@@ -52,6 +53,7 @@
     --tint: #30d158;
     --tint-fill: rgba(48, 209, 88, 0.2);
     --bar-green: #30d158;
+    --go-text: #30d158;
     --on-tint: #000000;
     --red: #ff453a;
     --orange: #ff9f0a;
@@ -469,15 +471,19 @@ input[type="checkbox"]:checked {
 .beat.on { background: var(--a-tempo); transform: scale(1.18); transition: none; }
 .beat-impact.on { background: #34c759; }
 .beat-label { font-size: 13px; font-weight: 600; }
-.tempo-bar { gap: 3px; margin: 4px 0 8px; }
-.unit { position: relative; flex: 1 1 0; min-width: 0; height: 26px; border-radius: 7px; overflow: hidden; background: var(--fill2); }
-.unit-down { margin-left: 6px; }
-.unit-down + .unit-rest { margin-left: 6px; }
-.unit .fill { width: 100%; transform: scaleX(0); transform-origin: left center; will-change: transform; }
-.unit-back .fill { background: var(--a-calibration); }
-.unit-down .fill { background: var(--a-tempo); }
-.unit-rest .fill { background: var(--label3); }
-.unit-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--label); mix-blend-mode: normal; }
+.tempo-bar { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: 8px 5px; margin: 6px 0 10px; }
+.cell { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; justify-items: center; min-width: 0; } /* a label wider than its box spills over equally on both sides instead of stretching the box */
+.unit { position: relative; width: 100%; height: 40px; border-radius: 10px; overflow: hidden; background: var(--fill2); }
+.unit .fill { width: 101%; opacity: 0.75; transform: scaleX(0); transform-origin: left center; will-change: transform; }
+.unit-swing .fill { background: var(--a-tempo); }
+.unit-impact .fill { background: #34c759; }
+.unit-rest .fill { background: rgba(120, 120, 128, 0.55); }
+.unit-tone::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2.5px solid var(--tone); pointer-events: none; }
+.tone-0, .tone-1 { --tone: var(--a-tempo); }
+.tone-2 { --tone: #34c759; }
+.unit-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--label); }
+.cell-label { min-height: 14px; font-size: 11px; font-weight: 700; line-height: 14px; white-space: nowrap; color: var(--tone, inherit); }
+.cell-label.tone-2 { color: var(--go-text); }
 .tempo-go { width: 100%; min-height: 56px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .chip { min-height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: var(--fill); color: var(--label); font-weight: 600; }

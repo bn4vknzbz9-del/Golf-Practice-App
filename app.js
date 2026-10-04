@@ -1867,24 +1867,34 @@
   // frames. The fit is within 0.4 ms at those three speeds and is an estimate at the others.
   const TRACK_A = 0.21846; // seconds
   const TRACK_B = 0.26255; // seconds per frame
+  // The cycle is a row of numbered boxes, one per beat. Each tone sounds exactly as its box begins, the soft clicks sound as the
+  // other boxes begin, and each box fills until the next one starts, so what you see, hear and count always agree.
   function tempoCycle(ratio, bpm, rest) {
     const u = 60 / bpm; // one beat: the downswing of the ratio, e.g. 0.3 s at 27/9
     const parts = TEMPO[ratio].parts;
     const back = parts * u;
-    let segs; let down; let pause; let track = false;
+    let down; let pause; let starts; let toneBox; let track = false;
     if (ratio === '3:1') {
       track = true;
       down = u + Math.max(0, TRACK_A - TRACK_B / (u * FPS));
       pause = back + down;
-      segs = [...Array(parts).fill(u), down, ...Array(rest).fill(pause / rest)];
+      const g = (back + down) / 6; // the reference tracks tick 12 times around a swing and its rest
+      starts = [0, g, 2 * g, 3 * g, back, 5 * g, 6 * g, 7 * g, 8 * g, 9 * g, 10 * g, 11 * g]; // the top of the backswing begins box 5
+      toneBox = [0, 4, 6]; // takeaway on box 1, top on box 5, impact on box 7
     } else { // the short game keeps whole beats: 2 back, 1 down, then the rest in beats
       down = u;
       pause = rest * u;
-      segs = Array(parts + 1 + rest).fill(u);
+      starts = Array.from({ length: parts + 1 + rest }, (_, i) => i * u);
+      toneBox = [0, parts, parts + 1]; // takeaway on box 1, top on box 3, impact on box 4
     }
-    const edges = []; let acc = 0;
-    segs.forEach((d) => { edges.push(acc); acc += d; });
-    return { u, back, down, pause, track, segs, edges, grid: (back + down) / 6, total: back + down + pause }; // total is the time from one takeaway to the next
+    const total = back + down + pause; // from one takeaway to the next
+    const boxes = starts.map((start, i) => ({
+      start,
+      end: i + 1 < starts.length ? starts[i + 1] : total,
+      tone: toneBox.indexOf(i) >= 0 ? toneBox.indexOf(i) : null, // 0 takeaway, 1 top, 2 impact
+      phase: i < toneBox[2] ? 'swing' : i === toneBox[2] ? 'impact' : 'rest'
+    }));
+    return { u, back, down, pause, track, boxes, total };
   }
   function presetMatch(ratio, bpm) {
     const downFrames = (60 / bpm) * FPS;
@@ -1907,7 +1917,7 @@
   }
 
   // The metronome engine. Beeps are scheduled on the audio clock so the timing stays steady.
-  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null };
+  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null, master: null, live: new Set() };
   const tempoClock = () => (tempoEngine.ctx ? tempoEngine.ctx.currentTime : Date.now() / 1000);
 
   // On an iPhone the silent switch mutes Web Audio but not media playback. Setting the audio session to
@@ -1941,9 +1951,11 @@
     g.gain.exponentialRampToValueAtTime(vol, when + 0.003);
     g.gain.exponentialRampToValueAtTime(0.0001, when + len);
     o.connect(g);
-    g.connect(ctx.destination);
+    g.connect(tempoEngine.master || ctx.destination); // every tone goes through one master volume so Stop can cut them all at once
     o.start(when);
     o.stop(when + len + 0.03);
+    tempoEngine.live.add(o);
+    o.onended = () => { tempoEngine.live.delete(o); };
   }
   // The time, on the audio clock, of the sound coming out of the speaker right now. Where the browser can report it,
   // this already includes the speaker or Bluetooth delay. Otherwise it is the clock minus what the browser says its delay is.
@@ -1969,14 +1981,7 @@
         beep(e.ctx, cyc.start, TONE_START, 0.1, 0.45); // takeaway
         beep(e.ctx, cyc.start + c.back, TONE_TOP, 0.1, 0.5); // top of the backswing, where the downswing starts: a little higher
         beep(e.ctx, cyc.start + c.back + c.down, TONE_IMPACT, 0.3, 0.9); // impact: a little higher again, and longer and louder to aim the strike at
-        if (st.ticks) { // an optional soft click on the other beats, so the beats can be counted
-          if (c.track) { // like the track: twelve evenly spaced beats around the swing and the rest, leaving out the beats that carry a tone
-            for (let k = 1; k < 12; k++) if (k !== 4 && k !== 6) beep(e.ctx, cyc.start + k * c.grid, TONE_CLICK, 0.02, 0.12);
-          } else {
-            const parts = TEMPO[st.ratio].parts;
-            for (let i = 1; i < parts + 1 + st.rest; i++) if (i !== parts && i !== parts + 1) beep(e.ctx, cyc.start + i * c.u, TONE_CLICK, 0.02, 0.12);
-          }
-        }
+        if (st.ticks) c.boxes.forEach((bx, i) => { if (i > 0 && bx.tone === null) beep(e.ctx, cyc.start + bx.start, TONE_CLICK, 0.02, 0.12); }); // an optional soft click as each other box begins
       }
       e.queue.push(cyc);
       if (e.queue.length > 6) e.queue.shift();
@@ -1998,8 +2003,8 @@
       return;
     }
     const p = t - cyc.start;
-    // One cell per beat; each cell fills over its own part of the swing, so the bar moves in time with the tones.
-    v.cells.forEach((f, i) => { f.style.transform = 'scaleX(' + clamp((p - cyc.edges[i]) / cyc.segs[i]).toFixed(4) + ')'; });
+    // each box fills from the moment it begins until the next box begins, so the bar moves in time with the tones and the clicks
+    v.cells.forEach((f, i) => { const bx = cyc.boxes[i]; f.style.transform = 'scaleX(' + clamp((p - bx.start) / (bx.end - bx.start)).toFixed(4) + ')'; });
     v.beats[0].classList.toggle('on', p >= 0 && p < 0.2);
     v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.2);
     v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.25);
@@ -2018,6 +2023,7 @@
     const AC = window.AudioContext || window.webkitAudioContext;
     if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
     if (e.ctx && e.ctx.resume) { try { await e.ctx.resume(); } catch (err) { /* keep going with visuals */ } }
+    if (e.ctx && e.ctx.createGain) { try { e.master = e.ctx.createGain(); e.master.connect(e.ctx.destination); } catch (err) { e.master = null; } }
     e.running = true;
     e.queue = [];
     e.next = tempoClock() + 0.2;
@@ -2035,6 +2041,15 @@
     e.raf = null;
     e.running = false;
     e.queue = [];
+    // The tones for the whole swing are scheduled ahead of time, so cut them off now: silence the master volume, unplug it,
+    // and stop every tone that has not finished.
+    if (e.master) {
+      try { e.master.gain.cancelScheduledValues(0); e.master.gain.value = 0; } catch (err) { /* ignore */ }
+      try { e.master.disconnect(); } catch (err) { /* ignore */ }
+      e.master = null;
+    }
+    e.live.forEach((o) => { try { o.stop(); } catch (err) { /* ignore */ } try { o.disconnect(); } catch (err) { /* ignore */ } });
+    e.live.clear();
     if (e.wake && e.wake.release) { try { e.wake.release(); } catch (err) { /* ignore */ } }
     e.wake = null;
     releaseSilentModeAudio();
@@ -2176,17 +2191,19 @@
     // beat visuals: three lights for the key moments, and a bar with one cell per beat
     const beatLabels = ['Takeaway', 'Top', 'Impact'];
     const beats = beatLabels.map((l, i) => h('span', { class: 'beat' + (i === 2 ? ' beat-impact' : ''), 'aria-hidden': 'true' }));
-    const bar = h('div', { class: 'timeline tempo-bar', 'aria-hidden': 'true' });
+    const bar = h('div', { class: 'tempo-bar', 'aria-hidden': 'true' });
     const phase = h('p', { class: 'now-label', role: 'status', text: 'Stopped' });
     function rebuildBar() {
-      const parts = TEMPO[st.ratio].parts;
+      const c = tempoCycle(st.ratio, st.bpm, st.rest);
       const cells = [];
-      const els = [];
-      for (let i = 0; i < parts + 1 + st.rest; i++) {
+      const els = c.boxes.map((bx, i) => {
         const f = h('span', { class: 'fill' });
         cells.push(f);
-        els.push(h('span', { class: 'unit unit-' + (i < parts ? 'back' : i === parts ? 'down' : 'rest') }, f, i <= parts ? h('span', { class: 'unit-n', text: String(i + 1) }) : null));
-      }
+        return h('div', { class: 'cell' },
+          h('span', { class: 'unit unit-' + bx.phase + (bx.tone !== null ? ' unit-tone tone-' + bx.tone : '') }, f, h('span', { class: 'unit-n', text: String(i + 1) })),
+          h('span', { class: 'cell-label' + (bx.tone !== null ? ' tone-' + bx.tone : ''), text: bx.tone !== null ? beatLabels[bx.tone] : '' }));
+      });
+      bar.style.setProperty('--cols', String(c.boxes.length > 8 ? 6 : 4)); // 12 boxes in two rows of 6, 7 boxes in rows of 4
       bar.replaceChildren(...els);
       if (tempoEngine.viz) tempoEngine.viz.cells = cells;
     }
