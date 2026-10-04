@@ -501,7 +501,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [] });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], tempo: [] });
 
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
@@ -545,6 +545,15 @@
         improve: str(t.improve, 3000)
       });
     }
+    for (const r of arr(d.tempo)) {
+      out.tempo.push({
+        id: str(r.id, 64) || uid(),
+        date: isDate(r.date) ? r.date : today(),
+        ratio: r.ratio === '2:1' ? '2:1' : '3:1',
+        bpm: Math.round(num(r.bpm, 20, 400)),
+        notes: str(r.notes, 3000)
+      });
+    }
     const seenMech = new Set();
     (Array.isArray(d.mechanics) ? d.mechanics : []).slice(0, 100).forEach((m) => {
       const v = str(m, 200).trim();
@@ -578,7 +587,7 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 3, sound: true }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -586,7 +595,11 @@
   let writeChain = Promise.resolve();
 
   function freshDrafts() {
-    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null };
+    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null, tempo: freshTempo() };
+  }
+  function freshTempo() {
+    const st = (typeof ui !== 'undefined' && ui && ui.tempo) || { ratio: '3:1', bpm: 100 };
+    return { id: null, date: today(), ratio: st.ratio, bpm: st.bpm, notes: '' };
   }
   function clearTimer() {
     if (tickHandle) clearInterval(tickHandle);
@@ -613,6 +626,8 @@
   function lock() {
     clearTimeout(idleHandle);
     clearTimer();
+    stopTempo();
+    stopTimerAudio();
     session = null;
     drafts = freshDrafts();
     ui = freshUi();
@@ -623,7 +638,7 @@
     clearTimeout(idleHandle);
     if (!session) return;
     idleHandle = setTimeout(() => {
-      if (tickHandle) { bump(); return; } // a practice timer is running, stay unlocked
+      if (tickHandle || tempoEngine.running) { bump(); return; } // a practice timer or the metronome is running, stay unlocked
       lock();
     }, IDLE_MS);
   }
@@ -656,7 +671,7 @@
   const markBackup = () => { try { localStorage.setItem(BACKUP_KEY, String(Date.now())); } catch (e) { /* ignore */ } };
   function backupDue() {
     if (!session) return false;
-    const total = session.data.technique.length + session.data.protocols.length + session.data.calibration.length + session.data.transfer.length;
+    const total = session.data.technique.length + session.data.protocols.length + session.data.calibration.length + session.data.transfer.length + session.data.tempo.length;
     if (!total) return false;
     const last = Number(localStorage.getItem(BACKUP_KEY));
     return !Number.isFinite(last) || !last || Date.now() - last > BACKUP_REMIND_MS;
@@ -787,7 +802,8 @@
     calibration: ['M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18', 'M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8', 'M12 2v3', 'M12 19v3', 'M2 12h3', 'M19 12h3'],
     transfer: ['M6 21V3.5', 'M6 4.5h12l-3 4l3 4H6'],
     trends: ['M3.5 20.5h17', 'M4.5 16l5-6l4 3.5l6-8'],
-    log: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4.2 6h.1', 'M4.2 12h.1', 'M4.2 18h.1']
+    log: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4.2 6h.1', 'M4.2 12h.1', 'M4.2 18h.1'],
+    tempo: ['M8.5 3.5h7l3 17h-13z', 'M12 16.5l3.5-9', 'M10.5 20.5h3']
   };
   const tabIcon = (id) => {
     const svg = s('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false' });
@@ -815,7 +831,7 @@
       s('path', { d: 'M22 64h24' }));
   }
 
-  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['trends', 'Practice trends'], ['log', 'Practice log']];
+  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['tempo', 'Tempo'], ['trends', 'Practice trends'], ['log', 'Practice log']];
 
   // Fill the left part of each slider track, as iOS does. Runs after each render and whenever a slider moves.
   function paintRange(el) {
@@ -828,10 +844,13 @@
 
   function renderApp(toTop) {
     clearTimer();
+    stopTempo();
+    if (!anyTimerRunning() && !timerAudio.ringing) stopTimerAudio();
     requestPersist();
     let view;
     if (ui.tab === 'settings') view = settingsView();
     else if (ui.tab === 'technique') view = techniqueView();
+    else if (ui.tab === 'tempo') view = tempoView();
     else if (ui.tab === 'trends') view = trendsView();
     else if (ui.tab === 'log') view = logView();
     else view = sessionsView(ui.tab);
@@ -1536,6 +1555,72 @@
     return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
   }
 
+  /* The session timer keeps running with the screen locked because a phone keeps playing audio when it locks.
+     The app plays one audio track that is silent for the time left and then sounds an alarm, so the alarm
+     does not depend on the page still running. It is played through the media volume, not the Clock app's alarm. */
+  const ALARM_SECONDS = 30;
+  const timerAudio = { el: null, url: null, endAt: 0, ringing: false, wake: null, ctl: null, onEnd: null };
+
+  // Builds an 8-bit mono WAV: silence for `silentSec`, then `alarmSec` of beeping (three beeps, a pause, repeat).
+  function buildTimerWav(silentSec, alarmSec) {
+    const rate = 4000;
+    const quiet = Math.round(Math.max(0, silentSec) * rate);
+    const n = quiet + Math.round(alarmSec * rate);
+    const buf = new ArrayBuffer(44 + n);
+    const v = new DataView(buf);
+    const text = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+    text(0, 'RIFF'); v.setUint32(4, 36 + n, true); text(8, 'WAVE'); text(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+    text(36, 'data'); v.setUint32(40, n, true);
+    const px = new Uint8Array(buf, 44, n);
+    px.fill(128);
+    for (let i = quiet; i < n; i++) {
+      const sec = (i - quiet) / rate;
+      const pos = sec % 1.5;
+      const beep = Math.floor(pos / 0.3);
+      if (beep < 3 && pos - beep * 0.3 < 0.2) {
+        const f = beep % 2 === 0 ? 880 : 1175;
+        px[i] = Math.round(128 + 112 * Math.sin(2 * Math.PI * f * sec));
+      }
+    }
+    return buf;
+  }
+  function stopTimerAudio() {
+    const a = timerAudio;
+    if (a.el) { try { a.el.pause(); a.el.removeAttribute('src'); if (a.el.load) a.el.load(); } catch (e) { /* ignore */ } }
+    if (a.url) { try { URL.revokeObjectURL(a.url); } catch (e) { /* ignore */ } }
+    if (a.wake && a.wake.release) { try { a.wake.release(); } catch (e) { /* ignore */ } }
+    a.el = null; a.url = null; a.wake = null; a.ringing = false;
+    try {
+      if (navigator.mediaSession) {
+        navigator.mediaSession.metadata = null;
+        ['pause', 'play', 'stop'].forEach((x) => { try { navigator.mediaSession.setActionHandler(x, null); } catch (e) { /* ignore */ } });
+      }
+    } catch (e) { /* ignore */ }
+  }
+  async function startTimerAudio(remainingSec) {
+    stopTimerAudio();
+    const a = timerAudio;
+    try {
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
+      a.url = URL.createObjectURL(new Blob([buildTimerWav(remainingSec, ALARM_SECONDS)], { type: 'audio/wav' }));
+      a.el = new Audio();
+      a.el.src = a.url;
+      a.endAt = Date.now() + remainingSec * 1000;
+      a.el.addEventListener('ended', () => { const done = a.onEnd; stopTimerAudio(); if (done) done(); });
+      const p = a.el.play();
+      if (p && p.catch) p.catch(() => { /* the on-screen timer still works */ });
+      if (navigator.mediaSession && typeof MediaMetadata !== 'undefined') {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: 'Practice timer', artist: 'Golf practice log' });
+        navigator.mediaSession.setActionHandler('pause', () => { if (a.ctl) a.ctl.pause(); });
+        navigator.mediaSession.setActionHandler('stop', () => { if (a.ctl) a.ctl.dismiss(); });
+      }
+      if (navigator.wakeLock) a.wake = await navigator.wakeLock.request('screen');
+    } catch (e) { /* audio is a bonus; the on-screen timer still works */ }
+  }
+  const anyTimerRunning = () => [drafts.protocol, drafts.calibration, drafts.transfer].some((d) => d && d.timer && d.timer.startedAt);
+
   function timerWidget(d, cards) {
     const t = d.timer;
     const total = d.items.reduce((a, i) => a + i.minutes * 60, 0);
@@ -1551,6 +1636,8 @@
     });
     const toggle = h('button', { type: 'button', class: 'primary' });
     const reset = h('button', { type: 'button', class: 'ghost', text: 'Reset timer' });
+    const stopAlarm = h('button', { type: 'button', class: 'danger', text: 'Stop alarm' });
+    stopAlarm.hidden = !timerAudio.ringing;
 
     const elapsed = () => Math.min(total, t.base + (t.startedAt ? (Date.now() - t.startedAt) / 1000 : 0));
 
@@ -1560,6 +1647,8 @@
         t.base = total; t.startedAt = null; e = total;
         clearTimer();
         if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        // the alarm is already part of the audio track; show the stop button while it is sounding
+        if (timerAudio.el && (Date.now() - timerAudio.endAt) / 1000 < ALARM_SECONDS) { timerAudio.ringing = true; stopAlarm.hidden = false; }
       }
       clock.textContent = fmtClock(total - e);
       let acc = 0, cur = -1;
@@ -1571,23 +1660,34 @@
       });
       segs.forEach((sg, i) => sg.classList.toggle('on', i === cur));
       cards.forEach((c, i) => c.classList.toggle('now', i === cur));
-      if (e >= total) nowLabel.textContent = 'Time is up. Finish scoring below.';
+      if (e >= total) nowLabel.textContent = timerAudio.ringing ? 'Time is up. The alarm is sounding.' : 'Time is up. Finish scoring below.';
       else if (t.startedAt) nowLabel.textContent = 'Now: ' + d.items[cur].name;
       else nowLabel.textContent = e > 0 ? 'Paused' : 'Press Start when you are ready.';
-      toggle.textContent = t.startedAt ? 'Pause' : (e > 0 && e < total ? 'Resume' : 'Start');
+      toggle.textContent = timerAudio.ringing ? 'Stop alarm' : (t.startedAt ? 'Pause' : (e > 0 && e < total ? 'Resume' : 'Start'));
     }
     function startTick() { clearTimer(); tickHandle = setInterval(paint, 250); }
 
+    const pauseTimer = () => { t.base = elapsed(); t.startedAt = null; clearTimer(); stopTimerAudio(); stopAlarm.hidden = true; paint(); };
+    const dismissAlarm = () => { stopTimerAudio(); stopAlarm.hidden = true; paint(); };
     toggle.addEventListener('click', () => {
-      if (t.startedAt) { t.base = elapsed(); t.startedAt = null; clearTimer(); }
-      else { if (t.base >= total) t.base = 0; t.startedAt = Date.now(); startTick(); }
+      if (timerAudio.ringing) { dismissAlarm(); return; }
+      if (t.startedAt) { pauseTimer(); return; }
+      if (t.base >= total) t.base = 0;
+      t.startedAt = Date.now();
+      startTick();
+      startTimerAudio(total - t.base); // started from this tap so the phone allows it
+      timerAudio.ctl = { pause: pauseTimer, dismiss: dismissAlarm };
+      timerAudio.onEnd = () => { stopAlarm.hidden = true; paint(); };
       paint();
     });
-    reset.addEventListener('click', () => { t.base = 0; t.startedAt = null; clearTimer(); paint(); });
+    reset.addEventListener('click', () => { t.base = 0; t.startedAt = null; clearTimer(); stopTimerAudio(); stopAlarm.hidden = true; paint(); });
+    stopAlarm.addEventListener('click', dismissAlarm);
+    if (t.startedAt || timerAudio.ringing) { timerAudio.ctl = { pause: pauseTimer, dismiss: dismissAlarm }; timerAudio.onEnd = () => { stopAlarm.hidden = true; paint(); }; }
 
     if (t.startedAt) startTick();
     paint();
-    return h('div', { class: 'card' }, clock, h('div', { class: 'timeline', 'aria-hidden': 'true' }, segs), nowLabel, h('div', { class: 'actions' }, toggle, reset));
+    return h('div', { class: 'card' }, clock, h('div', { class: 'timeline', 'aria-hidden': 'true' }, segs), nowLabel, h('div', { class: 'actions' }, toggle, reset, stopAlarm),
+      h('p', { class: 'hint timer-note', text: 'Keeps running with the screen locked and sounds an alarm at the end, through your media volume.' }));
   }
 
   // At the range: slide the shot distance and the target width (in yards) to see how many fingers wide the target looks.
@@ -1699,11 +1799,328 @@
   }
 
   /* ==========================================================
+     Tempo: a Tour Tempo metronome with a dial, beat visuals and a log
+     ========================================================== */
+  const FPS = 30; // Tour Tempo counts video frames at 30 per second
+  const BPM_MIN = 40;
+  const BPM_MAX = 300;
+  // Backswing : downswing. Frames are backswing/downswing, slowest first. The speed is not limited to these.
+  const TEMPO = {
+    '3:1': { name: 'Long game', parts: 3, frames: [[27, 9], [24, 8], [21, 7], [18, 6]] },
+    '2:1': { name: 'Short game', parts: 2, frames: [[20, 10], [18, 9], [16, 8], [14, 7]] }
+  };
+  const tourBpm = (down) => Math.round((60 * FPS) / down);
+
+  // One beat of the metronome is one unit of the ratio. A 3:1 swing is 3 units back and 1 unit down.
+  function tempoCycle(ratio, bpm, rest) {
+    const u = 60 / bpm;
+    const back = TEMPO[ratio].parts * u;
+    return { u, back, down: u, pause: rest * u, total: back + u + rest * u };
+  }
+  function tourMatch(ratio, bpm) {
+    const downFrames = (60 / bpm) * FPS;
+    const list = TEMPO[ratio].frames; // slowest first
+    const slow = list[0][1];
+    const fast = list[list.length - 1][1];
+    const hit = list.find(([, d]) => Math.abs(downFrames - d) <= 0.3);
+    if (hit) return 'Matches Tour Tempo ' + hit[0] + '/' + hit[1] + '.';
+    if (downFrames > slow) return 'Slower than the slowest Tour Tempo (' + list[0][0] + '/' + slow + '), good for learning the feel.';
+    if (downFrames < fast) return 'Faster than the fastest Tour Tempo (' + list[list.length - 1][0] + '/' + fast + ').';
+    return 'Between two Tour Tempo options.';
+  }
+  const tempoLabel = (rec) => rec.ratio + ' ' + TEMPO[rec.ratio].name.toLowerCase() + ' at ' + rec.bpm + ' BPM';
+
+  const polar = (cx, cy, r, deg) => { const a = ((deg - 90) * Math.PI) / 180; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  function arcPath(cx, cy, r, a0, a1) {
+    const [x0, y0] = polar(cx, cy, r, a0);
+    const [x1, y1] = polar(cx, cy, r, a1);
+    return 'M' + x0.toFixed(2) + ' ' + y0.toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + (a1 - a0 > 180 ? 1 : 0) + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2);
+  }
+
+  // The metronome engine. Beeps are scheduled on the audio clock so the timing stays steady.
+  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null };
+  const tempoClock = () => (tempoEngine.ctx ? tempoEngine.ctx.currentTime : Date.now() / 1000);
+
+  function beep(ctx, when, freq, len, vol) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(vol, when + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + len);
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start(when);
+    o.stop(when + len + 0.03);
+  }
+  function tempoSchedule() {
+    const e = tempoEngine;
+    const st = ui.tempo;
+    while (e.next < tempoClock() + 0.25) {
+      const c = tempoCycle(st.ratio, st.bpm, st.rest);
+      const cyc = { start: e.next, ...c };
+      if (st.sound && e.ctx) {
+        beep(e.ctx, cyc.start, 523, 0.18, 0.5); // takeaway
+        beep(e.ctx, cyc.start + c.back, 659, 0.18, 0.5); // top of the backswing
+        beep(e.ctx, cyc.start + c.back + c.down, 880, 0.3, 0.9); // impact
+      }
+      e.queue.push(cyc);
+      if (e.queue.length > 6) e.queue.shift();
+      e.next += c.total;
+    }
+  }
+  function tempoPaint() {
+    const e = tempoEngine;
+    const v = e.viz;
+    if (!v) return;
+    const t = tempoClock();
+    const cyc = [...e.queue].reverse().find((c) => c.start <= t);
+    const clamp = (x) => Math.min(1, Math.max(0, x));
+    if (!cyc) {
+      v.beats.forEach((b) => b.classList.remove('on'));
+      v.fills.forEach((f) => { f.style.width = '0%'; });
+      v.phase.textContent = 'Get ready';
+      return;
+    }
+    const p = t - cyc.start;
+    v.fills[0].style.width = (clamp(p / cyc.back) * 100).toFixed(1) + '%';
+    v.fills[1].style.width = (clamp((p - cyc.back) / cyc.down) * 100).toFixed(1) + '%';
+    v.fills[2].style.width = (clamp((p - cyc.back - cyc.down) / cyc.pause) * 100).toFixed(1) + '%';
+    v.beats[0].classList.toggle('on', p >= 0 && p < 0.22);
+    v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.22);
+    v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.3);
+    v.phase.textContent = p < cyc.back ? 'Backswing' : p < cyc.back + cyc.down ? 'Downswing' : 'Rest';
+  }
+  function tempoFrame() {
+    const e = tempoEngine;
+    if (!e.running) return;
+    tempoPaint();
+    e.raf = requestAnimationFrame(tempoFrame);
+  }
+  async function startTempo() {
+    const e = tempoEngine;
+    if (e.running) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
+    if (e.ctx && e.ctx.resume) { try { await e.ctx.resume(); } catch (err) { /* keep going with visuals */ } }
+    e.running = true;
+    e.queue = [];
+    e.next = tempoClock() + 0.2;
+    tempoSchedule();
+    e.timer = setInterval(tempoSchedule, 25);
+    e.raf = requestAnimationFrame(tempoFrame);
+    try { if (navigator.wakeLock) e.wake = await navigator.wakeLock.request('screen'); } catch (err) { e.wake = null; }
+    if (e.viz) e.viz.toggle.textContent = 'Stop';
+  }
+  function stopTempo() {
+    const e = tempoEngine;
+    if (e.timer) clearInterval(e.timer);
+    if (e.raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(e.raf);
+    e.timer = null;
+    e.raf = null;
+    e.running = false;
+    e.queue = [];
+    if (e.wake && e.wake.release) { try { e.wake.release(); } catch (err) { /* ignore */ } }
+    e.wake = null;
+    if (e.viz) {
+      e.viz.beats.forEach((b) => b.classList.remove('on'));
+      e.viz.fills.forEach((f) => { f.style.width = '0%'; });
+      e.viz.phase.textContent = 'Stopped';
+      e.viz.toggle.textContent = 'Start';
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopTempo(); });
+
+  function metronome() {
+    const st = ui.tempo;
+    const CX = 130; const CY = 130; const R = 90;
+    const angleOf = (b) => -135 + ((b - BPM_MIN) / (BPM_MAX - BPM_MIN)) * 270;
+    const bpmOf = (deg) => Math.round(BPM_MIN + ((Math.min(135, Math.max(-135, deg)) + 135) / 270) * (BPM_MAX - BPM_MIN));
+
+    // dial
+    const svg = s('svg', { viewBox: '-26 -2 312 264', class: 'dial', role: 'slider', tabindex: 0, 'aria-label': 'Tempo in beats per minute', 'aria-valuemin': BPM_MIN, 'aria-valuemax': BPM_MAX });
+    const valueArc = s('path', { class: 'dial-value' });
+    const ticks = s('g', null);
+    const knob = s('circle', { class: 'dial-knob', r: 15 });
+    const bpmText = s('text', { class: 'dial-bpm', x: CX, y: CY + 14 });
+    svg.append(s('path', { class: 'dial-track', d: arcPath(CX, CY, R, -135, 135) }), valueArc, ticks, knob, bpmText, s('text', { class: 'dial-sub', x: CX, y: CY + 38 }, 'BPM'));
+
+    const timeEl = h('p', { class: 'tempo-time' });
+    const matchEl = h('p', { class: 'hint' });
+    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Tour Tempo speeds' });
+    const segBtns = [];
+
+    function drawDial() {
+      const a = angleOf(st.bpm);
+      valueArc.setAttribute('d', arcPath(CX, CY, R, -135, Math.max(a, -134.5)));
+      const [kx, ky] = polar(CX, CY, R, a);
+      knob.setAttribute('cx', kx.toFixed(1));
+      knob.setAttribute('cy', ky.toFixed(1));
+      bpmText.textContent = String(st.bpm);
+      svg.setAttribute('aria-valuenow', String(st.bpm));
+      svg.setAttribute('aria-valuetext', st.bpm + ' beats per minute');
+    }
+    function drawTicks() {
+      ticks.replaceChildren();
+      TEMPO[st.ratio].frames.forEach(([tot, down]) => {
+        const a = angleOf(tourBpm(down));
+        const [x0, y0] = polar(CX, CY, R + 12, a);
+        const [x1, y1] = polar(CX, CY, R + 22, a);
+        const [tx, ty] = polar(CX, CY, R + 34, a);
+        ticks.append(s('line', { class: 'dial-tick', x1: x0.toFixed(1), y1: y0.toFixed(1), x2: x1.toFixed(1), y2: y1.toFixed(1) }),
+          s('text', { class: 'dial-tick-label', x: tx.toFixed(1), y: (ty + 3).toFixed(1) }, tot + '/' + down));
+      });
+    }
+    function drawChips() {
+      chips.replaceChildren(...TEMPO[st.ratio].frames.map(([tot, down]) => h('button', {
+        type: 'button', class: 'chip', text: tot + '/' + down, 'aria-pressed': String(st.bpm === tourBpm(down)),
+        onclick: () => setBpm(tourBpm(down))
+      })));
+    }
+    function drawReadouts() {
+      const c = tempoCycle(st.ratio, st.bpm, st.rest);
+      timeEl.textContent = 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s, whole swing ' + (c.back + c.down).toFixed(2) + ' s';
+      matchEl.textContent = tourMatch(st.ratio, st.bpm);
+    }
+    function setBpm(b) {
+      st.bpm = Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(b)));
+      drawDial(); drawChips(); drawReadouts();
+    }
+
+    // dragging the dial
+    let lastAngle = null;
+    function fromPointer(e) {
+      const r = svg.getBoundingClientRect();
+      let deg = (Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180) / Math.PI;
+      deg = Math.min(135, Math.max(-135, deg));
+      if (lastAngle !== null && Math.abs(deg - lastAngle) > 200) return; // ignore a jump across the gap at the bottom
+      lastAngle = deg;
+      setBpm(bpmOf(deg));
+    }
+    svg.addEventListener('pointerdown', (e) => { lastAngle = null; if (svg.setPointerCapture) { try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } } fromPointer(e); e.preventDefault(); });
+    svg.addEventListener('pointermove', (e) => { if (e.buttons || e.pressure > 0) fromPointer(e); });
+    svg.addEventListener('keydown', (e) => {
+      const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 }[e.key];
+      if (step) { setBpm(st.bpm + step); e.preventDefault(); }
+    });
+    const nudge = (label, d) => h('button', { type: 'button', class: 'ghost', text: label, 'aria-label': (d > 0 ? 'Faster by ' : 'Slower by ') + Math.abs(d) + ' beats per minute', onclick: () => setBpm(st.bpm + d) });
+
+    // ratio
+    const setRatio = (r) => { st.ratio = r; segBtns.forEach(([id, b]) => b.setAttribute('aria-pressed', String(id === r))); drawTicks(); drawChips(); drawReadouts(); layoutBar(); };
+    const ratioCtl = h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Tempo ratio' },
+      [['2:1', '2:1 Short game'], ['3:1', '3:1 Long game']].map(([id, label]) => {
+        const b = h('button', { type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(st.ratio === id), onclick: () => setRatio(id) });
+        segBtns.push([id, b]);
+        return b;
+      }));
+
+    // beat visuals
+    const beatLabels = ['Takeaway', 'Top', 'Impact'];
+    const beats = beatLabels.map((l) => h('span', { class: 'beat', 'aria-hidden': 'true' }));
+    const fills = [0, 1, 2].map(() => h('span', { class: 'fill' }));
+    const segs = fills.map((f, i) => h('span', { class: 'tseg tempo-seg tempo-seg-' + i }, f));
+    const phase = h('p', { class: 'now-label', role: 'status', text: 'Stopped' });
+    function layoutBar() {
+      segs[0].style.flexGrow = String(TEMPO[st.ratio].parts);
+      segs[1].style.flexGrow = '1';
+      segs[2].style.flexGrow = String(st.rest);
+    }
+    const toggle = h('button', { type: 'button', class: 'primary tempo-go', text: tempoEngine.running ? 'Stop' : 'Start', onclick: () => { if (tempoEngine.running) stopTempo(); else startTempo(); } });
+    tempoEngine.viz = { beats, fills, phase, toggle };
+
+    // rest and sound
+    const restSel = h('select', { 'aria-label': 'Rest between swings' }, [2, 3, 4, 6].map((n) => h('option', { value: String(n), text: n + ' beats' })));
+    restSel.value = String(st.rest);
+    restSel.addEventListener('change', () => { st.rest = Number(restSel.value); layoutBar(); drawReadouts(); });
+    const soundCb = h('input', { type: 'checkbox' });
+    soundCb.checked = !!st.sound;
+    soundCb.addEventListener('change', () => { st.sound = soundCb.checked; });
+
+    drawDial(); drawTicks(); drawChips(); drawReadouts(); layoutBar();
+
+    return h('div', { class: 'stack' },
+      ratioCtl,
+      h('div', { class: 'card' },
+        h('div', { class: 'beats' }, beats.map((b, i) => h('div', { class: 'beat-col' }, b, h('span', { class: 'beat-label', text: beatLabels[i] })))),
+        h('div', { class: 'timeline tempo-bar', 'aria-hidden': 'true' }, segs),
+        phase,
+        toggle),
+      h('div', { class: 'card tempo-card' }, svg,
+        h('div', { class: 'actions nudges' }, nudge('\u22125', -5), nudge('\u22121', -1), nudge('+1', 1), nudge('+5', 5)),
+        timeEl, matchEl),
+      h('div', { class: 'card' },
+        h('strong', { text: 'Tour Tempo speeds' }),
+        h('p', { class: 'hint', text: 'Tap one to jump to it. Tour Tempo uses frames of video at 30 frames per second, shown as backswing/downswing.' }),
+        chips),
+      h('div', { class: 'card stack' },
+        field('Rest between swings', restSel),
+        h('label', { class: 'check' }, soundCb, 'Sound on')),
+      h('button', {
+        type: 'button', class: 'ghost',
+        text: 'Log this session',
+        onclick: () => { stopTempo(); drafts.tempo = { id: null, date: today(), ratio: st.ratio, bpm: st.bpm, notes: '' }; ui.mode = 'history'; renderApp(true); }
+      }),
+      h('p', { class: 'hint', text: 'Three tones mark the takeaway, the top of the backswing and impact. From takeaway to top is 2 beats for a short game swing or 3 beats for a full swing, and from top to impact is 1 beat. Turn the dial to any speed, including slower than Tour Tempo.' }));
+  }
+
+  function tempoBody(rec) {
+    const c = tempoCycle(rec.ratio, rec.bpm, 3);
+    return [
+      h('p', { text: tempoLabel(rec) }),
+      h('p', { text: 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s. ' + tourMatch(rec.ratio, rec.bpm) }),
+      para('Notes', rec.notes)
+    ];
+  }
+
+  function tempoLog() {
+    const d = drafts.tempo;
+    const ratioSel = h('select', { 'aria-label': 'Tempo ratio' }, [['3:1', '3:1 Long game'], ['2:1', '2:1 Short game']].map(([v, l]) => h('option', { value: v, text: l })));
+    ratioSel.value = d.ratio;
+    ratioSel.addEventListener('change', () => { d.ratio = ratioSel.value; });
+    const bpmInput = h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, 'aria-label': 'Beats per minute', value: String(d.bpm) });
+    bpmInput.addEventListener('input', () => { d.bpm = Number(bpmInput.value.replace(/[^0-9]/g, '')); });
+    async function save() {
+      if (!Number.isFinite(d.bpm) || d.bpm < 20 || d.bpm > 400) { toast('Enter a speed from 20 to 400 BPM'); return; }
+      upsert(session.data.tempo, { id: d.id || uid(), date: isDate(d.date) ? d.date : today(), ratio: d.ratio === '2:1' ? '2:1' : '3:1', bpm: Math.round(d.bpm), notes: d.notes.trim().slice(0, 3000) });
+      await persist();
+      drafts.tempo = freshTempo();
+      renderApp(true);
+      toast('Tempo session saved');
+    }
+    const list = [...session.data.tempo].sort(byDateDesc);
+    return h('div', { class: 'stack' },
+      d.id ? h('p', { class: 'banner', text: 'Editing an earlier tempo session' }) : null,
+      field('Date', dateInput(d)),
+      field('Tempo ratio', ratioSel),
+      field('Speed (beats per minute)', bpmInput),
+      field('Notes', textArea(d, 'notes', 4, 3000)),
+      h('div', { class: 'actions' },
+        h('button', { type: 'button', class: 'primary', text: d.id ? 'Save changes' : 'Save tempo session', onclick: save }),
+        d.id ? h('button', { type: 'button', class: 'ghost', text: 'Cancel edit', onclick: () => { drafts.tempo = freshTempo(); renderApp(); } }) : null),
+      list.length
+        ? h('div', { class: 'group' }, list.map((rec) => entryShell(
+          [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.ratio + ' at ' + rec.bpm + ' BPM' })],
+          tempoBody(rec),
+          () => { drafts.tempo = { ...rec }; renderApp(true); },
+          () => removeRecord('tempo', rec.id))))
+        : h('p', { class: 'empty', text: 'No tempo sessions logged yet.' }));
+  }
+
+  function tempoView() {
+    if (ui.mode === 'log') ui.mode = 'new';
+    return h('section', null,
+      pageTitle('tempo', 'Tempo'),
+      modeBar([['new', 'Metronome'], ['history', 'Log']]),
+      ui.mode === 'history' ? tempoLog() : metronome());
+  }
+
+  /* ==========================================================
      Practice log: every session, with its drills, notes and scores
      ========================================================== */
   function logView() {
     const f = ui.logFilter;
-    const filters = [['all', 'All'], ['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer']];
+    const filters = [['all', 'All'], ['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['tempo', 'Tempo']];
     const entries = [];
     if (f === 'all' || f === 'technique') {
       session.data.protocols.forEach((rec) => entries.push({ type: 'protocol', rec }));
@@ -1711,6 +2128,7 @@
     }
     if (f === 'all' || f === 'calibration') session.data.calibration.forEach((rec) => entries.push({ type: 'calibration', rec }));
     if (f === 'all' || f === 'transfer') session.data.transfer.forEach((rec) => entries.push({ type: 'transfer', rec }));
+    if (f === 'all' || f === 'tempo') session.data.tempo.forEach((rec) => entries.push({ type: 'tempo', rec }));
     entries.sort((a, b) => b.rec.date.localeCompare(a.rec.date));
 
     const latest = (kind) => {
@@ -1728,13 +2146,17 @@
         tag = 'Technique protocol, ' + protocolMinutes(rec) + ' min';
         sum = h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') });
         body = protocolBody(rec);
+      } else if (type === 'tempo') {
+        tag = 'Tempo, ' + rec.ratio;
+        sum = h('span', { class: 'sum', text: rec.bpm + ' BPM' });
+        body = tempoBody(rec);
       } else {
         tag = (type === 'calibration' ? 'Calibration' : 'Transfer') + ', ' + protocolMinutes(rec) + ' min';
         sum = sessionSum(type, rec);
         body = sessionBody(type, rec);
       }
       return h('details', { class: 'entry' },
-        h('summary', null, iconTile(type === 'calibration' || type === 'transfer' ? type : 'technique'), h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
+        h('summary', null, iconTile(type === 'calibration' || type === 'transfer' || type === 'tempo' ? type : 'technique'), h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
         h('div', { class: 'entry-body' }, body));
     });
 

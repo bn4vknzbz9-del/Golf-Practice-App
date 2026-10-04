@@ -23,6 +23,7 @@
   --a-calibration: #007aff;
   --a-transfer: #ff9500;
   --a-trends: #30b0c7;
+  --a-tempo: #ff2d55;
   --a-log: #5856d6;
   --note: rgba(255, 204, 0, 0.2);
   --c0: #007aff;
@@ -60,6 +61,7 @@
     --a-calibration: #0a84ff;
     --a-transfer: #ff9f0a;
     --a-trends: #40c8e0;
+    --a-tempo: #ff375f;
     --a-log: #5e5ce6;
     --note: rgba(255, 214, 10, 0.18);
     --c0: #0a84ff;
@@ -209,7 +211,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   left: 0; right: 0; bottom: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--bar);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -235,7 +237,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .tab svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .tab[aria-current="page"] { color: var(--a, var(--tint)); }
 .t-technique { --a: var(--a-technique); } .t-calibration { --a: var(--a-calibration); } .t-transfer { --a: var(--a-transfer); }
-.t-trends { --a: var(--a-trends); } .t-log { --a: var(--a-log); }
+.t-trends { --a: var(--a-trends); } .t-tempo { --a: var(--a-tempo); } .t-log { --a: var(--a-log); }
 
 /* Lock screen */
 .lock { max-width: 420px; margin: 0 auto; padding: calc(56px + env(safe-area-inset-top)) 24px 24px; text-align: center; }
@@ -428,7 +430,7 @@ input[type="checkbox"]:checked {
 .tile { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; border-radius: 8px; background: var(--tile, var(--tint)); }
 .tile svg { width: 18px; height: 18px; fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .tile-technique { --tile: var(--a-technique); } .tile-calibration { --tile: var(--a-calibration); } .tile-transfer { --tile: var(--a-transfer); }
-.tile-trends { --tile: var(--a-trends); } .tile-log { --tile: var(--a-log); }
+.tile-trends { --tile: var(--a-trends); } .tile-tempo { --tile: var(--a-tempo); } .tile-log { --tile: var(--a-log); }
 .page-title { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; }
 .page-title h2 { margin: 0; font-size: clamp(24px, 7vw, 30px); min-width: 0; }
 .page-title .tile { width: 36px; height: 36px; border-radius: 9px; }
@@ -437,3 +439,31 @@ input[type="checkbox"]:checked {
 
 /* Drill categories share the chart colours */
 .cat-blue { --accent: var(--c0); } .cat-orange { --accent: var(--c1); } .cat-green { --accent: var(--c2); } .cat-purple { --accent: var(--c3); }
+
+/* Tempo: dial, beats and the swing bar */
+.tempo-card { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.dial { width: min(100%, 300px); height: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.dial:focus-visible { outline-offset: 4px; border-radius: 50%; }
+.dial-track { fill: none; stroke: var(--fill2); stroke-width: 14; stroke-linecap: round; }
+.dial-value { fill: none; stroke: var(--a-tempo); stroke-width: 14; stroke-linecap: round; }
+.dial-knob { fill: #ffffff; stroke: var(--a-tempo); stroke-width: 3; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25)); }
+.dial-bpm { fill: var(--label); font: 700 56px var(--font); text-anchor: middle; letter-spacing: -0.03em; }
+.dial-sub { fill: var(--label2); font: 600 13px var(--font); text-anchor: middle; letter-spacing: 0.08em; }
+.dial-tick { stroke: var(--label3); stroke-width: 2; stroke-linecap: round; }
+.dial-tick-label { fill: var(--label2); font: 600 9px var(--font); text-anchor: middle; }
+.nudges { justify-content: center; width: 100%; }
+.nudges .ghost { flex: 1 1 60px; min-width: 60px; padding: 0 8px; }
+.tempo-time { font-weight: 600; }
+.beats { display: flex; justify-content: space-around; margin-bottom: 12px; }
+.beat-col { display: grid; justify-items: center; gap: 6px; }
+.beat { width: 46px; height: 46px; border-radius: 50%; background: var(--fill2); transition: background 60ms linear, transform 60ms linear; }
+.beat.on { background: var(--a-tempo); transform: scale(1.18); }
+.beat-label { font-size: 13px; font-weight: 600; }
+.tempo-seg-0 .fill { background: var(--a-calibration); }
+.tempo-seg-1 .fill { background: var(--a-tempo); }
+.tempo-seg-2 .fill { background: var(--label3); }
+.tempo-bar .tseg { height: 14px; border-radius: 7px; }
+.tempo-go { width: 100%; min-height: 56px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.chip { min-height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: var(--fill); color: var(--label); font-weight: 600; }
+.chip[aria-pressed="true"] { background: var(--a-tempo); color: #ffffff; }
