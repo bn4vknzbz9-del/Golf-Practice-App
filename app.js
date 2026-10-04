@@ -587,7 +587,13 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: 0 }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
+  // How far to hold the lights back so they match the sound you hear. It depends on the speaker or headphones,
+  // so it is remembered on this device (outside the encrypted log, since it is not personal).
+  function loadSync() {
+    try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(400, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
+  }
+  function saveSync(v) { try { localStorage.setItem('golfpractice.tempo.sync.v1', String(v)); } catch (e) { /* ignore */ } }
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -1841,7 +1847,7 @@
   }
 
   // The metronome engine. Beeps are scheduled on the audio clock so the timing stays steady.
-  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null };
+  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, mode: 'swing', next: 0, queue: [], wake: null, viz: null };
   const tempoClock = () => (tempoEngine.ctx ? tempoEngine.ctx.currentTime : Date.now() / 1000);
 
   // On an iPhone the silent switch mutes Web Audio but not media playback. Setting the audio session to
@@ -1879,9 +1885,32 @@
     o.start(when);
     o.stop(when + len + 0.03);
   }
+  // The time, on the audio clock, of the sound coming out of the speaker right now. Where the browser can report it,
+  // this already includes the speaker or Bluetooth delay. Otherwise it is the clock minus what the browser says its delay is.
+  function audibleTime() {
+    const e = tempoEngine;
+    if (!e.ctx) return Date.now() / 1000;
+    if (typeof e.ctx.getOutputTimestamp === 'function' && typeof performance !== 'undefined') {
+      try {
+        const ts = e.ctx.getOutputTimestamp();
+        if (ts && ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
+      } catch (err) { /* fall back below */ }
+    }
+    return e.ctx.currentTime - (e.ctx.baseLatency || 0) - (e.ctx.outputLatency || 0);
+  }
+
   function tempoSchedule() {
     const e = tempoEngine;
     const st = ui.tempo;
+    if (e.mode === 'sync') { // sync test: one ping every second, with a light, so the lights can be lined up with the sound
+      while (e.next < tempoClock() + 0.25) {
+        if (e.ctx) beep(e.ctx, e.next, TONE_PING, 0.3, 0.9);
+        e.queue.push({ start: e.next });
+        if (e.queue.length > 6) e.queue.shift();
+        e.next += 1;
+      }
+      return;
+    }
     while (e.next < tempoClock() + 0.25) {
       const c = tempoCycle(st.ratio, st.bpm, st.rest);
       const cyc = { start: e.next, ...c };
@@ -1903,20 +1932,23 @@
     const e = tempoEngine;
     const v = e.viz;
     if (!v) return;
-    // The audio clock runs ahead of what you hear by the device's output delay (more on Bluetooth), so hold the lights back by that much.
-    const delay = e.ctx ? (e.ctx.baseLatency || 0) + (e.ctx.outputLatency || 0) : 0;
-    const t = tempoClock() - delay - (ui.tempo.sync || 0) / 1000;
+    // Draw the moment that is being heard now, adjusted by the sync set for this speaker or headphones.
+    const t = audibleTime() - (ui.tempo.sync || 0) / 1000;
     const cyc = [...e.queue].reverse().find((c) => c.start <= t);
     const clamp = (x) => Math.min(1, Math.max(0, x));
+    if (e.mode === 'sync') {
+      v.syncDot.classList.toggle('on', !!cyc && t - cyc.start < 0.15);
+      return;
+    }
     if (!cyc) {
       v.beats.forEach((b) => b.classList.remove('on'));
-      v.cells.forEach((f) => { f.style.width = '0%'; });
+      v.cells.forEach((f) => { f.style.transform = 'scaleX(0)'; });
       v.phase.textContent = 'Get ready';
       return;
     }
     const p = t - cyc.start;
     // One cell per beat, and each cell fills over exactly one beat, so the bar moves in time with the tones.
-    v.cells.forEach((f, i) => { f.style.width = (clamp((p - i * cyc.u) / cyc.u) * 100).toFixed(1) + '%'; });
+    v.cells.forEach((f, i) => { f.style.transform = 'scaleX(' + clamp((p - i * cyc.u) / cyc.u).toFixed(4) + ')'; });
     v.beats[0].classList.toggle('on', p >= 0 && p < 0.2);
     v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.2);
     v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.25);
@@ -1928,9 +1960,10 @@
     tempoPaint();
     e.raf = requestAnimationFrame(tempoFrame);
   }
-  async function startTempo() {
+  async function startTempo(mode) {
     const e = tempoEngine;
     if (e.running) return;
+    e.mode = mode || 'swing';
     allowSilentModeAudio(); // started from the tap, so the phone allows it
     const AC = window.AudioContext || window.webkitAudioContext;
     if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
@@ -1942,7 +1975,7 @@
     e.timer = setInterval(tempoSchedule, 25);
     e.raf = requestAnimationFrame(tempoFrame);
     try { if (navigator.wakeLock) e.wake = await navigator.wakeLock.request('screen'); } catch (err) { e.wake = null; }
-    if (e.viz) e.viz.toggle.textContent = 'Stop';
+    if (e.viz) { e.viz.toggle.textContent = e.mode === 'sync' ? 'Start' : 'Stop'; e.viz.test.textContent = e.mode === 'sync' ? 'Stop the sync test' : 'Test sync'; }
   }
   function stopTempo() {
     const e = tempoEngine;
@@ -1957,9 +1990,11 @@
     releaseSilentModeAudio();
     if (e.viz) {
       e.viz.beats.forEach((b) => b.classList.remove('on'));
-      e.viz.cells.forEach((f) => { f.style.width = '0%'; });
+      e.viz.cells.forEach((f) => { f.style.transform = 'scaleX(0)'; });
+      e.viz.syncDot.classList.remove('on');
       e.viz.phase.textContent = 'Stopped';
       e.viz.toggle.textContent = 'Start';
+      e.viz.test.textContent = 'Test sync';
     }
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopTempo(); });
@@ -2067,8 +2102,8 @@
       if (tempoEngine.viz) tempoEngine.viz.cells = cells;
     }
     // a change to the ratio or the rest starts the pattern again so the bar and the tones stay together
-    const restartIfRunning = () => { if (tempoEngine.running) { stopTempo(); startTempo(); } };
-    const toggle = h('button', { type: 'button', class: 'primary tempo-go', text: tempoEngine.running ? 'Stop' : 'Start', onclick: () => { if (tempoEngine.running) stopTempo(); else startTempo(); } });
+    const restartIfRunning = () => { if (tempoEngine.running && tempoEngine.mode === 'swing') { stopTempo(); startTempo('swing'); } };
+    const toggle = h('button', { type: 'button', class: 'primary tempo-go', text: tempoEngine.running ? 'Stop' : 'Start', onclick: () => { if (tempoEngine.running && tempoEngine.mode === 'swing') stopTempo(); else { stopTempo(); startTempo('swing'); } } });
     tempoEngine.viz = { beats, cells: [], phase, toggle };
     rebuildBar();
 
@@ -2082,10 +2117,18 @@
     const tickCb = h('input', { type: 'checkbox' });
     tickCb.checked = !!st.ticks;
     tickCb.addEventListener('change', () => { st.ticks = tickCb.checked; });
-    const syncOut = h('output', { class: 'len-out', text: (st.sync || 0) + ' ms' });
-    const syncRange = h('input', { type: 'range', min: 0, max: 300, step: 10, 'aria-label': 'Delay the lights in milliseconds' });
+    const fmtMs = (v) => (v > 0 ? '+' : '') + v + ' ms';
+    const syncOut = h('output', { class: 'len-out', text: fmtMs(st.sync || 0) });
+    const syncRange = h('input', { type: 'range', min: -100, max: 400, step: 5, 'aria-label': 'Sync the lights with the sound, in milliseconds' });
     syncRange.value = String(st.sync || 0);
-    syncRange.addEventListener('input', () => { st.sync = Number(syncRange.value); syncOut.textContent = st.sync + ' ms'; });
+    syncRange.addEventListener('input', () => { st.sync = Number(syncRange.value); syncOut.textContent = fmtMs(st.sync); saveSync(st.sync); });
+    const syncDot = h('span', { class: 'sync-dot', 'aria-hidden': 'true' });
+    const testBtn = h('button', {
+      type: 'button', class: 'ghost', text: tempoEngine.running && tempoEngine.mode === 'sync' ? 'Stop the sync test' : 'Test sync',
+      onclick: () => { if (tempoEngine.running && tempoEngine.mode === 'sync') stopTempo(); else { stopTempo(); startTempo('sync'); } }
+    });
+    tempoEngine.viz.syncDot = syncDot;
+    tempoEngine.viz.test = testBtn;
 
     drawDial(); drawTicks(); drawChips(); drawReadouts();
 
@@ -2108,9 +2151,10 @@
         h('label', { class: 'check' }, soundCb, 'Sound on'),
         h('label', { class: 'check' }, tickCb, 'Soft click on the other beats'),
         h('div', null,
-          h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Delay the lights' }), syncOut),
+          h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Sync the lights with the sound' }), syncOut),
           syncRange,
-          h('p', { class: 'hint', text: 'If the lights come before you hear the tone, add a delay. Bluetooth speakers and headphones need more.' }))),
+          h('p', { class: 'hint', text: 'Your phone plays the sound a moment after the app sends it, and the delay depends on the speaker or headphones. Tap Test sync, then move this until the light flashes exactly with the ping. Bluetooth usually needs 150 to 300 ms. It is remembered on this phone, so set it again if you change speaker.' }),
+          h('div', { class: 'sync-test' }, syncDot, testBtn))),
       h('button', {
         type: 'button', class: 'ghost',
         text: 'Log this session',
