@@ -462,7 +462,7 @@ input[type="checkbox"]:checked {
 .tempo-bar { gap: 3px; margin: 4px 0 8px; }
 .unit { position: relative; flex: 1 1 0; min-width: 0; height: 26px; border-radius: 7px; overflow: hidden; background: var(--fill2); }
 .unit-down { margin-left: 6px; }
-.unit-down + .unit-rest { margin-left: 6px; flex-grow: 2; }
+.unit-down + .unit-rest { margin-left: 6px; }
 .unit-back .fill { background: var(--a-calibration); }
 .unit-down .fill { background: var(--a-tempo); }
 .unit-rest .fill { background: var(--label3); }

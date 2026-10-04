@@ -587,7 +587,7 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, pause: 4, sound: true, ticks: false, sync: 0 }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: 0 }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -1815,10 +1815,10 @@
   const presetBpm = (down) => (60 * FPS) / down; // exact, e.g. 21/7 is 257.14 BPM
 
   // One beat of the metronome is one unit of the ratio. A 3:1 swing is 3 units back and 1 unit down.
-  function tempoCycle(ratio, bpm, pauseSec) {
+  function tempoCycle(ratio, bpm, rest) {
     const u = 60 / bpm;
     const back = TEMPO[ratio].parts * u;
-    return { u, back, down: u, pause: pauseSec, total: back + u + pauseSec };
+    return { u, back, down: u, pause: rest * u, total: back + u + rest * u }; // the rest is a whole number of beats
   }
   function presetMatch(ratio, bpm) {
     const downFrames = (60 / bpm) * FPS;
@@ -1883,15 +1883,15 @@
     const e = tempoEngine;
     const st = ui.tempo;
     while (e.next < tempoClock() + 0.25) {
-      const c = tempoCycle(st.ratio, st.bpm, st.pause);
+      const c = tempoCycle(st.ratio, st.bpm, st.rest);
       const cyc = { start: e.next, ...c };
       if (st.sound && e.ctx) {
         beep(e.ctx, cyc.start, TONE_LOW, 0.08, 0.4); // takeaway: a low, subtle click
         beep(e.ctx, cyc.start + c.back, TONE_LOW, 0.08, 0.4); // top of the backswing, the start of the downswing: the same low click
         beep(e.ctx, cyc.start + c.back + c.down, TONE_PING, 0.3, 0.9); // impact: a higher, clear ping to aim the strike at
-        if (st.ticks) { // an optional soft click on the beats inside the backswing, so the spacing can be counted
+        if (st.ticks) { // an optional soft click on every other beat, in the backswing and the rest, so the beats can be counted
           const parts = TEMPO[st.ratio].parts;
-          for (let i = 1; i < parts; i++) beep(e.ctx, cyc.start + i * c.u, TONE_CLICK, 0.02, 0.12);
+          for (let i = 1; i < parts + 1 + st.rest; i++) if (i !== parts && i !== parts + 1) beep(e.ctx, cyc.start + i * c.u, TONE_CLICK, 0.02, 0.12);
         }
       }
       e.queue.push(cyc);
@@ -1916,11 +1916,7 @@
     }
     const p = t - cyc.start;
     // One cell per beat, and each cell fills over exactly one beat, so the bar moves in time with the tones.
-    const swingCells = v.cells.length - 1; // the last cell is the pause
-    v.cells.forEach((f, i) => {
-      const frac = i < swingCells ? (p - i * cyc.u) / cyc.u : (p - swingCells * cyc.u) / cyc.pause;
-      f.style.width = (clamp(frac) * 100).toFixed(1) + '%';
-    });
+    v.cells.forEach((f, i) => { f.style.width = (clamp((p - i * cyc.u) / cyc.u) * 100).toFixed(1) + '%'; });
     v.beats[0].classList.toggle('on', p >= 0 && p < 0.2);
     v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.2);
     v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.25);
@@ -2016,8 +2012,8 @@
       })));
     }
     function drawReadouts() {
-      const c = tempoCycle(st.ratio, st.bpm, st.pause);
-      timeEl.textContent = 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s, whole swing ' + (c.back + c.down).toFixed(2) + ' s';
+      const c = tempoCycle(st.ratio, st.bpm, st.rest);
+      timeEl.textContent = 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s, whole swing ' + (c.back + c.down).toFixed(2) + ' s. Rest ' + st.rest + (st.rest === 1 ? ' beat' : ' beats') + ', ' + c.pause.toFixed(2) + ' s.';
       matchEl.textContent = presetMatch(st.ratio, st.bpm);
     }
     function setBpm(b, exact) {
@@ -2062,7 +2058,7 @@
       const parts = TEMPO[st.ratio].parts;
       const cells = [];
       const els = [];
-      for (let i = 0; i < parts + 2; i++) {
+      for (let i = 0; i < parts + 1 + st.rest; i++) {
         const f = h('span', { class: 'fill' });
         cells.push(f);
         els.push(h('span', { class: 'unit unit-' + (i < parts ? 'back' : i === parts ? 'down' : 'rest') }, f, i <= parts ? h('span', { class: 'unit-n', text: String(i + 1) }) : null));
@@ -2077,9 +2073,9 @@
     rebuildBar();
 
     // rest and sound
-    const restSel = h('select', { 'aria-label': 'Pause between swings' }, [1, 2, 3, 4, 5, 6, 8].map((n) => h('option', { value: String(n), text: n + (n === 1 ? ' second' : ' seconds') })));
-    restSel.value = String(st.pause);
-    restSel.addEventListener('change', () => { st.pause = Number(restSel.value); drawReadouts(); restartIfRunning(); });
+    const restSel = h('select', { 'aria-label': 'Rest between swings' }, [1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => h('option', { value: String(n), text: n + (n === 1 ? ' beat' : ' beats') })));
+    restSel.value = String(st.rest);
+    restSel.addEventListener('change', () => { st.rest = Number(restSel.value); rebuildBar(); drawReadouts(); restartIfRunning(); });
     const soundCb = h('input', { type: 'checkbox' });
     soundCb.checked = !!st.sound;
     soundCb.addEventListener('change', () => { st.sound = soundCb.checked; });
@@ -2108,9 +2104,9 @@
         h('p', { class: 'hint', text: 'Tap one to jump to it. Each is written backswing/downswing in frames of video at 30 frames per second, so 27/9 is 0.9 s back and 0.3 s down.' }),
         chips),
       h('div', { class: 'card stack' },
-        field('Pause between swings', restSel),
+        field('Rest between swings', restSel),
         h('label', { class: 'check' }, soundCb, 'Sound on'),
-        h('label', { class: 'check' }, tickCb, 'Soft click inside the backswing'),
+        h('label', { class: 'check' }, tickCb, 'Soft click on the other beats'),
         h('div', null,
           h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Delay the lights' }), syncOut),
           syncRange,
@@ -2124,7 +2120,7 @@
   }
 
   function tempoBody(rec) {
-    const c = tempoCycle(rec.ratio, rec.bpm, 4);
+    const c = tempoCycle(rec.ratio, rec.bpm, 0);
     return [
       h('p', { text: tempoLabel(rec) }),
       h('p', { text: 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s. ' + presetMatch(rec.ratio, rec.bpm) }),
