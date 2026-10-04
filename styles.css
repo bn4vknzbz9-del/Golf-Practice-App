@@ -462,7 +462,7 @@ input[type="checkbox"]:checked {
 .beat-col { display: grid; justify-items: center; gap: 6px; }
 .beat { width: 46px; height: 46px; border-radius: 50%; background: var(--fill2); transition: background 180ms ease-out, transform 180ms ease-out; }
 .beat.on { background: var(--a-tempo); transform: scale(1.18); transition: none; }
-.beat-impact.on { background: var(--green); }
+.beat-impact.on { background: #34c759; }
 .beat-label { font-size: 13px; font-weight: 600; }
 .tempo-bar { gap: 3px; margin: 4px 0 8px; }
 .unit { position: relative; flex: 1 1 0; min-width: 0; height: 26px; border-radius: 7px; overflow: hidden; background: var(--fill2); }
@@ -484,3 +484,19 @@ input[type="checkbox"]:checked {
 .mech-list-row:last-child { border-bottom: 0; }
 .mech-list-row .ghost { min-height: 36px; padding: 0 14px; border-radius: 18px; flex: none; }
 [hidden] { display: none !important; }
+
+/* Each of the first four tabs wears its own colour in place of the green: buttons, links, switches and sliders follow it.
+   The text colours are a little darker than the tab icons so white text stays readable on them. */
+body[data-area="technique"] { --tint: #9b3fd0; --tint-fill: rgba(155, 63, 208, 0.12); }
+body[data-area="calibration"] { --tint: #0062cc; --tint-fill: rgba(0, 98, 204, 0.12); }
+body[data-area="transfer"] { --tint: #b85c00; --tint-fill: rgba(184, 92, 0, 0.13); }
+body[data-area="tempo"] { --tint: #d6143f; --tint-fill: rgba(214, 20, 63, 0.12); }
+@media (prefers-color-scheme: dark) {
+  body[data-area="technique"] { --tint: #bf5af2; --tint-fill: rgba(191, 90, 242, 0.22); }
+  body[data-area="calibration"] { --tint: #0a84ff; --tint-fill: rgba(10, 132, 255, 0.22); }
+  body[data-area="transfer"] { --tint: #ff9f0a; --tint-fill: rgba(255, 159, 10, 0.22); }
+  body[data-area="tempo"] { --tint: #ff375f; --tint-fill: rgba(255, 55, 95, 0.22); }
+}
+.fold-wrap { display: grid; gap: 4px; }
+.fold-btn { justify-self: start; font-weight: 600; }
+.fold[hidden], .how[hidden] { display: none; }

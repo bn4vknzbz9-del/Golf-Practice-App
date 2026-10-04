@@ -347,7 +347,7 @@
   const TRANSFER = TRANSFER_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + FOCUS }));
 
   /* Technique protocol: no club -> freezer -> smoothie -> foam ball -> real ball.
-     Progression from Dr Luke Benoit's 5x5 method. The Set the target and Refine blocks follow
+     Progression from Dr Luke Benoit's 5x5 method. The Set your goal and Refine blocks follow
      Adam Young's Diagnose, Intervene, Refine, Transfer structure. */
   const STAGE_NAMES = ['No club', 'Freezer', 'Smoothie', 'Foam ball', 'Real ball'];
   const STAGE_SHORT = ['No club', 'Freezer', 'Smoothie', 'Foam', 'Real'];
@@ -359,10 +359,10 @@
     { name: 'Foam ball', how: 'Add a foam ball and use the same method. You can alternate freezer and smoothie swings. The foam ball lets you change the pattern while hitting a ball, without chasing the reward of a pure real shot.\n' + FIVE },
     { name: 'Real ball', how: 'Now hit real balls. You can think about the move as you swing. Your job is to get comfortable hitting real shots with the new pattern, and some of them will be bad: that is often a sign the pattern is changing. If a big miss shows up again and again, spend a few balls hitting it the other way on purpose to nudge impact back to a workable window, without losing the move.\n' + FIVE }
   ];
-  const SET_BLOCK = { name: 'Set the target', how: 'Diagnose first. Write down the mechanic and the exact position you want, film one baseline swing and compare it with that position. Pick a check you can judge on video or in a mirror. If the mechanic has several parts, work the pivot and transition first, then the arms and club. The goal of this session is to change your pattern, not to hit good shots, because trying to hit good shots at the same time splits your attention.' };
+  const SET_BLOCK = { name: 'Set your goal', how: 'Diagnose first. Write down the mechanic and the exact position you want, film one baseline swing and compare it with that position. Pick a check you can judge on video or in a mirror. If the mechanic has several parts, work the pivot and transition first, then the arms and club. The goal of this session is to change your pattern, not to hit good shots, because trying to hit good shots at the same time splits your attention.' };
   const REFINE_BLOCK = { name: 'Refine on real balls', how: 'Keep the move and calibrate it. Hit 3 real balls with a little too much of the move, 3 with a little too little, then 3 with the amount you want. Finish with shots at a target, keeping your attention on the ball flight.' };
 
-  // Minutes for each block, by starting stage (all total 30). Stage -1 is Set the target, 5 is Refine.
+  // Minutes for each block, by starting stage (all total 30). Stage -1 is Set your goal, 5 is Refine.
   const PROTO_PLANS = {
     0: [[-1, 3], [0, 3], [1, 6], [2, 6], [3, 6], [4, 6]],
     1: [[-1, 3], [1, 6], [2, 6], [3, 7], [4, 8]],
@@ -506,7 +506,7 @@
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
     cat: str(i.cat, 40),
-    name: str(i.name, 120),
+    name: str(i.name, 120) === 'Set the target' ? 'Set your goal' : str(i.name, 120), // the block was renamed
     how: str(i.how, 1500),
     minutes: num(i.minutes, 0, 120),
     max: i.max == null ? null : Math.round(num(i.max, 1, 100)), // top of the score slider; null on older sessions scored out of 10
@@ -636,6 +636,8 @@
     session = null;
     drafts = freshDrafts();
     ui = freshUi();
+    openText.clear();
+    document.body.removeAttribute('data-area');
     renderLock();
   }
 
@@ -874,6 +876,8 @@
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: 'Back up now', onclick: async () => { if (await exportBackup()) { toast('Backup saved'); renderApp(); } } }))) : null;
+    if (['technique', 'calibration', 'transfer', 'tempo'].includes(ui.tab)) document.body.setAttribute('data-area', ui.tab); // the accent colour follows the tab
+    else document.body.removeAttribute('data-area');
     root.replaceChildren(header, h('main', null, reminder, view), nav);
     syncRanges();
     if (toTop) window.scrollTo(0, 0);
@@ -1276,6 +1280,22 @@
       body);
   }
 
+  // A piece of text that starts folded away behind a button. Which ones are open is remembered until you lock the app.
+  const openText = new Set();
+  function disclosure(key, showLabel, hideLabel, nodes, cls) {
+    const box = h('div', { class: cls || 'fold' }, nodes);
+    const btn = h('button', { type: 'button', class: 'link fold-btn' });
+    const paint = () => {
+      const open = openText.has(key);
+      box.hidden = !open;
+      btn.textContent = open ? hideLabel : showLabel;
+      btn.setAttribute('aria-expanded', String(open));
+    };
+    btn.addEventListener('click', () => { if (openText.has(key)) openText.delete(key); else openText.add(key); paint(); });
+    paint();
+    return h('div', { class: 'fold-wrap' }, btn, box);
+  }
+
   function protocolSetup(d) {
     const known = () => d.mechList.some((m) => progressByMechanic().some((e) => mechKey(e.name) === mechKey(m)));
     const sel = h('select', null, STAGE_NAMES.map((n, i) => h('option', { value: String(i), text: n })));
@@ -1295,8 +1315,9 @@
     updateHint();
 
     return h('div', { class: 'stack' },
-      h('p', { class: 'lead', text: lenWord(ui.len.technique) + ' to change one mechanic. You move from no club to freezer swings, smoothie swings, a foam ball and then real balls, with five good swings in a row at each stage.' }),
-      h('p', { class: 'hint', text: 'The goal is to change your pattern, not to hit good shots. Film yourself to check each swing hits the position. If one is wrong, start that set of five again.' }),
+      disclosure('setup-intro', 'How this works', 'Hide how this works', [
+        h('p', { class: 'lead', text: lenWord(ui.len.technique) + ' to change one mechanic. You move from no club to freezer swings, smoothie swings, a foam ball and then real balls, with five good swings in a row at each stage.' }),
+        h('p', { class: 'hint', text: 'The goal is to change your pattern, not to hit good shots. Film yourself to check each swing hits the position. If one is wrong, start that set of five again.' })]),
       progressBlock(),
       field('Date', dateInput(d)),
       field('Mechanics I am working on (tick one or more)', mech),
@@ -1331,7 +1352,7 @@
         h('span', { class: 'idx', text: String(i + 1) }),
         h('h3', { text: item.name }),
         h('span', { class: 'tag', text: item.cat + ', ' + item.minutes + ' min' })),
-      h('div', { class: 'how' }, howNodes(item.how)),
+      disclosure('how-' + item.id, 'Show instructions', 'Hide instructions', howNodes(item.how), 'how'),
       tracked ? h('div', { class: 'stepper' },
         h('span', { text: 'Sets of five attempted' }),
         h('button', { type: 'button', class: 'ghost', text: '\u2212', 'aria-label': 'One fewer set', onclick: step(-1) }),
@@ -2093,30 +2114,28 @@
       drawDial(); drawChips(); drawReadouts();
     }
 
-    // turning the knob: grab it and turn, like a real one, with no jump. A touch on the printed scale outside the knob jumps there.
+    // turning the knob: grab it anywhere and turn, like a real one, with no jump. It is geared down, so the finger
+    // has to travel 2.5 degrees for every 1 degree the knob turns. The printed scale is for reading only.
+    const GEAR = 0.4;
     let turn = null;
-    function pointerPos(e) {
+    function pointerDeg(e) {
       const r = svg.getBoundingClientRect();
       const k = (r.width || VB_W) / VB_W;
-      const dx = e.clientX - (r.left + CX * k);
-      const dy = e.clientY - (r.top + CY * k);
-      return { deg: (Math.atan2(dx, -dy) * 180) / Math.PI, dist: Math.hypot(dx, dy) / k };
+      return (Math.atan2(e.clientX - (r.left + CX * k), -(e.clientY - (r.top + CY * k))) * 180) / Math.PI;
     }
     svg.addEventListener('pointerdown', (e) => {
       if (svg.setPointerCapture) { try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
-      const { deg, dist } = pointerPos(e);
-      if (dist > KR + 6 && dist > CAP) setBpm(Math.round(bpmAt(deg))); // the scale: jump to that speed
-      turn = { prev: deg, angle: angleOf(st.bpm) };
+      turn = { prev: pointerDeg(e), angle: angleOf(st.bpm) };
       e.preventDefault();
     });
     svg.addEventListener('pointermove', (e) => {
       if (!turn || !(e.buttons || e.pressure > 0)) return;
-      const { deg } = pointerPos(e);
+      const deg = pointerDeg(e);
       let d = deg - turn.prev;
       if (d > 180) d -= 360;
       if (d < -180) d += 360;
       turn.prev = deg;
-      turn.angle = Math.min(135, Math.max(-135, turn.angle + d)); // the knob stops at both ends
+      turn.angle = Math.min(135, Math.max(-135, turn.angle + d * GEAR)); // the knob stops at both ends
       setBpm(Math.round(bpmAt(turn.angle)));
     });
     const endTurn = () => { turn = null; };
