@@ -484,3 +484,7 @@ input[type="checkbox"]:checked {
 .sync-test { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
 .sync-dot { width: 40px; height: 40px; border-radius: 50%; background: var(--fill2); flex: none; transition: background 150ms ease-out; }
 .sync-dot.on { background: var(--a-tempo); transition: none; }
+
+/* Tap to sync */
+.tap-pad { width: 100%; min-height: 120px; font-size: 22px; margin-top: 8px; touch-action: manipulation; }
+.tap-pad[hidden] { display: none; }

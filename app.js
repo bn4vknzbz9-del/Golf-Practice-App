@@ -590,10 +590,11 @@
   // How far to hold the lights back so they match the sound you hear. It depends on the speaker or headphones,
   // so it is remembered on this device (outside the encrypted log, since it is not personal).
   function loadSync() {
-    try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(400, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
+    try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(600, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
   }
+  function hasSync() { try { return localStorage.getItem('golfpractice.tempo.sync.v1') !== null; } catch (e) { return false; } }
   function saveSync(v) { try { localStorage.setItem('golfpractice.tempo.sync.v1', String(v)); } catch (e) { /* ignore */ } }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync(), synced: hasSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -1847,7 +1848,10 @@
   }
 
   // The metronome engine. Beeps are scheduled on the audio clock so the timing stays steady.
-  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, mode: 'swing', next: 0, queue: [], wake: null, viz: null };
+  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, mode: 'swing', next: 0, queue: [], wake: null, viz: null, tapPings: [], taps: [] };
+  const TAP_PERIOD = 1.2; // seconds between pings in the tap test
+  const TAP_WARMUP = 2; // the first taps are practice
+  const TAP_COUNT = 8; // taps that are counted
   const tempoClock = () => (tempoEngine.ctx ? tempoEngine.ctx.currentTime : Date.now() / 1000);
 
   // On an iPhone the silent switch mutes Web Audio but not media playback. Setting the audio session to
@@ -1902,12 +1906,14 @@
   function tempoSchedule() {
     const e = tempoEngine;
     const st = ui.tempo;
-    if (e.mode === 'sync') { // sync test: one ping every second, with a light, so the lights can be lined up with the sound
+    if (e.mode === 'sync' || e.mode === 'tap') { // sync tests: a steady ping, with a light (sync test) or without one (tap test)
+      const step = e.mode === 'tap' ? TAP_PERIOD : 1;
       while (e.next < tempoClock() + 0.25) {
         if (e.ctx) beep(e.ctx, e.next, TONE_PING, 0.3, 0.9);
         e.queue.push({ start: e.next });
+        if (e.mode === 'tap') e.tapPings.push(e.next);
         if (e.queue.length > 6) e.queue.shift();
-        e.next += 1;
+        e.next += step;
       }
       return;
     }
@@ -1936,6 +1942,7 @@
     const t = audibleTime() - (ui.tempo.sync || 0) / 1000;
     const cyc = [...e.queue].reverse().find((c) => c.start <= t);
     const clamp = (x) => Math.min(1, Math.max(0, x));
+    if (e.mode === 'tap') return;
     if (e.mode === 'sync') {
       v.syncDot.classList.toggle('on', !!cyc && t - cyc.start < 0.15);
       return;
@@ -1954,6 +1961,31 @@
     v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.25);
     v.phase.textContent = p < cyc.back ? 'Backswing' : p < cyc.back + cyc.down ? 'Downswing' : 'Rest';
   }
+  // Tap to sync: you tap with each ping you hear. The gap between each ping and your tap, less the delay the app already
+  // allows for, is how far the lights need to be held back. The middle value of the counted taps is used.
+  function recordTap(ev) {
+    const e = tempoEngine;
+    const v = e.viz;
+    if (!v || !e.running || e.mode !== 'tap' || !e.tapPings.length) return;
+    const lag = typeof performance !== 'undefined' && ev && typeof ev.timeStamp === 'number' ? Math.min(0.1, Math.max(0, (performance.now() - ev.timeStamp) / 1000)) : 0; // time the tap waited before the page saw it
+    const tapAt = tempoClock() - lag;
+    let ph = (tapAt - e.tapPings[0]) % TAP_PERIOD;
+    if (ph < 0) ph += TAP_PERIOD;
+    if (ph > TAP_PERIOD - 0.35) ph -= TAP_PERIOD; // a tap up to 350 ms before a ping still counts for that ping
+    e.taps.push(Math.round((ph - (tempoClock() - audibleTime())) * 1000));
+    const counted = e.taps.length - TAP_WARMUP;
+    if (counted <= 0) { v.tapMsg.textContent = 'Practice tap. Keep tapping with each ping.'; return; }
+    if (counted < TAP_COUNT) { v.tapMsg.textContent = 'Counted ' + counted + ' of ' + TAP_COUNT + '.'; return; }
+    const use = e.taps.slice(TAP_WARMUP).sort((a, b) => a - b);
+    const mid = use.length % 2 ? use[(use.length - 1) / 2] : (use[use.length / 2 - 1] + use[use.length / 2]) / 2;
+    const spread = use[use.length - 1] - use[0];
+    stopTempo();
+    if (spread > 400) { v.tapMsg.textContent = 'The taps were too uneven to use. Try again, tapping with the sound.'; return; }
+    const val = Math.min(600, Math.max(-100, Math.round(mid / 5) * 5));
+    v.applySync(val);
+    v.tapMsg.textContent = 'Set to ' + (val > 0 ? '+' : '') + val + ' ms. Tap Test sync to check it, and move the slider to fine tune.';
+  }
+
   function tempoFrame() {
     const e = tempoEngine;
     if (!e.running) return;
@@ -1964,6 +1996,8 @@
     const e = tempoEngine;
     if (e.running) return;
     e.mode = mode || 'swing';
+    e.tapPings = [];
+    e.taps = [];
     allowSilentModeAudio(); // started from the tap, so the phone allows it
     const AC = window.AudioContext || window.webkitAudioContext;
     if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
@@ -1975,7 +2009,16 @@
     e.timer = setInterval(tempoSchedule, 25);
     e.raf = requestAnimationFrame(tempoFrame);
     try { if (navigator.wakeLock) e.wake = await navigator.wakeLock.request('screen'); } catch (err) { e.wake = null; }
-    if (e.viz) { e.viz.toggle.textContent = e.mode === 'sync' ? 'Start' : 'Stop'; e.viz.test.textContent = e.mode === 'sync' ? 'Stop the sync test' : 'Test sync'; }
+    if (e.viz) {
+      e.viz.toggle.textContent = e.mode === 'swing' ? 'Stop' : 'Start';
+      e.viz.test.textContent = e.mode === 'sync' ? 'Stop the sync test' : 'Test sync';
+      e.viz.tap.textContent = e.mode === 'tap' ? 'Cancel' : 'Tap to sync';
+      e.viz.tapPad.hidden = e.mode !== 'tap';
+      if (e.mode === 'tap') {
+        e.viz.tapMsg.textContent = 'Listen for the ping and tap the big button with each one. The first two are practice.';
+        try { e.viz.tapPad.scrollIntoView({ block: 'center' }); } catch (err) { /* ignore */ }
+      }
+    }
   }
   function stopTempo() {
     const e = tempoEngine;
@@ -1995,6 +2038,8 @@
       e.viz.phase.textContent = 'Stopped';
       e.viz.toggle.textContent = 'Start';
       e.viz.test.textContent = 'Test sync';
+      e.viz.tap.textContent = 'Tap to sync';
+      e.viz.tapPad.hidden = true;
     }
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopTempo(); });
@@ -2119,16 +2164,42 @@
     tickCb.addEventListener('change', () => { st.ticks = tickCb.checked; });
     const fmtMs = (v) => (v > 0 ? '+' : '') + v + ' ms';
     const syncOut = h('output', { class: 'len-out', text: fmtMs(st.sync || 0) });
-    const syncRange = h('input', { type: 'range', min: -100, max: 400, step: 5, 'aria-label': 'Sync the lights with the sound, in milliseconds' });
+    const syncRange = h('input', { type: 'range', min: -100, max: 600, step: 5, 'aria-label': 'Sync the lights with the sound, in milliseconds' });
     syncRange.value = String(st.sync || 0);
-    syncRange.addEventListener('input', () => { st.sync = Number(syncRange.value); syncOut.textContent = fmtMs(st.sync); saveSync(st.sync); });
+    const applySync = (v) => { st.sync = v; st.synced = true; syncRange.value = String(v); syncOut.textContent = fmtMs(v); saveSync(v); if (syncRange.dispatchEvent && typeof Event === 'function') syncRange.dispatchEvent(new Event('input')); };
+    syncRange.addEventListener('input', () => { st.sync = Number(syncRange.value); st.synced = true; syncOut.textContent = fmtMs(st.sync); saveSync(st.sync); });
     const syncDot = h('span', { class: 'sync-dot', 'aria-hidden': 'true' });
     const testBtn = h('button', {
       type: 'button', class: 'ghost', text: tempoEngine.running && tempoEngine.mode === 'sync' ? 'Stop the sync test' : 'Test sync',
       onclick: () => { if (tempoEngine.running && tempoEngine.mode === 'sync') stopTempo(); else { stopTempo(); startTempo('sync'); } }
     });
+    const tapBtn = h('button', {
+      type: 'button', class: 'primary', text: 'Tap to sync',
+      onclick: () => { if (tempoEngine.running && tempoEngine.mode === 'tap') stopTempo(); else { stopTempo(); startTempo('tap'); } }
+    });
+    const tapPad = h('button', { type: 'button', class: 'primary tap-pad', text: 'Tap with each ping' });
+    tapPad.hidden = true;
+    tapPad.addEventListener('pointerdown', (ev) => { if (ev.preventDefault) ev.preventDefault(); recordTap(ev); });
+    tapPad.addEventListener('click', (ev) => { if (ev.detail === 0) recordTap(ev); }); // a keyboard press
+    const tapMsg = h('p', { class: 'hint', role: 'status', text: '' });
     tempoEngine.viz.syncDot = syncDot;
     tempoEngine.viz.test = testBtn;
+    tempoEngine.viz.tap = tapBtn;
+    tempoEngine.viz.tapPad = tapPad;
+    tempoEngine.viz.tapMsg = tapMsg;
+    tempoEngine.viz.applySync = applySync;
+    const syncPanel = h('details', { class: 'guide', open: !st.synced },
+      h('summary', { text: 'Lights out of step with the sound?' }),
+      h('div', { class: 'entry-body' },
+        h('p', { class: 'hint', text: 'Your phone plays the sound a moment after the app sends it, and the delay depends on the speaker or headphones, so the lights can come early. Tap to sync measures it from your taps. Bluetooth is usually 150 to 300 ms.' }),
+        h('div', { class: 'actions' }, tapBtn, testBtn),
+        tapPad,
+        tapMsg,
+        h('div', null,
+          h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Sync the lights with the sound' }), syncOut),
+          syncRange,
+          h('p', { class: 'hint', text: 'Positive holds the lights back. Tap Test sync and move this until the light flashes exactly with the ping. It is remembered on this phone, so set it again if you change speaker.' }),
+          h('div', { class: 'sync-test' }, syncDot))));
 
     drawDial(); drawTicks(); drawChips(); drawReadouts();
 
@@ -2139,6 +2210,7 @@
         bar,
         phase,
         toggle),
+      syncPanel,
       h('div', { class: 'card tempo-card' }, svg,
         h('div', { class: 'actions nudges' }, nudge('\u22125', -5), nudge('\u22121', -1), nudge('+1', 1), nudge('+5', 5)),
         timeEl, matchEl),
@@ -2149,12 +2221,7 @@
       h('div', { class: 'card stack' },
         field('Rest between swings', restSel),
         h('label', { class: 'check' }, soundCb, 'Sound on'),
-        h('label', { class: 'check' }, tickCb, 'Soft click on the other beats'),
-        h('div', null,
-          h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Sync the lights with the sound' }), syncOut),
-          syncRange,
-          h('p', { class: 'hint', text: 'Your phone plays the sound a moment after the app sends it, and the delay depends on the speaker or headphones. Tap Test sync, then move this until the light flashes exactly with the ping. Bluetooth usually needs 150 to 300 ms. It is remembered on this phone, so set it again if you change speaker.' }),
-          h('div', { class: 'sync-test' }, syncDot, testBtn))),
+        h('label', { class: 'check' }, tickCb, 'Soft click on the other beats')),
       h('button', {
         type: 'button', class: 'ghost',
         text: 'Log this session',
