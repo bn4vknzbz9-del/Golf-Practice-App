@@ -451,13 +451,12 @@ input[type="checkbox"]:checked {
 .dial-sub { fill: var(--label2); font: 600 13px var(--font); text-anchor: middle; letter-spacing: 0.08em; }
 .dial-tick { stroke: var(--label3); stroke-width: 2; stroke-linecap: round; }
 .dial-tick-label { fill: var(--label2); font: 600 9px var(--font); text-anchor: middle; }
-.nudges { justify-content: center; width: 100%; }
-.nudges .ghost { flex: 1 1 60px; min-width: 60px; padding: 0 8px; }
 .tempo-time { font-weight: 600; }
 .beats { display: flex; justify-content: space-around; margin-bottom: 12px; }
 .beat-col { display: grid; justify-items: center; gap: 6px; }
 .beat { width: 46px; height: 46px; border-radius: 50%; background: var(--fill2); transition: background 180ms ease-out, transform 180ms ease-out; }
 .beat.on { background: var(--a-tempo); transform: scale(1.18); transition: none; }
+.beat-impact.on { background: var(--green); }
 .beat-label { font-size: 13px; font-weight: 600; }
 .tempo-bar { gap: 3px; margin: 4px 0 8px; }
 .unit { position: relative; flex: 1 1 0; min-width: 0; height: 26px; border-radius: 7px; overflow: hidden; background: var(--fill2); }
@@ -479,12 +478,3 @@ input[type="checkbox"]:checked {
 .mech-list-row:last-child { border-bottom: 0; }
 .mech-list-row .ghost { min-height: 36px; padding: 0 14px; border-radius: 18px; flex: none; }
 [hidden] { display: none !important; }
-
-/* Sync test light */
-.sync-test { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
-.sync-dot { width: 40px; height: 40px; border-radius: 50%; background: var(--fill2); flex: none; transition: background 150ms ease-out; }
-.sync-dot.on { background: var(--a-tempo); transition: none; }
-
-/* Tap to sync */
-.tap-pad { width: 100%; min-height: 120px; font-size: 22px; margin-top: 8px; touch-action: manipulation; }
-.tap-pad[hidden] { display: none; }
