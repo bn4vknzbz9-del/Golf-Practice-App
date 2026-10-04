@@ -459,11 +459,22 @@ input[type="checkbox"]:checked {
 .beat { width: 46px; height: 46px; border-radius: 50%; background: var(--fill2); transition: background 60ms linear, transform 60ms linear; }
 .beat.on { background: var(--a-tempo); transform: scale(1.18); }
 .beat-label { font-size: 13px; font-weight: 600; }
-.tempo-seg-0 .fill { background: var(--a-calibration); }
-.tempo-seg-1 .fill { background: var(--a-tempo); }
-.tempo-seg-2 .fill { background: var(--label3); }
-.tempo-bar .tseg { height: 14px; border-radius: 7px; }
+.tempo-bar { gap: 3px; margin: 4px 0 8px; }
+.unit { position: relative; flex: 1 1 0; min-width: 0; height: 26px; border-radius: 7px; overflow: hidden; background: var(--fill2); }
+.unit-down { margin-left: 6px; }
+.unit-down + .unit-rest { margin-left: 6px; flex-grow: 2; }
+.unit-back .fill { background: var(--a-calibration); }
+.unit-down .fill { background: var(--a-tempo); }
+.unit-rest .fill { background: var(--label3); }
+.unit-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--label); mix-blend-mode: normal; }
 .tempo-go { width: 100%; min-height: 56px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .chip { min-height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: var(--fill); color: var(--label); font-weight: 600; }
 .chip[aria-pressed="true"] { background: var(--a-tempo); color: #ffffff; }
+
+/* Invite codes (owner page) */
+.invite-code { font: 700 26px/1.2 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.04em; margin: 8px 0; word-break: break-all; }
+.mech-list-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 52px; padding: 0 16px; border-bottom: 0.5px solid var(--sep); }
+.mech-list-row:last-child { border-bottom: 0; }
+.mech-list-row .ghost { min-height: 36px; padding: 0 14px; border-radius: 18px; flex: none; }
+[hidden] { display: none !important; }

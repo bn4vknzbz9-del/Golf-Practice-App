@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src blob:; connect-src 'none'; base-uri 'none'; form-action 'none'; manifest-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src blob:; connect-src 'self'; base-uri 'none'; form-action 'none'; manifest-src 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
@@ -12,7 +12,8 @@
   <title>Golf practice log</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+  <script src="access-core.js" defer></script>
+  <script src="gate.js" defer></script>
 </head>
 <body>
   <div id="root"></div>

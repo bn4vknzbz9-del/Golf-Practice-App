@@ -587,7 +587,7 @@
      Session state (lives in memory only while unlocked)
      ========================================================== */
   let session = null; // { key, salt, iter, data }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 3, sound: true }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, pause: 4, sound: true, ticks: false, sync: 0 }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -1799,9 +1799,9 @@
   }
 
   /* ==========================================================
-     Tempo: a Tour Tempo metronome with a dial, beat visuals and a log
+     Tempo: a metronome with a dial, beat visuals and a log
      ========================================================== */
-  const FPS = 30; // Tour Tempo counts video frames at 30 per second
+  const FPS = 30; // backswing and downswing are counted in frames of video at 30 per second
   const BPM_MIN = 40;
   const BPM_MAX = 300;
   // Backswing : downswing. Frames are backswing/downswing, slowest first. The speed is not limited to these.
@@ -1809,24 +1809,27 @@
     '3:1': { name: 'Long game', parts: 3, frames: [[27, 9], [24, 8], [21, 7], [18, 6]] },
     '2:1': { name: 'Short game', parts: 2, frames: [[20, 10], [18, 9], [16, 8], [14, 7]] }
   };
-  const tourBpm = (down) => Math.round((60 * FPS) / down);
+  const TONE_LOW = 587; // takeaway and top
+  const TONE_PING = 1319; // impact
+  const TONE_CLICK = 2400; // optional beat clicks
+  const presetBpm = (down) => (60 * FPS) / down; // exact, e.g. 21/7 is 257.14 BPM
 
   // One beat of the metronome is one unit of the ratio. A 3:1 swing is 3 units back and 1 unit down.
-  function tempoCycle(ratio, bpm, rest) {
+  function tempoCycle(ratio, bpm, pauseSec) {
     const u = 60 / bpm;
     const back = TEMPO[ratio].parts * u;
-    return { u, back, down: u, pause: rest * u, total: back + u + rest * u };
+    return { u, back, down: u, pause: pauseSec, total: back + u + pauseSec };
   }
-  function tourMatch(ratio, bpm) {
+  function presetMatch(ratio, bpm) {
     const downFrames = (60 / bpm) * FPS;
     const list = TEMPO[ratio].frames; // slowest first
     const slow = list[0][1];
     const fast = list[list.length - 1][1];
     const hit = list.find(([, d]) => Math.abs(downFrames - d) <= 0.3);
-    if (hit) return 'Matches Tour Tempo ' + hit[0] + '/' + hit[1] + '.';
-    if (downFrames > slow) return 'Slower than the slowest Tour Tempo (' + list[0][0] + '/' + slow + '), good for learning the feel.';
-    if (downFrames < fast) return 'Faster than the fastest Tour Tempo (' + list[list.length - 1][0] + '/' + fast + ').';
-    return 'Between two Tour Tempo options.';
+    if (hit) return 'Matches the ' + hit[0] + '/' + hit[1] + ' preset.';
+    if (downFrames > slow) return 'Slower than the slowest preset (' + list[0][0] + '/' + slow + '), good for learning the feel.';
+    if (downFrames < fast) return 'Faster than the fastest preset (' + list[list.length - 1][0] + '/' + fast + ').';
+    return 'Between two presets.';
   }
   const tempoLabel = (rec) => rec.ratio + ' ' + TEMPO[rec.ratio].name.toLowerCase() + ' at ' + rec.bpm + ' BPM';
 
@@ -1841,13 +1844,35 @@
   const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null };
   const tempoClock = () => (tempoEngine.ctx ? tempoEngine.ctx.currentTime : Date.now() / 1000);
 
+  // On an iPhone the silent switch mutes Web Audio but not media playback. Setting the audio session to
+  // playback (where supported) and keeping a silent media track playing makes the tones sound in silent mode.
+  const silentMode = { el: null, url: null };
+  function allowSilentModeAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
+    try {
+      if (!silentMode.el) {
+        silentMode.url = URL.createObjectURL(new Blob([buildTimerWav(1, 0)], { type: 'audio/wav' })); // 1 second of silence
+        const el = new Audio();
+        el.src = silentMode.url;
+        el.loop = true;
+        if (el.setAttribute) el.setAttribute('playsinline', '');
+        silentMode.el = el;
+      }
+      const p = silentMode.el.play();
+      if (p && p.catch) p.catch(() => { /* the tones still play where the phone is not on silent */ });
+    } catch (e) { /* ignore */ }
+  }
+  function releaseSilentModeAudio() {
+    if (silentMode.el) { try { silentMode.el.pause(); } catch (e) { /* ignore */ } }
+  }
+
   function beep(ctx, when, freq, len, vol) {
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = 'sine';
     o.frequency.value = freq;
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(vol, when + 0.006);
+    g.gain.exponentialRampToValueAtTime(vol, when + 0.003);
     g.gain.exponentialRampToValueAtTime(0.0001, when + len);
     o.connect(g);
     g.connect(ctx.destination);
@@ -1858,12 +1883,16 @@
     const e = tempoEngine;
     const st = ui.tempo;
     while (e.next < tempoClock() + 0.25) {
-      const c = tempoCycle(st.ratio, st.bpm, st.rest);
+      const c = tempoCycle(st.ratio, st.bpm, st.pause);
       const cyc = { start: e.next, ...c };
       if (st.sound && e.ctx) {
-        beep(e.ctx, cyc.start, 523, 0.18, 0.5); // takeaway
-        beep(e.ctx, cyc.start + c.back, 659, 0.18, 0.5); // top of the backswing
-        beep(e.ctx, cyc.start + c.back + c.down, 880, 0.3, 0.9); // impact
+        beep(e.ctx, cyc.start, TONE_LOW, 0.08, 0.4); // takeaway: a low, subtle click
+        beep(e.ctx, cyc.start + c.back, TONE_LOW, 0.08, 0.4); // top of the backswing, the start of the downswing: the same low click
+        beep(e.ctx, cyc.start + c.back + c.down, TONE_PING, 0.3, 0.9); // impact: a higher, clear ping to aim the strike at
+        if (st.ticks) { // an optional soft click on the beats inside the backswing, so the spacing can be counted
+          const parts = TEMPO[st.ratio].parts;
+          for (let i = 1; i < parts; i++) beep(e.ctx, cyc.start + i * c.u, TONE_CLICK, 0.02, 0.12);
+        }
       }
       e.queue.push(cyc);
       if (e.queue.length > 6) e.queue.shift();
@@ -1874,22 +1903,27 @@
     const e = tempoEngine;
     const v = e.viz;
     if (!v) return;
-    const t = tempoClock();
+    // The audio clock runs ahead of what you hear by the device's output delay (more on Bluetooth), so hold the lights back by that much.
+    const delay = e.ctx ? (e.ctx.baseLatency || 0) + (e.ctx.outputLatency || 0) : 0;
+    const t = tempoClock() - delay - (ui.tempo.sync || 0) / 1000;
     const cyc = [...e.queue].reverse().find((c) => c.start <= t);
     const clamp = (x) => Math.min(1, Math.max(0, x));
     if (!cyc) {
       v.beats.forEach((b) => b.classList.remove('on'));
-      v.fills.forEach((f) => { f.style.width = '0%'; });
+      v.cells.forEach((f) => { f.style.width = '0%'; });
       v.phase.textContent = 'Get ready';
       return;
     }
     const p = t - cyc.start;
-    v.fills[0].style.width = (clamp(p / cyc.back) * 100).toFixed(1) + '%';
-    v.fills[1].style.width = (clamp((p - cyc.back) / cyc.down) * 100).toFixed(1) + '%';
-    v.fills[2].style.width = (clamp((p - cyc.back - cyc.down) / cyc.pause) * 100).toFixed(1) + '%';
-    v.beats[0].classList.toggle('on', p >= 0 && p < 0.22);
-    v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.22);
-    v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.3);
+    // One cell per beat, and each cell fills over exactly one beat, so the bar moves in time with the tones.
+    const swingCells = v.cells.length - 1; // the last cell is the pause
+    v.cells.forEach((f, i) => {
+      const frac = i < swingCells ? (p - i * cyc.u) / cyc.u : (p - swingCells * cyc.u) / cyc.pause;
+      f.style.width = (clamp(frac) * 100).toFixed(1) + '%';
+    });
+    v.beats[0].classList.toggle('on', p >= 0 && p < 0.2);
+    v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.2);
+    v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.25);
     v.phase.textContent = p < cyc.back ? 'Backswing' : p < cyc.back + cyc.down ? 'Downswing' : 'Rest';
   }
   function tempoFrame() {
@@ -1901,6 +1935,7 @@
   async function startTempo() {
     const e = tempoEngine;
     if (e.running) return;
+    allowSilentModeAudio(); // started from the tap, so the phone allows it
     const AC = window.AudioContext || window.webkitAudioContext;
     if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
     if (e.ctx && e.ctx.resume) { try { await e.ctx.resume(); } catch (err) { /* keep going with visuals */ } }
@@ -1923,9 +1958,10 @@
     e.queue = [];
     if (e.wake && e.wake.release) { try { e.wake.release(); } catch (err) { /* ignore */ } }
     e.wake = null;
+    releaseSilentModeAudio();
     if (e.viz) {
       e.viz.beats.forEach((b) => b.classList.remove('on'));
-      e.viz.fills.forEach((f) => { f.style.width = '0%'; });
+      e.viz.cells.forEach((f) => { f.style.width = '0%'; });
       e.viz.phase.textContent = 'Stopped';
       e.viz.toggle.textContent = 'Start';
     }
@@ -1948,7 +1984,7 @@
 
     const timeEl = h('p', { class: 'tempo-time' });
     const matchEl = h('p', { class: 'hint' });
-    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Tour Tempo speeds' });
+    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Preset speeds' });
     const segBtns = [];
 
     function drawDial() {
@@ -1957,14 +1993,15 @@
       const [kx, ky] = polar(CX, CY, R, a);
       knob.setAttribute('cx', kx.toFixed(1));
       knob.setAttribute('cy', ky.toFixed(1));
-      bpmText.textContent = String(st.bpm);
-      svg.setAttribute('aria-valuenow', String(st.bpm));
-      svg.setAttribute('aria-valuetext', st.bpm + ' beats per minute');
+      const shown = Math.round(st.bpm);
+      bpmText.textContent = String(shown);
+      svg.setAttribute('aria-valuenow', String(shown));
+      svg.setAttribute('aria-valuetext', shown + ' beats per minute');
     }
     function drawTicks() {
       ticks.replaceChildren();
       TEMPO[st.ratio].frames.forEach(([tot, down]) => {
-        const a = angleOf(tourBpm(down));
+        const a = angleOf(presetBpm(down));
         const [x0, y0] = polar(CX, CY, R + 12, a);
         const [x1, y1] = polar(CX, CY, R + 22, a);
         const [tx, ty] = polar(CX, CY, R + 34, a);
@@ -1974,17 +2011,18 @@
     }
     function drawChips() {
       chips.replaceChildren(...TEMPO[st.ratio].frames.map(([tot, down]) => h('button', {
-        type: 'button', class: 'chip', text: tot + '/' + down, 'aria-pressed': String(st.bpm === tourBpm(down)),
-        onclick: () => setBpm(tourBpm(down))
+        type: 'button', class: 'chip', text: tot + '/' + down, 'aria-pressed': String(Math.abs(st.bpm - presetBpm(down)) < 0.01),
+        onclick: () => setBpm(presetBpm(down), true)
       })));
     }
     function drawReadouts() {
-      const c = tempoCycle(st.ratio, st.bpm, st.rest);
+      const c = tempoCycle(st.ratio, st.bpm, st.pause);
       timeEl.textContent = 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s, whole swing ' + (c.back + c.down).toFixed(2) + ' s';
-      matchEl.textContent = tourMatch(st.ratio, st.bpm);
+      matchEl.textContent = presetMatch(st.ratio, st.bpm);
     }
-    function setBpm(b) {
-      st.bpm = Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(b)));
+    function setBpm(b, exact) {
+      const v = Math.min(BPM_MAX, Math.max(BPM_MIN, exact ? b : Math.round(b)));
+      st.bpm = v;
       drawDial(); drawChips(); drawReadouts();
     }
 
@@ -2002,12 +2040,12 @@
     svg.addEventListener('pointermove', (e) => { if (e.buttons || e.pressure > 0) fromPointer(e); });
     svg.addEventListener('keydown', (e) => {
       const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 }[e.key];
-      if (step) { setBpm(st.bpm + step); e.preventDefault(); }
+      if (step) { setBpm(Math.round(st.bpm) + step); e.preventDefault(); }
     });
-    const nudge = (label, d) => h('button', { type: 'button', class: 'ghost', text: label, 'aria-label': (d > 0 ? 'Faster by ' : 'Slower by ') + Math.abs(d) + ' beats per minute', onclick: () => setBpm(st.bpm + d) });
+    const nudge = (label, d) => h('button', { type: 'button', class: 'ghost', text: label, 'aria-label': (d > 0 ? 'Faster by ' : 'Slower by ') + Math.abs(d) + ' beats per minute', onclick: () => setBpm(Math.round(st.bpm) + d) });
 
     // ratio
-    const setRatio = (r) => { st.ratio = r; segBtns.forEach(([id, b]) => b.setAttribute('aria-pressed', String(id === r))); drawTicks(); drawChips(); drawReadouts(); layoutBar(); };
+    const setRatio = (r) => { st.ratio = r; segBtns.forEach(([id, b]) => b.setAttribute('aria-pressed', String(id === r))); drawTicks(); drawChips(); drawReadouts(); rebuildBar(); restartIfRunning(); };
     const ratioCtl = h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Tempo ratio' },
       [['2:1', '2:1 Short game'], ['3:1', '3:1 Long game']].map(([id, label]) => {
         const b = h('button', { type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(st.ratio === id), onclick: () => setRatio(id) });
@@ -2015,60 +2053,81 @@
         return b;
       }));
 
-    // beat visuals
+    // beat visuals: three lights for the key moments, and a bar with one cell per beat
     const beatLabels = ['Takeaway', 'Top', 'Impact'];
-    const beats = beatLabels.map((l) => h('span', { class: 'beat', 'aria-hidden': 'true' }));
-    const fills = [0, 1, 2].map(() => h('span', { class: 'fill' }));
-    const segs = fills.map((f, i) => h('span', { class: 'tseg tempo-seg tempo-seg-' + i }, f));
+    const beats = beatLabels.map(() => h('span', { class: 'beat', 'aria-hidden': 'true' }));
+    const bar = h('div', { class: 'timeline tempo-bar', 'aria-hidden': 'true' });
     const phase = h('p', { class: 'now-label', role: 'status', text: 'Stopped' });
-    function layoutBar() {
-      segs[0].style.flexGrow = String(TEMPO[st.ratio].parts);
-      segs[1].style.flexGrow = '1';
-      segs[2].style.flexGrow = String(st.rest);
+    function rebuildBar() {
+      const parts = TEMPO[st.ratio].parts;
+      const cells = [];
+      const els = [];
+      for (let i = 0; i < parts + 2; i++) {
+        const f = h('span', { class: 'fill' });
+        cells.push(f);
+        els.push(h('span', { class: 'unit unit-' + (i < parts ? 'back' : i === parts ? 'down' : 'rest') }, f, i <= parts ? h('span', { class: 'unit-n', text: String(i + 1) }) : null));
+      }
+      bar.replaceChildren(...els);
+      if (tempoEngine.viz) tempoEngine.viz.cells = cells;
     }
+    // a change to the ratio or the rest starts the pattern again so the bar and the tones stay together
+    const restartIfRunning = () => { if (tempoEngine.running) { stopTempo(); startTempo(); } };
     const toggle = h('button', { type: 'button', class: 'primary tempo-go', text: tempoEngine.running ? 'Stop' : 'Start', onclick: () => { if (tempoEngine.running) stopTempo(); else startTempo(); } });
-    tempoEngine.viz = { beats, fills, phase, toggle };
+    tempoEngine.viz = { beats, cells: [], phase, toggle };
+    rebuildBar();
 
     // rest and sound
-    const restSel = h('select', { 'aria-label': 'Rest between swings' }, [2, 3, 4, 6].map((n) => h('option', { value: String(n), text: n + ' beats' })));
-    restSel.value = String(st.rest);
-    restSel.addEventListener('change', () => { st.rest = Number(restSel.value); layoutBar(); drawReadouts(); });
+    const restSel = h('select', { 'aria-label': 'Pause between swings' }, [1, 2, 3, 4, 5, 6, 8].map((n) => h('option', { value: String(n), text: n + (n === 1 ? ' second' : ' seconds') })));
+    restSel.value = String(st.pause);
+    restSel.addEventListener('change', () => { st.pause = Number(restSel.value); drawReadouts(); restartIfRunning(); });
     const soundCb = h('input', { type: 'checkbox' });
     soundCb.checked = !!st.sound;
     soundCb.addEventListener('change', () => { st.sound = soundCb.checked; });
+    const tickCb = h('input', { type: 'checkbox' });
+    tickCb.checked = !!st.ticks;
+    tickCb.addEventListener('change', () => { st.ticks = tickCb.checked; });
+    const syncOut = h('output', { class: 'len-out', text: (st.sync || 0) + ' ms' });
+    const syncRange = h('input', { type: 'range', min: 0, max: 300, step: 10, 'aria-label': 'Delay the lights in milliseconds' });
+    syncRange.value = String(st.sync || 0);
+    syncRange.addEventListener('input', () => { st.sync = Number(syncRange.value); syncOut.textContent = st.sync + ' ms'; });
 
-    drawDial(); drawTicks(); drawChips(); drawReadouts(); layoutBar();
+    drawDial(); drawTicks(); drawChips(); drawReadouts();
 
     return h('div', { class: 'stack' },
       ratioCtl,
       h('div', { class: 'card' },
         h('div', { class: 'beats' }, beats.map((b, i) => h('div', { class: 'beat-col' }, b, h('span', { class: 'beat-label', text: beatLabels[i] })))),
-        h('div', { class: 'timeline tempo-bar', 'aria-hidden': 'true' }, segs),
+        bar,
         phase,
         toggle),
       h('div', { class: 'card tempo-card' }, svg,
         h('div', { class: 'actions nudges' }, nudge('\u22125', -5), nudge('\u22121', -1), nudge('+1', 1), nudge('+5', 5)),
         timeEl, matchEl),
       h('div', { class: 'card' },
-        h('strong', { text: 'Tour Tempo speeds' }),
-        h('p', { class: 'hint', text: 'Tap one to jump to it. Tour Tempo uses frames of video at 30 frames per second, shown as backswing/downswing.' }),
+        h('strong', { text: 'Preset speeds' }),
+        h('p', { class: 'hint', text: 'Tap one to jump to it. Each is written backswing/downswing in frames of video at 30 frames per second, so 27/9 is 0.9 s back and 0.3 s down.' }),
         chips),
       h('div', { class: 'card stack' },
-        field('Rest between swings', restSel),
-        h('label', { class: 'check' }, soundCb, 'Sound on')),
+        field('Pause between swings', restSel),
+        h('label', { class: 'check' }, soundCb, 'Sound on'),
+        h('label', { class: 'check' }, tickCb, 'Soft click inside the backswing'),
+        h('div', null,
+          h('div', { class: 'len-top' }, h('span', { class: 'lbl', text: 'Delay the lights' }), syncOut),
+          syncRange,
+          h('p', { class: 'hint', text: 'If the lights come before you hear the tone, add a delay. Bluetooth speakers and headphones need more.' }))),
       h('button', {
         type: 'button', class: 'ghost',
         text: 'Log this session',
         onclick: () => { stopTempo(); drafts.tempo = { id: null, date: today(), ratio: st.ratio, bpm: st.bpm, notes: '' }; ui.mode = 'history'; renderApp(true); }
       }),
-      h('p', { class: 'hint', text: 'Three tones mark the takeaway, the top of the backswing and impact. From takeaway to top is 2 beats for a short game swing or 3 beats for a full swing, and from top to impact is 1 beat. Turn the dial to any speed, including slower than Tour Tempo.' }));
+      h('p', { class: 'hint', text: 'Three tones mark the takeaway, the top of the backswing and impact. From takeaway to top is 2 beats for a short game swing or 3 beats for a full swing, and from top to impact is 1 beat. Turn the dial to any speed, including slower than the presets. The sound plays through your media volume, so the silent switch should not mute it.' }));
   }
 
   function tempoBody(rec) {
-    const c = tempoCycle(rec.ratio, rec.bpm, 3);
+    const c = tempoCycle(rec.ratio, rec.bpm, 4);
     return [
       h('p', { text: tempoLabel(rec) }),
-      h('p', { text: 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s. ' + tourMatch(rec.ratio, rec.bpm) }),
+      h('p', { text: 'Backswing ' + c.back.toFixed(2) + ' s, downswing ' + c.down.toFixed(2) + ' s. ' + presetMatch(rec.ratio, rec.bpm) }),
       para('Notes', rec.notes)
     ];
   }

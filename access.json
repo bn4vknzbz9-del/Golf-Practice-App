@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "iter": 600000,
+  "invites": [
+    {
+      "id": "QPHV",
+      "name": "Owner",
+      "salt": "jm+a04vahdIS61A17B0nnA==",
+      "hash": "vWYqpTTPt8IE4gbR575y8sDMH2v4jBYHlghWWmlg7X0="
+    }
+  ]
+}
