@@ -7,6 +7,7 @@
   const GRACE_MS = 30 * 24 * 60 * 60 * 1000; // how long an invite is trusted when access.json cannot be reached
   const C = window.AccessCore;
   const root = document.getElementById('root');
+  if (!C) { root.textContent = 'access-core.js did not load. Check it is in your GitHub repository with exactly that name, then reload this page.'; return; }
 
   function h(tag, attrs, ...kids) {
     const el = document.createElement(tag);
@@ -99,5 +100,5 @@
       else showGate('Could not check your access. Connect to the internet and try again.');
     }
   }
-  check();
+  try { check(); } catch (e) { root.textContent = 'This page hit a problem: ' + e.message; }
 })();
