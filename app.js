@@ -999,6 +999,7 @@
     const summary = h('p', { class: 'hint' });
     const paint = () => { summary.textContent = obj[key].length ? 'Selected: ' + obj[key].join(', ') : 'None selected yet.'; };
     const box = h('div', { class: 'picker', role: 'group', 'aria-label': 'Mechanics' });
+    const labels = [];
     opts.forEach((m) => {
       const cb = h('input', { type: 'checkbox' });
       cb.checked = obj[key].some((x) => mechKey(x) === mechKey(m));
@@ -1008,9 +1009,26 @@
         paint();
         if (onChange) onChange();
       });
-      box.append(h('label', { class: 'pick' }, cb, m));
+      const label = h('label', { class: 'pick' }, cb, m);
+      labels.push(label);
+      box.append(label);
     });
     if (!opts.length) box.append(h('p', { class: 'hint', text: 'No mechanics added yet.' }));
+    // a long list shows its first 8 options and a button for the rest, so the page never needs a scrolling box inside it
+    const SHOW = 8;
+    let more = null;
+    if (opts.length > SHOW + 2) {
+      let all = false;
+      more = h('button', { type: 'button', class: 'link picker-more' });
+      const fold = () => {
+        labels.forEach((l, i) => { l.hidden = !all && i >= SHOW; });
+        more.textContent = all ? 'Show fewer mechanics' : 'Show all ' + opts.length + ' mechanics';
+        more.setAttribute('aria-expanded', String(all));
+      };
+      more.addEventListener('click', () => { all = !all; fold(); });
+      fold();
+      box.append(more);
+    }
     paint();
     return h('div', null, box, summary);
   }

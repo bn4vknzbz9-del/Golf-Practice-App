@@ -12,6 +12,7 @@
   --fill2: rgba(120, 120, 128, 0.2);
   --tint: #1e7f34;
   --tint-fill: rgba(30, 127, 52, 0.12);
+  --bar-green: #1e7f34; /* the Lock and Settings buttons stay green on every tab */
   --on-tint: #ffffff;
   --red: #ff3b30;
   --orange: #ff9500;
@@ -50,6 +51,7 @@
     --fill2: rgba(120, 120, 128, 0.36);
     --tint: #30d158;
     --tint-fill: rgba(48, 209, 88, 0.2);
+    --bar-green: #30d158;
     --on-tint: #000000;
     --red: #ff453a;
     --orange: #ff9f0a;
@@ -110,8 +112,9 @@ strong { font-weight: 600; }
   border-bottom: 0.5px solid var(--sep);
 }
 .top h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; text-align: center; }
-.bar-btn { background: none; border: 0; color: var(--tint); font: inherit; min-height: 44px; padding: 0 8px; cursor: pointer; }
+.bar-btn { background: none; border: 0; color: var(--bar-green); font: inherit; min-height: 44px; padding: 0 8px; cursor: pointer; }
 .bar-btn:first-child { justify-self: start; }
+.bar-btn:focus-visible { outline-color: var(--bar-green); }
 .bar-btn:last-child { justify-self: end; }
 
 main { max-width: 640px; margin: 0 auto; padding: 8px 16px 24px; }
@@ -395,7 +398,9 @@ input[type="checkbox"]:checked {
 .mech-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 52px; border-bottom: 0.5px solid var(--sep); }
 .mech-list li:last-child { border-bottom: 0; }
 .mech-list .ghost { min-height: 36px; padding: 0 14px; border-radius: 18px; flex: none; }
-.picker { max-height: 260px; overflow-y: auto; padding: 0 16px; }
+.picker { padding: 0 16px; } /* no box of its own to scroll: the list flows with the page so scrolling never gets caught */
+.pick[hidden] { display: none; }
+.picker-more { display: block; width: 100%; text-align: left; }
 .pick { display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 0.5px solid var(--sep); }
 .pick:last-of-type { border-bottom: 0; }
 .picker .hint { padding: 14px 0; }
