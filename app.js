@@ -1893,7 +1893,7 @@
       start,
       end: i + 1 < starts.length ? starts[i + 1] : total,
       tone: toneBox.indexOf(i) >= 0 ? toneBox.indexOf(i) : null, // 0 takeaway, 1 top, 2 impact
-      phase: i < toneBox[2] ? 'swing' : i === toneBox[2] ? 'impact' : 'rest'
+      phase: i < toneBox[1] ? 'back' : i < toneBox[2] ? 'down' : i === toneBox[2] ? 'impact' : 'rest'
     }));
     // What is drawn: one numbered box for each beat up to and including the impact box, then a single small unnumbered box
     // that stands for the whole rest and fills slowly over it.
@@ -1922,7 +1922,7 @@
   }
 
   // The metronome engine. Beeps are scheduled on the audio clock so the timing stays steady.
-  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null, master: null, live: new Set() };
+  const tempoEngine = { ctx: null, timer: null, raf: null, running: false, next: 0, queue: [], wake: null, viz: null, master: null, live: new Set(), gen: 0, starting: 0, stalledAt: 0, resuming: false, lastCt: 0, lastMove: 0 };
   const tempoClock = () => (tempoEngine.ctx ? tempoEngine.ctx.currentTime : Date.now() / 1000);
 
   // On an iPhone the silent switch mutes Web Audio but not media playback. Setting the audio session to
@@ -1964,16 +1964,60 @@
   }
   // The time, on the audio clock, of the sound coming out of the speaker right now. Where the browser can report it,
   // this already includes the speaker or Bluetooth delay. Otherwise it is the clock minus what the browser says its delay is.
+  const ctxRunning = (ctx) => !ctx.state || ctx.state === 'running'; // a browser that does not report a state is taken to be running
   function audibleTime() {
     const e = tempoEngine;
     if (!e.ctx) return Date.now() / 1000;
-    if (typeof e.ctx.getOutputTimestamp === 'function' && typeof performance !== 'undefined') {
+    // If the sound has been interrupted the clock is frozen, so do not carry on counting from the wall clock
+    if (ctxRunning(e.ctx) && typeof e.ctx.getOutputTimestamp === 'function' && typeof performance !== 'undefined') {
       try {
         const ts = e.ctx.getOutputTimestamp();
         if (ts && ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
       } catch (err) { /* fall back below */ }
     }
     return e.ctx.currentTime - (e.ctx.baseLatency || 0) - (e.ctx.outputLatency || 0);
+  }
+
+  // Silence everything already scheduled: the tones for a whole swing are queued ahead of time.
+  function cutSound() {
+    const e = tempoEngine;
+    if (e.master) {
+      try { e.master.gain.cancelScheduledValues(0); e.master.gain.value = 0; } catch (err) { /* ignore */ }
+      try { e.master.disconnect(); } catch (err) { /* ignore */ }
+      e.master = null;
+    }
+    e.live.forEach((o) => { try { o.stop(); } catch (err) { /* ignore */ } try { o.disconnect(); } catch (err) { /* ignore */ } });
+    e.live.clear();
+  }
+  function newMaster() {
+    const e = tempoEngine;
+    e.master = null;
+    if (e.ctx && e.ctx.createGain) { try { e.master = e.ctx.createGain(); e.master.connect(e.ctx.destination); } catch (err) { e.master = null; } }
+  }
+  // The phone can interrupt the sound (a call, a notification, another app). The sound clock then stops, but the screen and the
+  // wall clock carry on, which used to leave every box full and no sound. So watch the clock: try to restart the sound, begin the
+  // pattern again cleanly if that works, and if the phone will not allow it, stop and say so.
+  const STALL_MS = 1500;
+  const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  function watchAudio() {
+    const e = tempoEngine;
+    if (!e.running || !e.ctx) return;
+    const now = nowMs();
+    const ct = e.ctx.currentTime;
+    if (ct !== e.lastCt) { e.lastCt = ct; e.lastMove = now; }
+    if (ctxRunning(e.ctx) && now - e.lastMove < 400) {
+      if (e.stalledAt) { e.stalledAt = 0; cutSound(); newMaster(); e.queue = []; e.next = tempoClock() + 0.2; } // it came back: begin the pattern again from now
+      return;
+    }
+    if (!e.stalledAt) e.stalledAt = now;
+    if (!e.resuming && e.ctx.resume) {
+      e.resuming = true;
+      try { Promise.resolve(e.ctx.resume()).catch(() => {}).then(() => { e.resuming = false; }); } catch (err) { e.resuming = false; }
+    }
+    if (now - e.stalledAt > STALL_MS) {
+      stopTempo();
+      toast('The sound was interrupted. Tap Start to begin again.');
+    }
   }
 
   function tempoSchedule() {
@@ -2009,7 +2053,7 @@
     }
     const p = t - cyc.start;
     // each box fills from the moment it begins until the next box begins, so the bar moves in time with the tones and the clicks
-    v.cells.forEach((f, i) => { const bx = cyc.boxes[i]; f.style.transform = 'scaleX(' + clamp((p - bx.start) / (bx.end - bx.start)).toFixed(4) + ')'; });
+    v.cells.forEach((f, i) => { const bx = cyc.boxes[i]; if (!bx) return; f.style.transform = 'scaleX(' + clamp((p - bx.start) / (bx.end - bx.start)).toFixed(4) + ')'; });
     v.beats[0].classList.toggle('on', p >= 0 && p < 0.2);
     v.beats[1].classList.toggle('on', p >= cyc.back && p < cyc.back + 0.2);
     v.beats[2].classList.toggle('on', p >= cyc.back + cyc.down && p < cyc.back + cyc.down + 0.25);
@@ -2018,25 +2062,44 @@
   function tempoFrame() {
     const e = tempoEngine;
     if (!e.running) return;
-    tempoPaint();
+    try { tempoPaint(); } catch (err) { /* one bad frame must not stop the animation */ }
     e.raf = requestAnimationFrame(tempoFrame);
   }
   async function startTempo() {
     const e = tempoEngine;
-    if (e.running) return;
-    allowSilentModeAudio(); // started from the tap, so the phone allows it
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
-    if (e.ctx && e.ctx.resume) { try { await e.ctx.resume(); } catch (err) { /* keep going with visuals */ } }
-    if (e.ctx && e.ctx.createGain) { try { e.master = e.ctx.createGain(); e.master.connect(e.ctx.destination); } catch (err) { e.master = null; } }
-    e.running = true;
-    e.queue = [];
-    e.next = tempoClock() + 0.2;
-    tempoSchedule();
-    e.timer = setInterval(tempoSchedule, 25);
-    e.raf = requestAnimationFrame(tempoFrame);
-    try { if (navigator.wakeLock) e.wake = await navigator.wakeLock.request('screen'); } catch (err) { e.wake = null; }
-    if (e.viz) e.viz.toggle.textContent = 'Stop';
+    if (e.running || e.starting === e.gen) return; // already running, or a start is already under way (a double tap)
+    const gen = ++e.gen;
+    e.starting = gen;
+    const cancelled = () => gen !== e.gen; // Stop was pressed while the sound was still starting
+    try {
+      allowSilentModeAudio(); // started from the tap, so the phone allows it
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC && !e.ctx) { try { e.ctx = new AC(); } catch (err) { e.ctx = null; } }
+      // a phone that has interrupted the sound can leave resume() waiting for ever, so give it a moment and then carry on:
+      // the watch on the sound clock will stop with a message if the sound really is not running
+      if (e.ctx && e.ctx.resume) { try { await Promise.race([e.ctx.resume(), new Promise((done) => setTimeout(done, 800))]); } catch (err) { /* keep going with visuals */ } }
+      if (cancelled()) return;
+      newMaster();
+      e.running = true;
+      e.queue = [];
+      e.next = tempoClock() + 0.2;
+      e.stalledAt = 0;
+      e.resuming = false;
+      e.lastCt = e.ctx ? e.ctx.currentTime : 0;
+      e.lastMove = nowMs();
+      if (e.viz) e.viz.toggle.textContent = 'Stop';
+      tempoSchedule();
+      e.timer = setInterval(() => { try { watchAudio(); if (e.running) tempoSchedule(); } catch (err) { /* keep ticking */ } }, 25);
+      e.raf = requestAnimationFrame(tempoFrame);
+      try {
+        if (navigator.wakeLock) {
+          const lock = await navigator.wakeLock.request('screen');
+          if (cancelled()) { try { lock.release(); } catch (err) { /* ignore */ } } else e.wake = lock;
+        }
+      } catch (err) { e.wake = null; }
+    } finally {
+      if (e.starting === gen) e.starting = 0;
+    }
   }
   function stopTempo() {
     const e = tempoEngine;
@@ -2046,15 +2109,8 @@
     e.raf = null;
     e.running = false;
     e.queue = [];
-    // The tones for the whole swing are scheduled ahead of time, so cut them off now: silence the master volume, unplug it,
-    // and stop every tone that has not finished.
-    if (e.master) {
-      try { e.master.gain.cancelScheduledValues(0); e.master.gain.value = 0; } catch (err) { /* ignore */ }
-      try { e.master.disconnect(); } catch (err) { /* ignore */ }
-      e.master = null;
-    }
-    e.live.forEach((o) => { try { o.stop(); } catch (err) { /* ignore */ } try { o.disconnect(); } catch (err) { /* ignore */ } });
-    e.live.clear();
+    e.gen++; // cancels a start that is still waiting for the sound
+    cutSound(); // the tones for the whole swing are scheduled ahead, so cut them off now
     if (e.wake && e.wake.release) { try { e.wake.release(); } catch (err) { /* ignore */ } }
     e.wake = null;
     releaseSilentModeAudio();
@@ -2195,20 +2251,20 @@
 
     // beat visuals: three lights for the key moments, and a bar with one cell per beat
     const beatLabels = ['Takeaway', 'Top', 'Impact'];
-    const beats = beatLabels.map((l, i) => h('span', { class: 'beat' + (i === 2 ? ' beat-impact' : ''), 'aria-hidden': 'true' }));
+    const beats = beatLabels.map((l, i) => h('span', { class: 'beat' + (i === 1 ? ' beat-top' : i === 2 ? ' beat-impact' : ''), 'aria-hidden': 'true' }));
     const bar = h('div', { class: 'tempo-bar', 'aria-hidden': 'true' });
     const phase = h('p', { class: 'now-label', role: 'status', text: 'Stopped' });
     function rebuildBar() {
       const c = tempoCycle(st.ratio, st.bpm, st.rest);
       const cells = [];
-      const els = c.boxes.map((bx, i) => {
+      const els = c.boxes.map((bx) => {
         const f = h('span', { class: 'fill' });
         cells.push(f);
         if (bx.collapsed) { // the rest: one box half the size, no number, filling slowly
           return h('div', { class: 'cell cell-rest' }, h('span', { class: 'unit unit-rest' }, f), h('span', { class: 'cell-label' })); // no label: the Impact label beside it needs the room
         }
         return h('div', { class: 'cell' },
-          h('span', { class: 'unit unit-' + bx.phase + (bx.tone !== null ? ' unit-tone tone-' + bx.tone : '') }, f, h('span', { class: 'unit-n', text: String(i + 1) })),
+          h('span', { class: 'unit unit-' + bx.phase + (bx.tone !== null ? ' unit-tone tone-' + bx.tone : '') }, f),
           h('span', { class: 'cell-label' + (bx.tone !== null ? ' tone-' + bx.tone : ''), text: bx.tone !== null ? beatLabels[bx.tone] : '' }));
       });
       bar.replaceChildren(...els);

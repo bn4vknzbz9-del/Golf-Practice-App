@@ -14,6 +14,8 @@
   --tint-fill: rgba(30, 127, 52, 0.12);
   --bar-green: #1e7f34; /* the Lock and Settings buttons stay green on every tab */
   --go-text: #1e7b34;
+  --top-blue: #007aff; /* the top of the backswing: its light and its box */
+  --top-blue-text: #0062cc;
   --on-tint: #ffffff;
   --red: #ff3b30;
   --orange: #ff9500;
@@ -54,6 +56,8 @@
     --tint-fill: rgba(48, 209, 88, 0.2);
     --bar-green: #30d158;
     --go-text: #30d158;
+    --top-blue: #0a84ff;
+    --top-blue-text: #0a84ff;
     --on-tint: #000000;
     --red: #ff453a;
     --orange: #ff9f0a;
@@ -469,6 +473,7 @@ input[type="checkbox"]:checked {
 .beat-col { display: grid; justify-items: center; gap: 6px; }
 .beat { width: 46px; height: 46px; border-radius: 50%; background: var(--fill2); transition: background 180ms ease-out, transform 180ms ease-out; }
 .beat.on { background: var(--a-tempo); transform: scale(1.18); transition: none; }
+.beat-top.on { background: var(--top-blue); }
 .beat-impact.on { background: #34c759; }
 .beat-label { font-size: 13px; font-weight: 600; }
 .tempo-bar { display: flex; align-items: flex-start; gap: 4px; margin: 6px 0 10px; } /* one continuous line */
@@ -476,14 +481,16 @@ input[type="checkbox"]:checked {
 .cell-rest { flex: 1 1 0; } /* the rest box is half the width of a numbered box */
 .unit { position: relative; width: 100%; height: 44px; border-radius: 10px; overflow: hidden; background: var(--fill2); }
 .unit .fill { width: 101%; opacity: 0.75; transform: scaleX(0); transform-origin: left center; will-change: transform; }
-.unit-swing .fill { background: var(--a-tempo); }
+.unit-back .fill { background: var(--a-tempo); }
+.unit-down .fill { background: var(--top-blue); }
 .unit-impact .fill { background: #34c759; }
 .unit-rest .fill { background: rgba(120, 120, 128, 0.55); }
 .unit-tone::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2.5px solid var(--tone); pointer-events: none; }
-.tone-0, .tone-1 { --tone: var(--a-tempo); }
+.tone-0 { --tone: var(--a-tempo); }
+.tone-1 { --tone: var(--top-blue); }
 .tone-2 { --tone: #34c759; }
-.unit-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--label); }
 .cell-label { min-height: 14px; font-size: 11px; font-weight: 700; line-height: 14px; white-space: nowrap; color: var(--tone, inherit); }
+.cell-label.tone-1 { color: var(--top-blue-text); }
 .cell-label.tone-2 { color: var(--go-text); }
 .tempo-go { width: 100%; min-height: 56px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
