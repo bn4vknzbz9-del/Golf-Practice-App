@@ -3076,12 +3076,12 @@
     const benchTable = h('table', { class: 'stats-table bench-table' },
       h('thead', null, h('tr', null, h('th', { text: 'Per 18 holes' }), T5_LEVELS.map((v) => h('th', { text: String(v) })))),
       h('tbody', null,
-        T5_FIVE.map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: fmt1(v) + (m.est ? '*' : '') })))),
-        h('tr', { class: 'total' }, h('th', { scope: 'row', text: 'Tiger 5 total' }), T5_TOTAL.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: fmt1(v) + '*' }))),
-        T5_METRICS.filter((m) => !m.tiger).map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v)) + (m.est ? '*' : '') }))))));
+        T5_FIVE.map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: fmt1(v) })))),
+        h('tr', { class: 'total' }, h('th', { scope: 'row', text: 'Tiger 5 total' }), T5_TOTAL.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: fmt1(v) }))),
+        T5_METRICS.filter((m) => !m.tiger).map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v)) }))))));
     const about = disclosure('t5-about', 'About the benchmarks', 'Hide the benchmarks', [
       benchTable,
-      h('p', { class: 'hint', text: 'The columns are the handicap. An asterisk marks a figure that was modelled from related data, because no direct per-round figure exists. The rest are averages from large sets of tracked amateur rounds. Drivers not in play and missed greens rest on tracked rates and need only one assumption each (drives and approaches a round). Different sets of tracked rounds give different figures, for example scratch golfers average anywhere from about 0.5 to 1.7 three-putts a round, so treat the benchmarks as a guide, not a target to the decimal.' }),
+      h('p', { class: 'hint', text: 'The columns are the handicap. Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are estimates, because no direct per-round figure exists; the notes below say how each was built. The rest are averages from large sets of tracked amateur rounds. Drivers not in play and missed greens rest on tracked rates and need only one assumption each (drives and approaches a round). Different sets of tracked rounds give different figures, for example scratch golfers average anywhere from about 0.5 to 1.7 three-putts a round, so treat the benchmarks as a guide, not a target to the decimal.' }),
       h('div', { class: 'stack' }, T5_METRICS.map((m) => h('p', { class: 'hint' }, h('strong', { text: m.label + ': ' }), m.basis)))
     ]);
 
@@ -3090,7 +3090,7 @@
         pageTitle('tiger5', 'Tiger 5'),
         controls,
         h('p', { class: 'empty', text: 'No rounds yet. Save a round in the Rounds tab and your Tiger 5, greens, up and downs and score appear here, set against what golfers at each handicap typically make.' }),
-        h('div', { class: 'card stack' }, sectionHead('tiger5', 'What each handicap typically makes'), benchTable, h('p', { class: 'hint', text: 'An asterisk marks a figure that was modelled from related published data.' })));
+        h('div', { class: 'card stack' }, sectionHead('tiger5', 'What each handicap typically makes'), benchTable, h('p', { class: 'hint', text: 'Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are estimates; the notes in About the benchmarks (on this tab once you have a round) say how each was built.' })));
     }
 
     // ---- the top card: your Tiger 5 total against the benchmark, with what it is made of ----
@@ -3115,7 +3115,7 @@
           h('div', { class: 't5-big st-' + totalStatus, text: fmt1(total) })),
         h('div', { class: 't5-hero-side' },
           h('div', { class: 't5-small', text: 'A ' + level + ' handicap' }),
-          h('div', { class: 't5-mid', text: fmt1(tb) + '*' }))),
+          h('div', { class: 't5-mid', text: fmt1(tb) }))),
       h('p', { class: 't5-line' }, 'You are making Tiger 5 mistakes like ', h('strong', { text: hcpWords(totalHcp) }), ' over ' + (win === 'all' ? 'all ' + rs.length : 'your last ' + rs.length) + (rs.length === 1 ? ' round.' : ' rounds.'),
         diff != null && Math.abs(diff) >= 0.05 ? h('span', { class: 'delta ' + (diff < 0 ? 'good' : 'bad'), text: (diff < 0 ? ' \u25BC ' : ' \u25B2 ') + fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than the 5 rounds before' }) : null),
       bar('You', yourVals, true),
@@ -3133,7 +3133,7 @@
           h('div', { class: 'work-n', text: String(i + 1) }),
           h('div', { class: 'work-body' },
             h('strong', { text: p.m.label }),
-            h('div', { class: 'work-nums' }, h('span', { class: 'st-bad', text: t5Fmt(p.m, p.v) }), ' against ' + t5Fmt(p.m, p.b) + (p.m.est ? '*' : '') + ' for a ' + level + ' handicap. Worth about ' + fmt1(p.strokes) + (p.strokes >= 1.05 || p.strokes < 0.95 ? ' shots' : ' shot') + ' a round.'),
+            h('div', { class: 'work-nums' }, h('span', { class: 'st-bad', text: t5Fmt(p.m, p.v) }), ' against ' + t5Fmt(p.m, p.b) + ' for a ' + level + ' handicap. Worth about ' + fmt1(p.strokes) + (p.strokes >= 1.05 || p.strokes < 0.95 ? ' shots' : ' shot') + ' a round.'),
             h('p', { class: 'hint', text: p.m.fix }),
             h('button', { type: 'button', class: 'ghost', text: 'Practise: ' + TABS.find(([id]) => id === p.m.tab)[1], onclick: goTo(p.m.tab) }))))
         : [h('p', { text: 'You are at or ahead of a ' + level + ' handicap on every stat over these rounds. Well played.' }),
@@ -3160,7 +3160,7 @@
           T5_LEVELS.map((lv, i) => styled(h('span', { class: 'rule-tick' + (i === levelIdx ? ' target' : '') }), { left: i * 25 + '%' })),
           v == null ? null : styled(h('span', { class: 'rule-pin st-' + st, 'aria-hidden': 'true' }), { left: pos.toFixed(1) + '%' })),
         h('div', { class: 'rule-labels', 'aria-hidden': 'true' }, T5_LEVELS.map((lv, i) => styled(h('span', { class: i === levelIdx ? 'target' : '', text: String(lv) }), { left: i * 25 + '%' }))),
-        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'About a ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b) + ' a ' + level + ' (' + t5Fmt(m, b) + (m.est ? '*' : '') + ')' }));
+        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'About a ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b) + ' a ' + level + ' (' + t5Fmt(m, b) + ')' }));
     };
     const rulers = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Where you stand'),
@@ -3181,7 +3181,7 @@
       return h('div', { class: 'mini' },
         h('div', { class: 'mini-top' }, h('span', { class: 'mini-label', text: m.short }), h('span', { class: 'mini-val st-' + st, text: t5Fmt(m, last) })),
         vals.some((v) => v != null) ? spark(vals, b, m) : h('div', { class: 'spark-empty', text: 'No data' }),
-        h('div', { class: 'mini-foot', text: 'Dashed: a ' + level + ' handicap, ' + t5Fmt(m, b) + (m.est ? '*' : '') }));
+        h('div', { class: 'mini-foot', text: 'Dashed: a ' + level + ' handicap, ' + t5Fmt(m, b) }));
     };
     const totalChart = all.length > 1
       ? [valueChart(all.slice(-20).map((r) => r.date), all.slice(-20).map((r) => (tiger5(r) / r.holes) * 18), 'Tiger 5 total per round', { min: 0, noPad: true, bench: tb, benchLabel: level + ' hcp ' + fmt1(tb) }),
