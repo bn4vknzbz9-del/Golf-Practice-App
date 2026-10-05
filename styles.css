@@ -247,9 +247,11 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 /* ten tabs: five and a bit show at once, so part of the sixth always peeks in and shows the bar scrolls sideways */
 .tabs::-webkit-scrollbar { display: none; }
+/* Each tab is as wide as its label plus the same space on both sides, so the gap between one label and the next is the same all
+   along the bar. The script sets --tab-gap so that five tabs and part of the sixth fit across the screen. */
 .tab {
-  flex: 0 0 calc(100% / 5.4);
-  min-width: 70px;
+  position: relative;
+  flex: 0 0 auto;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
@@ -257,7 +259,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   justify-content: center;
   gap: 3px;
   min-height: 60px;
-  padding: 6px 0 3px;
+  padding: 6px calc(var(--tab-gap, 24px) / 2) 3px;
   border: 0;
   background: none;
   color: var(--ink, var(--label2));
@@ -266,13 +268,16 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   line-height: 1.15;
   letter-spacing: 0;
 }
-.tab svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.tab span { white-space: nowrap; }
+.t-trends span { white-space: normal; width: min-content; text-align: center; } /* the one label that wraps, onto two lines */
+.tab svg { position: relative; z-index: 1; width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .tab[aria-current="page"] { font-weight: 800; }
-.tab[aria-current="page"] svg { width: 42px; padding: 0 6px; border-radius: 15px; background: var(--ink-fill, transparent); stroke-width: 1.9; box-sizing: border-box; }
+.tab::before { content: ""; position: absolute; top: 6px; left: 50%; width: 46px; height: 30px; margin-left: -23px; border-radius: 15px; background: var(--ink-fill, transparent); opacity: 0; }
+.tab[aria-current="page"]::before { opacity: 1; }
+.tab[aria-current="page"] svg { stroke-width: 1.9; }
 .t-technique { --a: var(--a-technique); } .t-calibration { --a: var(--a-calibration); } .t-transfer { --a: var(--a-transfer); }
 .t-trends { --a: var(--a-trends); } .t-tempo { --a: var(--a-tempo); } .t-log { --a: var(--a-log); }
 .t-shortgame { --a: var(--a-shortgame); } .t-putting { --a: var(--a-putting); } .t-rounds { --a: var(--a-rounds); } .t-tiger5 { --a: var(--a-tiger5); }
-@media (min-width: 720px) { .tab { flex: 1 0 0; } }
 
 /* Lock screen */
 .lock { max-width: 420px; margin: 0 auto; padding: calc(56px + env(safe-area-inset-top)) 24px 24px; text-align: center; }

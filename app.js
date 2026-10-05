@@ -1109,6 +1109,24 @@
   function syncRanges() { document.querySelectorAll('input[type="range"]').forEach(paintRange); }
   document.addEventListener('input', (e) => { if (e.target && e.target.type === 'range') paintRange(e.target); });
 
+  // The bottom tabs are as wide as their labels, with one gap between every label and the next. The gap is chosen so that five tabs
+  // and about 40 percent of the sixth fit across the screen (so the next tab peeks in), or, where all ten fit, so they fill the bar.
+  function fitTabs(nav) {
+    try {
+      const labels = [...nav.children].map((tab) => tab.querySelector('span'));
+      const w = labels.map((l) => Math.max(30, l.getBoundingClientRect().width));
+      const V = nav.clientWidth;
+      if (!V || w.some((x) => !(x > 0))) return;
+      const MIN = 12; const MAX = 32; const PEEK = 0.4;
+      const sum = (a) => a.reduce((x, y) => x + y, 0);
+      let g;
+      if (sum(w) + MIN * w.length <= V) g = (V - sum(w)) / w.length; // all of them fit
+      else g = (V - sum(w.slice(0, 5)) - PEEK * w[5]) / (5 + PEEK);
+      nav.style.setProperty('--tab-gap', Math.max(MIN, Math.min(MAX, g)).toFixed(2) + 'px');
+    } catch (err) { /* keep the default gap */ }
+  }
+  window.addEventListener('resize', () => { const nav = document.querySelector('.tabs'); if (nav) fitTabs(nav); });
+
   function renderApp(toTop) {
     clearTimer();
     stopTempo();
@@ -1141,6 +1159,7 @@
     if (['technique', 'calibration', 'transfer', 'shortgame', 'putting', 'tempo', 'rounds', 'tiger5'].includes(ui.tab)) document.body.setAttribute('data-area', ui.tab); // the accent colour follows the tab
     else document.body.removeAttribute('data-area');
     root.replaceChildren(header, h('main', null, reminder, view), nav);
+    fitTabs(nav);
     try { // the tab bar scrolls sideways, so bring the current tab into view
       const cur = nav.querySelector('[aria-current="page"]');
       if (cur) nav.scrollLeft = cur.offsetLeft - (nav.clientWidth - cur.offsetWidth) / 2;
