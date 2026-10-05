@@ -92,3 +92,15 @@ The calibration and transfer games are at the top of `app.js` under **EDIT ME**,
 ## Colours and folded text
 
 The Technique, Calibration, Transfer and Tempo tabs each use their own colour (purple, blue, orange and pink) for buttons, links, switches and sliders. The Practice trends and Practice log tabs stay green, and the Lock and Settings buttons stay green on every tab. The mechanic list on the Technique tab no longer scrolls inside itself, so the page always scrolls smoothly past it; a long list shows its first 8 mechanics with a button to show the rest. On the Technique tab, the "How this works" text and each block's instructions start folded away behind a button. The first block of a protocol is now called Set your goal; older saved sessions are renamed to match when they open.
+
+## Editing past sessions
+
+Open any saved session in the Practice log, or in the History of its own tab, and tap Edit. It opens in the same form you used to record it, filled in with what you saved, so you can change the date, scores, passes, notes and, for a technique protocol, its mechanics and target position. For a tempo session you can change the date, ratio, speed and notes. Tap Save changes and you go back to where you started (the Practice log or the tab's History); Cancel edit also takes you back, with nothing changed. Delete asks you to confirm before it removes a session, and it cannot be undone. The score timer is not shown when editing, since the session is already finished.
+
+## Short game, Putting and Rounds
+
+**Short game and Putting** work like Transfer training: a 30 to 60 minute session of ten-minute games, each scored on the same slider with a pass mark. A short game session always starts with a course-style game such as Par 21 (nine holes, three easy and three medium at par 2 and three hard at par 3, so par 21). A putting session always starts with a distance-control game based on Scott Fawcett's ideas, such as his ladder with five lives and the twenty-foot depth test. Par 21 and the Fawcett games are built from published descriptions of those drills; check the rules in each game's instructions and change the scoring in the notes if you play them differently. Sessions appear in the Practice log and in Practice trends, and can be edited or deleted like any other.
+
+**Rounds** records a round: date, where it was, tees, holes (18 or 9), total score and par, with your score vs par worked out for you. It counts the Tiger 5 (bogeys or worse on par 5s, double bogeys or worse, 3-putts, missed greens with a 9 iron or less, and double chips), plus greens in regulation, drivers not in play, up and downs made and up and down chances. History lists every round, and Stats shows your averages (all rounds and the last five, per 18 holes) and charts of score vs par, Tiger 5 total, greens in regulation and up and down success.
+
+The tab bar scrolls sideways now that there are nine tabs; the current tab always scrolls into view.

@@ -346,6 +346,152 @@
     'Pattern transfer', 12));
   const TRANSFER = TRANSFER_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + FOCUS }));
 
+
+  /* Short game and putting: transfer-style games scored on the same slider. */
+  const SG_FOCUS = 'Focus: full routine on every ball. Pick the landing spot first and keep your attention on it, not on body positions.';
+  const PUTT_FOCUS = 'Focus: full routine on every putt. Decide the pace first and keep your attention on where the ball should stop.';
+  const SHORTGAME_BASE = [
+    G('Par 21',
+      'Pick nine spots around a green and a hole for each: three easy (clean lie, 5 to 10 yards), three medium (rough, or a slope, 10 to 20 yards) and three hard (bunker, tight or downhill lie, short-sided). Easy and medium holes are par 2 and hard holes are par 3, so the course is par 21. A scorecard and one ball.',
+      'One ball per hole. Chip, pitch or splash it, then putt out. Count every stroke, no re-hits, full routine every shot. Play the holes in a random order you draw.',
+      'Different spot, club and shot on every hole, and the order is reshuffled each time you play it.',
+      'Holes finished in par or better, out of 9. Write your total strokes in the notes (21 or fewer is the target). Mark it passed at 6 or more.',
+      'Course simulation', 9, 9),
+    G('Up and down for pars, nine lies',
+      'Nine different lies around the green: fairway, fringe, rough, a downhill lie, an uphill lie, a tight lie, a bunker, short-sided and a long chip. One ball and one hole, any hole you like.',
+      'Chip, pitch or splash from each lie, then putt out. An up and down is par. Full routine every shot, no re-hits.',
+      'Lie, club and landing spot change on every ball, never the same club twice in a row.',
+      'Up and downs, out of 9. Mark it passed at 5 or more.',
+      'Course simulation', 9),
+    G('Protect your points, three-foot circle',
+      'One hole with a three-foot circle around it (use a rope, string or a ring of tees). Start with 10 points. Three or four lies and two or three clubs.',
+      '10 balls. Before every ball, draw the lie and the club. Each ball that finishes outside the circle costs 1 point. Full routine every ball, no re-hits.',
+      'Lie and club both change on every ball.',
+      'Balls inside the circle, out of 10 (your points left equal your balls inside). Mark it passed at 6 or more.',
+      'Pressure game', 10),
+    G('Up and down streak',
+      'Nine lies around the green written on cards, one hole and one ball.',
+      'Draw a lie, play it, putt out. An up and down keeps your streak alive; a miss resets it to zero. Play 9 balls in total, never repeating a lie until the cards run out.',
+      'Random lie and club on every ball.',
+      'Your longest run of up and downs in a row, out of 9. Mark it passed at 3 or more.',
+      'Pressure game', 9),
+    G('Rings around the hole',
+      'One hole with three rings around it at 3, 6 and 9 feet (tees or a rope). Four lies and two or three clubs.',
+      '8 balls from lies you draw. Ball inside 3 feet = 3 points, inside 6 feet = 2 points, inside 9 feet = 1 point, outside = 0. Full routine every ball, no re-hits.',
+      'Lie and club change every ball.',
+      'Points, out of 24. Mark it passed at 12 or more.',
+      'Scoring game', 8, 24),
+    G('Landing spot',
+      'A towel or a hoop on the green as the landing spot, and the hole beyond it. Three starting positions at 5, 10 and 15 yards from the spot.',
+      '10 balls. Land the ball on the towel or in the hoop on the first bounce, from a start position you draw. Full routine every ball.',
+      'Start position and club change every ball, so the carry and the roll change each time.',
+      'Balls that land on the spot, out of 10. Mark it passed at 5 or more.',
+      'Distance control', 10),
+    G('Bunker nine',
+      'A greenside bunker and one hole. Nine lies in the bunker or around its edge: clean, plugged, a downhill lie, an uphill lie, close to the lip and so on.',
+      '9 balls, one from each lie, drawn at random. Ball out and on the green = 1 point; ball out and inside 6 feet = 2 points. Full routine every ball.',
+      'Lie changes every ball, and so does the landing spot.',
+      'Points, out of 18. Mark it passed at 10 or more.',
+      'Scoring game', 9, 18),
+    G('Short-sided',
+      'Three short-sided spots (less than 5 yards of green) and one hole on the far side. Wedges of different lofts.',
+      '9 balls, 3 from each spot, in a random order. The ball must stop on the green and inside 10 feet. Full routine every ball.',
+      'Spot and club change every ball.',
+      'Balls on the green and inside 10 feet, out of 9. Mark it passed at 5 or more.',
+      'Pressure game', 9),
+    G('Pitching ladder',
+      'Targets at 20, 30, 40 and 50 yards. A circle around each target with a radius of 10 percent of its distance (2, 3, 4 and 5 yards).',
+      '8 balls, 2 at each distance, in a random order you draw. Full routine every ball.',
+      'Distance changes every ball, never the same distance twice in a row.',
+      'Balls finishing inside their circle, out of 8. Mark it passed at 4 or more.',
+      'Distance control', 8),
+    G('One spot, three clubs',
+      'One spot about 15 yards from the hole and three clubs, for example a lob wedge, a sand wedge and a 9 iron.',
+      '9 balls, 3 with each club, in an order you draw. Note which club finishes closest more often.',
+      'Club changes every ball.',
+      'Balls finishing inside 6 feet, out of 9. Mark it passed at 4 or more.',
+      'Distance control', 9),
+    G('Chip it close, then hole it',
+      'One hole, four lies around it and a coin under the putter for a five-footer.',
+      '8 balls. Chip from a lie you draw, then putt the ball out. Holing the putt after a chip inside 6 feet scores 3 points, holing any other putt scores 1 point, and a miss scores 0.',
+      'Lie and club change every ball.',
+      'Points, out of 24. Mark it passed at 10 or more.',
+      'Scoring game', 8, 24),
+    G('Flop or run',
+      'One hole, a lie with a little green to work with and a lie with lots of green, and two clubs: a lofted wedge and an 8 iron or 9 iron.',
+      '8 balls. Draw the lie and decide, before the routine, whether to fly it or run it. Ball inside 6 feet = 1 point, holed = 3 points. Full routine every ball.',
+      'Lie and the type of shot (fly or run) change every ball.',
+      'Points, out of 24. Mark it passed at 8 or more.',
+      'Scoring game', 8, 24)
+  ];
+  const SHORTGAME = SHORTGAME_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + SG_FOCUS }));
+
+  // The putting drills use Scott Fawcett's distance-control ideas: speed matters more than line, so the target is how far the
+  // ball stops, in gates and zones, not whether it drops.
+  const PUTTING_BASE = [
+    G('Fawcett ladder, five lives',
+      'Four ball marks one foot apart in a line behind the hole (A, B, C and D); the first is the target. Mark starting points 5, 10, 20 and 30 feet from the first mark. Four or more balls. This is Scott Fawcett\'s distance-control ladder.',
+      'Start at 5 feet. From 5 to 10 feet the ball must stop between marks A and B (1 foot deep), from 10 to 20 feet between A and C (2 feet), and from 20 to 30 feet between A and D (3 feet). Each good putt moves you back 6 inches. You have five lives and lose one for every putt that finishes outside the gate. If you lose all five, stop.',
+      'Distance changes after every good putt, and you putt from the same spot only again after a miss.',
+      'Good putts before you ran out of lives, out of 50 (50 means you reached 30 feet). Mark it passed at 30 or more, which is about 20 feet.',
+      'Distance control', 50),
+    G('Twenty-foot depth test',
+      'A tee or coin 20 feet away on a flat part of the green. No hole matters. This is the test Scott Fawcett uses to show how deep your speed pattern is.',
+      '10 balls to the spot, trying to stop each one on it. Look at the pattern: how many feet between your shortest and longest ball? Most golfers are three to six times deeper than they are wide.',
+      'Use a different ball and a different roll each time, and take a full routine before every ball.',
+      'Balls that finish within 1 foot of the spot, front or back, out of 10. Mark it passed at 6 or more.',
+      'Distance control', 10),
+    G('Two-foot circle',
+      'A hole with a circle 2 feet from the hole in every direction (a rope or a ring of tees). Three starting points at 20, 25 and 30 feet, each with a different slope or break.',
+      '9 balls, 3 from each distance, in a random order you draw. The goal is to stop the ball inside the circle, not to hole it. Full routine every putt.',
+      'Distance and break change on every putt.',
+      'Putts finishing inside the circle, out of 9. Mark it passed at 5 or more.',
+      'Distance control', 9),
+    G('Nine-hole putting course',
+      'Nine holes on the practice green with putts of 15 to 50 feet. Each hole is par 2. Draw the order at random.',
+      'One ball per hole, putt out and count every putt. Full routine every putt.',
+      'Different length and break on every hole.',
+      'Points are 27 minus your total putts, so all two-putts gives 9. The slider goes to 18. Mark it passed at 9 or more.',
+      'Course simulation', 9, 18),
+    G('Three-putt killer',
+      'One hole and a start spot at 30 feet. Add a second at 40 feet and a third at 50 feet if there is room.',
+      '9 balls, 3 from each distance, in a random order. Putt out each ball. A three-putt is a miss.',
+      'Distance and break change on every ball.',
+      'Balls that took 2 putts or fewer, out of 9. Mark it passed at 8 or more.',
+      'Pressure game', 9),
+    G('Six, six, twelve',
+      'Three holes. At each, a 6-foot putt from two different angles and a 12-foot putt from a third angle.',
+      '3 holes, 3 putts each. A made 6-footer counts as par and a made 12-footer is a birdie. Full routine every putt, no re-hits.',
+      'Angle and break change on every putt.',
+      'Points: 1 for each 6-footer made and 2 for each 12-footer made, out of 12. Mark it passed at 6 or more.',
+      'Scoring game', 9, 12),
+    G('Short putt streak',
+      'One hole and a 4-foot putt from several angles around it.',
+      'Hole as many 4-footers in a row as you can in 20 putts. A miss resets the streak. Full routine every putt, no re-hits.',
+      'Angle changes on every putt, including uphill and downhill.',
+      'Your longest streak of putts made, out of 20. Mark it passed at 8 or more.',
+      'Pressure game', 20),
+    G('Clock, six and nine feet',
+      'Six balls around one hole at 3 feet, then six at 6 feet, like the numbers on a clock.',
+      '12 putts, taken in a random order. Full routine every putt, no re-hits.',
+      'Position changes every putt, so break and slope change each time.',
+      'Putts made, out of 12. Mark it passed at 9 or more.',
+      'Scoring game', 12),
+    G('Back and forth lags',
+      'Two holes about 40 feet apart on the practice green.',
+      '8 putts, back and forth. Aim to stop the ball inside 3 feet of the hole, and never leave it short of the hole by more than 3 feet. Full routine every putt.',
+      'Direction, slope and break change every putt.',
+      'Putts that finish inside 3 feet, out of 8. Mark it passed at 5 or more.',
+      'Distance control', 8),
+    G('Speed under pressure',
+      'A coin 15 feet away and a second coin 30 feet away, and a hole at each.',
+      '8 putts, alternating the two distances. Hole the putt and you get 2 points; stop it inside 3 feet and you get 1; otherwise 0. If you three-putt, take 1 point away.',
+      'Distance alternates every putt.',
+      'Points, out of 16 (never below 0). Mark it passed at 8 or more.',
+      'Pressure game', 8, 16)
+  ];
+  const PUTTING = PUTTING_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + PUTT_FOCUS }));
+
   /* Technique protocol: no club -> freezer -> smoothie -> foam ball -> real ball.
      Progression from Dr Luke Benoit's 5x5 method. The Set your goal and Refine blocks follow
      Adam Young's Diagnose, Intervene, Refine, Transfer structure. */
@@ -501,7 +647,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], tempo: [] });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [] });
 
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
@@ -571,7 +717,7 @@
         next: str(p.next, 3000)
       });
     }
-    for (const kind of ['calibration', 'transfer']) {
+    for (const kind of ['calibration', 'transfer', 'shortgame', 'putting']) {
       for (const rec of arr(d[kind])) {
         out[kind].push({
           id: str(rec.id, 64) || uid(),
@@ -579,6 +725,29 @@
           items: arr(rec.items).slice(0, 20).map(cleanItem)
         });
       }
+    }
+    for (const r of arr(d.rounds)) {
+      const holes = r.holes === 9 ? 9 : 18;
+      const count = (v) => Math.round(num(v, 0, holes));
+      out.rounds.push({
+        id: str(r.id, 64) || uid(),
+        date: isDate(r.date) ? r.date : today(),
+        course: str(r.course, 120),
+        tees: str(r.tees, 40),
+        holes,
+        score: Math.round(num(r.score, 9, 300)),
+        par: Math.round(num(r.par, 18, 90)),
+        threePutts: count(r.threePutts),
+        parFiveBogeys: count(r.parFiveBogeys),
+        doubles: count(r.doubles),
+        missedGreens: count(r.missedGreens), // missed greens with a 9 iron or less
+        doubleChips: count(r.doubleChips),
+        driversOut: count(r.driversOut), // drivers not in play
+        gir: count(r.gir),
+        udMade: count(r.udMade),
+        udChances: count(r.udChances),
+        notes: str(r.notes, 3000)
+      });
     }
     return out;
   }
@@ -592,7 +761,7 @@
   function loadSync() {
     try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(600, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
   }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -600,7 +769,12 @@
   let writeChain = Promise.resolve();
 
   function freshDrafts() {
-    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null, tempo: freshTempo() };
+    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null, shortgame: null, putting: null, round: freshRound(), tempo: freshTempo() };
+  }
+  // A new round starts with the course, tees and par of your latest one.
+  function freshRound() {
+    const last = (typeof session !== 'undefined' && session && session.data && session.data.rounds) ? [...session.data.rounds].sort(byDateDesc)[0] : null;
+    return { id: null, date: today(), course: last ? last.course : '', tees: last ? last.tees : '', holes: 18, score: '', par: last ? last.par : 72, threePutts: 0, parFiveBogeys: 0, doubles: 0, missedGreens: 0, doubleChips: 0, driversOut: 0, gir: 0, udMade: 0, udChances: 0, notes: '' };
   }
   function freshTempo() {
     const st = (typeof ui !== 'undefined' && ui && ui.tempo) || { ratio: '3:1', bpm: 100 };
@@ -810,7 +984,10 @@
     transfer: ['M6 21V3.5', 'M6 4.5h12l-3 4l3 4H6'],
     trends: ['M3.5 20.5h17', 'M4.5 16l5-6l4 3.5l6-8'],
     log: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4.2 6h.1', 'M4.2 12h.1', 'M4.2 18h.1'],
-    tempo: ['M8.5 3.5h7l3 17h-13z', 'M12 16.5l3.5-9', 'M10.5 20.5h3']
+    tempo: ['M8.5 3.5h7l3 17h-13z', 'M12 16.5l3.5-9', 'M10.5 20.5h3'],
+    shortgame: ['M3.5 19.5c2.5-9 9-12.5 14-3', 'M19 20.5V7.5', 'M19 8l3.5 1.8L19 11.6', 'M2.5 20.5h8'],
+    putting: ['M3 19.5h18', 'M5 15.8a2.4 2.4 0 1 0 0.1 0', 'M16 19.5V6', 'M16 6.5l4 2-4 2'],
+    rounds: ['M6.5 4.5h11v16h-11z', 'M9.5 4.5v-1.5h5v1.5', 'M9.5 9.5h5', 'M9.5 13h5', 'M9.5 16.5h3']
   };
   const tabIcon = (id) => {
     const svg = s('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false' });
@@ -825,7 +1002,7 @@
   const CAT_CLASS = {
     'Face strike': 'cat-blue', 'Low point': 'cat-orange', 'Clubface direction': 'cat-green',
     'Course simulation': 'cat-blue', 'Pressure game': 'cat-orange', 'Scoring game': 'cat-green', 'Pattern transfer': 'cat-purple',
-    Diagnose: 'cat-purple', Refine: 'cat-purple'
+    'Distance control': 'cat-green', Diagnose: 'cat-purple', Refine: 'cat-purple'
   };
   const catClass = (cat) => CAT_CLASS[cat] || (/^Stage \d of 5$/.test(cat || '') ? 'cat-purple' : '');
 
@@ -838,7 +1015,7 @@
       s('path', { d: 'M22 64h24' }));
   }
 
-  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['tempo', 'Tempo'], ['trends', 'Practice trends'], ['log', 'Practice log']];
+  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['shortgame', 'Short game'], ['putting', 'Putting'], ['tempo', 'Tempo'], ['rounds', 'Rounds'], ['trends', 'Practice trends'], ['log', 'Practice log']];
 
   // Fill the left part of each slider track, as iOS does. Runs after each render and whenever a slider moves.
   function paintRange(el) {
@@ -860,6 +1037,7 @@
     else if (ui.tab === 'tempo') view = tempoView();
     else if (ui.tab === 'trends') view = trendsView();
     else if (ui.tab === 'log') view = logView();
+    else if (ui.tab === 'rounds') view = roundsView();
     else view = sessionsView(ui.tab);
 
     const header = h('header', { class: 'top' },
@@ -876,9 +1054,13 @@
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: 'Back up now', onclick: async () => { if (await exportBackup()) { toast('Backup saved'); renderApp(); } } }))) : null;
-    if (['technique', 'calibration', 'transfer', 'tempo'].includes(ui.tab)) document.body.setAttribute('data-area', ui.tab); // the accent colour follows the tab
+    if (['technique', 'calibration', 'transfer', 'shortgame', 'putting', 'tempo', 'rounds'].includes(ui.tab)) document.body.setAttribute('data-area', ui.tab); // the accent colour follows the tab
     else document.body.removeAttribute('data-area');
     root.replaceChildren(header, h('main', null, reminder, view), nav);
+    try { // the tab bar scrolls sideways, so bring the current tab into view
+      const cur = nav.querySelector('[aria-current="page"]');
+      if (cur) nav.scrollLeft = cur.offsetLeft - (nav.clientWidth - cur.offsetWidth) / 2;
+    } catch (err) { /* ignore */ }
     syncRanges();
     if (toTop) window.scrollTo(0, 0);
   }
@@ -944,7 +1126,7 @@
   }
   const scoreText = (kind, it) => (it.score == null ? 'Not scored'
     : (it.max == null ? 'Score ' + it.score + ' / 10' : it.score + ' of ' + it.max + (it.unit === 'points' ? ' points' : ' balls'))
-      + (kind === 'transfer' ? (it.passed ? ', passed' : ', not passed') : ''));
+      + (kind !== 'calibration' ? (it.passed ? ', passed' : ', not passed') : ''));
   function sessionBody(kind, rec) {
     const r = hitShare(rec.items);
     return [
@@ -972,6 +1154,35 @@
     await persist();
     renderApp();
     toast('Deleted');
+  }
+
+  // Editing a saved session. It opens in the same form used to record it, filled in with what was saved. `from` is where the edit
+  // was started: the Practice log ('log') or null for a tab's own History. After saving or cancelling you go back to where you were.
+  const DATA_KEY = { log: 'technique', protocol: 'protocols', calibration: 'calibration', transfer: 'transfer', shortgame: 'shortgame', putting: 'putting', round: 'rounds', tempo: 'tempo' };
+  function startEdit(type, rec, from) {
+    const returnTo = from || null;
+    if (type === 'log') {
+      drafts.technique = { ...rec, mechList: (rec.mechList || []).slice(), returnTo };
+      ui.tab = 'technique'; ui.mode = 'log';
+    } else if (type === 'protocol') {
+      drafts.protocol = { id: rec.id, date: rec.date, mechList: rec.mechList.slice(), mechanic: rec.mechanic, target: rec.target, start: 0, startTouched: true, items: rec.items.map((i) => ({ ...i })), notes: rec.notes, next: rec.next, timer: { base: 0, startedAt: null }, returnTo };
+      ui.tab = 'technique'; ui.mode = 'new';
+    } else if (type === 'round') {
+      drafts.round = { ...rec, returnTo };
+      ui.tab = 'rounds'; ui.mode = 'new';
+    } else if (type === 'calibration' || type === 'transfer' || type === 'shortgame' || type === 'putting') {
+      drafts[type] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null }, returnTo };
+      ui.tab = type; ui.mode = 'new';
+    } else if (type === 'tempo') {
+      drafts.tempo = { ...rec, returnTo };
+      ui.tab = 'tempo'; ui.mode = 'history';
+    }
+    renderApp(true);
+  }
+  // After a save or a cancel: back to the Practice log if that is where the edit began, otherwise to the tab's History (if given).
+  function leaveEdit(draft, historyMode) {
+    if (draft && draft.returnTo) ui.tab = draft.returnTo;
+    else if (historyMode) ui.mode = historyMode;
   }
 
   /* ==========================================================
@@ -1248,7 +1459,21 @@
         { name: ANCHOR, cls: 'l4', filter: (it) => it.name === ANCHOR },
         { name: 'All games', cls: 'l3', filter: null }
       ], 'No transfer sessions scored yet. Your average score as a percentage of the maximum appears here, for each type of game.'),
-      h('p', { class: 'hint', text: 'Calibration and transfer progress is your average score as a percentage of the maximum: each drill is scored against its own maximum (balls hit or points) and the drills in a session are averaged. Sessions scored out of 10 before ball counts count as a percentage of 10. A transfer line only has a point for sessions that included that type of game, so lines can skip some sessions.' }));
+      trendBlock('shortgame', 'Short game progress', session.data.shortgame, [
+        { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
+        { name: 'Pressure game', cls: 'l1', filter: (it) => it.cat === 'Pressure game' },
+        { name: 'Scoring game', cls: 'l2', filter: (it) => it.cat === 'Scoring game' },
+        { name: 'Distance control', cls: 'l4', filter: (it) => it.cat === 'Distance control' },
+        { name: 'All games', cls: 'l3', filter: null }
+      ], 'No short game sessions scored yet. Your average score as a percentage of the maximum appears here, for each type of game.'),
+      trendBlock('putting', 'Putting progress', session.data.putting, [
+        { name: 'Distance control', cls: 'l4', filter: (it) => it.cat === 'Distance control' },
+        { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
+        { name: 'Pressure game', cls: 'l1', filter: (it) => it.cat === 'Pressure game' },
+        { name: 'Scoring game', cls: 'l2', filter: (it) => it.cat === 'Scoring game' },
+        { name: 'All games', cls: 'l3', filter: null }
+      ], 'No putting sessions scored yet. Your average score as a percentage of the maximum appears here, for each type of game.'),
+      h('p', { class: 'hint', text: 'Calibration, transfer, short game and putting progress is your average score as a percentage of the maximum: each drill is scored against its own maximum (balls hit or points) and the drills in a session are averaged. Sessions scored out of 10 before ball counts count as a percentage of 10. A transfer line only has a point for sessions that included that type of game, so lines can skip some sessions.' }));
   }
 
   const lenText = (n) => (n === 60 ? '1 hour' : n + ' minutes');
@@ -1384,6 +1609,7 @@
     const editing = !!d.id;
     const cards = d.items.map((it, i) => protoCard(it, i));
     async function save() {
+      if (!d.mechList.length) { toast('Choose at least one mechanic'); return; }
       upsert(session.data.protocols, {
         id: d.id || uid(),
         date: isDate(d.date) ? d.date : today(),
@@ -1396,10 +1622,10 @@
       });
       await persist();
       clearTimer();
+      leaveEdit(d, 'history');
       drafts.protocol = freshProtocol();
-      ui.mode = 'history';
       renderApp(true);
-      toast('Session saved');
+      toast(editing ? 'Changes saved' : 'Session saved');
     }
     function changeSetup() {
       if (d.items.some((i) => i.rounds > 0 || i.passed) && !window.confirm('Change the setup? Progress you logged will be lost.')) return;
@@ -1408,13 +1634,16 @@
     }
     function discard() {
       if (!window.confirm(editing ? 'Discard your changes?' : 'Discard this session?')) return;
+      leaveEdit(d);
       drafts.protocol = freshProtocol();
-      renderApp();
+      renderApp(true);
     }
     return h('div', { class: 'stack' },
       editing ? h('p', { class: 'banner', text: 'Editing an earlier session' }) : null,
-      h('p', { class: 'banner', text: (d.mechList.length > 1 ? 'Mechanics: ' : 'Mechanic: ') + d.mechList.join(', ') + (d.target ? '. Target position: ' + d.target : '') }),
+      editing ? null : h('p', { class: 'banner', text: (d.mechList.length > 1 ? 'Mechanics: ' : 'Mechanic: ') + d.mechList.join(', ') + (d.target ? '. Target position: ' + d.target : '') }),
       field('Date', dateInput(d)),
+      editing ? field('Mechanics I worked on (tick one or more)', mechanicPicker(d, 'mechList', () => { d.mechanic = d.mechList.join(', '); })) : null,
+      editing ? field('Position I was aiming for', textInput(d, 'target', 500, 'For example: lead wrist flat at the top')) : null,
       editing ? null : timerWidget(d, cards),
       h('ol', { class: 'drills' }, cards),
       field('How the session went', textArea(d, 'notes', 4, 3000)),
@@ -1438,10 +1667,10 @@
         improve: d.improve.trim().slice(0, 3000)
       });
       await persist();
+      leaveEdit(d, 'history');
       drafts.technique = freshDrafts().technique;
-      ui.mode = 'history';
       renderApp(true);
-      toast('Entry saved');
+      toast(d.id ? 'Changes saved' : 'Entry saved');
     }
     return h('div', { class: 'stack' },
       d.id ? h('p', { class: 'banner', text: 'Editing an earlier entry' }) : null,
@@ -1452,7 +1681,7 @@
       field('How to improve the next practice', textArea(d, 'improve', 5, 3000)),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: d.id ? 'Save changes' : 'Save entry', onclick: save }),
-        d.id ? h('button', { type: 'button', class: 'ghost', text: 'Cancel edit', onclick: () => { drafts.technique = freshDrafts().technique; renderApp(); } }) : null));
+        d.id ? h('button', { type: 'button', class: 'ghost', text: 'Cancel edit', onclick: () => { leaveEdit(d); drafts.technique = freshDrafts().technique; renderApp(true); } }) : null));
   }
 
   function techniqueHistory() {
@@ -1467,14 +1696,14 @@
         nodes.push(entryShell(
           [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanics })],
           logBody(rec),
-          () => { drafts.technique = { ...rec }; ui.mode = 'log'; renderApp(true); },
+          () => startEdit('log', rec),
           () => removeRecord('technique', rec.id)));
       } else {
         const fp = furthestPassed(rec);
         nodes.push(entryShell(
           [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') })],
           protocolBody(rec),
-          () => { drafts.protocol = { id: rec.id, date: rec.date, mechList: rec.mechList.slice(), mechanic: rec.mechanic, target: rec.target, start: 0, startTouched: true, items: rec.items.map((i) => ({ ...i })), notes: rec.notes, next: rec.next, timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
+          () => startEdit('protocol', rec),
           () => removeRecord('protocols', rec.id)));
       }
     });
@@ -1521,7 +1750,30 @@
     return [anchor, ...rest].map((x) => mkItem(x, x.cat, TRANSFER_BLOCK_MINUTES));
   }
 
+  // Short game and putting sessions: one course-style game first (Par 21 and the like for the short game, a Fawcett distance-control
+  // game for putting), then others at random, avoiding the games you played in your last two sessions.
+  function genFromPool(kind, pool, firstCat, len) {
+    const n = Math.max(3, Math.round((len || 30) / TRANSFER_BLOCK_MINUTES));
+    const seen = recentNames(kind);
+    const fresh = (list) => { const f = list.filter((g) => !seen.has(g.name)); return f.length ? f : list; };
+    const first = shuffle(fresh(pool.filter((g) => g.cat === firstCat)))[0];
+    const rest = pool.filter((g) => g !== first);
+    let others = rest.filter((g) => !seen.has(g.name));
+    if (others.length < n - 1) others = rest;
+    return [first, ...shuffle(others).slice(0, n - 1)].map((x) => mkItem(x, x.cat, TRANSFER_BLOCK_MINUTES));
+  }
+  const genShortGame = (len) => genFromPool('shortgame', SHORTGAME, 'Course simulation', len);
+  const genPutting = (len) => genFromPool('putting', PUTTING, 'Distance control', len);
+
   const META = {
+    shortgame: {
+      title: 'Short game practice', unit: 'game', gen: genShortGame,
+      intro: (len) => lenWord(len) + ' of short game practice scored on the same slider as transfer training: ' + NUMWORD[len / 10] + ' ten-minute games drawn from twelve, always starting with a course-style game such as Par 21. Lie, club and landing spot change on every ball, you use your full routine, and every game has a score and a pass mark.'
+    },
+    putting: {
+      title: 'Putting practice', unit: 'game', gen: genPutting,
+      intro: (len) => lenWord(len) + ' of putting practice scored on the same slider as transfer training: ' + NUMWORD[len / 10] + ' ten-minute games drawn from ten, always starting with a distance-control game based on Scott Fawcett\'s ideas. Speed matters more than line, so most games score where the ball stops. Distance and break change on every putt.'
+    },
     calibration: {
       title: 'Calibration practice', unit: 'drill', gen: genCalibration,
       intro: (len) => lenWord(len) + ' of structured calibration: ' + NUMWORD[len / 10] + ' ten-minute games across face strike, low point and clubface direction. You never change club or target. Instead the part of the face you strike, your contact, your shot shape and your start line step through a fixed order and then switch from ball to ball. Every game is 15 balls or fewer, and your score is the number of balls that hit what the game asks for.'
@@ -1574,7 +1826,7 @@
     }
 
     let passed = null;
-    if (kind === 'transfer') {
+    if (kind !== 'calibration') {
       const cb = h('input', { type: 'checkbox' });
       cb.checked = !!item.passed;
       cb.addEventListener('change', () => { item.passed = cb.checked; });
@@ -1779,10 +2031,10 @@
         items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, max: i.max, unit: i.unit, balls: i.balls, dist: i.dist, score: i.score, passed: !!i.passed, notes: i.notes.trim() }))
       });
       await persist();
+      leaveEdit(d, 'history');
       drafts[kind] = null;
-      ui.mode = 'history';
       renderApp(true);
-      toast('Session saved');
+      toast(editing ? 'Changes saved' : 'Session saved');
     }
     function regenerate() {
       if (d.items.some((i) => i.score !== null) && !window.confirm('Replace this plan? Scores you entered will be lost.')) return;
@@ -1792,14 +2044,15 @@
     }
     function discard() {
       if (!window.confirm(editing ? 'Discard your changes?' : 'Discard this session?')) return;
+      leaveEdit(d);
       drafts[kind] = null;
-      renderApp();
+      renderApp(true);
     }
 
     return h('div', { class: 'stack' },
       editing ? h('p', { class: 'banner', text: 'Editing an earlier session' }) : null,
       field('Date', dateInput(d)),
-      editing ? null : fingerCalc(),
+      editing || kind === 'shortgame' || kind === 'putting' ? null : fingerCalc(), // the range calculator is for full shots
       editing ? null : timerWidget(d, cards),
       h('ol', { class: 'drills' }, cards),
       h('div', { class: 'actions' },
@@ -1825,7 +2078,7 @@
     else if (scored.some((i) => i.unit === 'points')) base = pct;
     else base = r.hit + ' of ' + r.total + ' balls, ' + pct;
     const passed = rec.items.filter((i) => i.passed).length;
-    return kind === 'transfer' ? base + ', ' + passed + ' of ' + rec.items.length + ' passed' : base;
+    return kind !== 'calibration' ? base + ', ' + passed + ' of ' + rec.items.length + ' passed' : base;
   }
 
   function sessionHistory(kind) {
@@ -1836,7 +2089,7 @@
       nodes.push(entryShell(
         [h('span', { class: 'd', text: fmtDate(rec.date) }), sessionSum(kind, rec)],
         sessionBody(kind, rec),
-        () => { drafts[kind] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null } }; ui.mode = 'new'; renderApp(true); },
+        () => startEdit(kind, rec),
         () => removeRecord(kind, rec.id)));
     });
     return h('div', { class: 'group' }, nodes);
@@ -2327,9 +2580,10 @@
       if (!Number.isFinite(d.bpm) || d.bpm < 20 || d.bpm > 400) { toast('Enter a speed from 20 to 400 BPM'); return; }
       upsert(session.data.tempo, { id: d.id || uid(), date: isDate(d.date) ? d.date : today(), ratio: d.ratio === '2:1' ? '2:1' : '3:1', bpm: Math.round(d.bpm), notes: d.notes.trim().slice(0, 3000) });
       await persist();
+      leaveEdit(d);
       drafts.tempo = freshTempo();
       renderApp(true);
-      toast('Tempo session saved');
+      toast(d.id ? 'Changes saved' : 'Tempo session saved');
     }
     const list = [...session.data.tempo].sort(byDateDesc);
     return h('div', { class: 'stack' },
@@ -2340,12 +2594,12 @@
       field('Notes', textArea(d, 'notes', 4, 3000)),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: d.id ? 'Save changes' : 'Save tempo session', onclick: save }),
-        d.id ? h('button', { type: 'button', class: 'ghost', text: 'Cancel edit', onclick: () => { drafts.tempo = freshTempo(); renderApp(); } }) : null),
+        d.id ? h('button', { type: 'button', class: 'ghost', text: 'Cancel edit', onclick: () => { leaveEdit(d); drafts.tempo = freshTempo(); renderApp(true); } }) : null),
       list.length
         ? h('div', { class: 'group' }, list.map((rec) => entryShell(
           [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.ratio + ' at ' + rec.bpm + ' BPM' })],
           tempoBody(rec),
-          () => { drafts.tempo = { ...rec }; renderApp(true); },
+          () => startEdit('tempo', rec),
           () => removeRecord('tempo', rec.id))))
         : h('p', { class: 'empty', text: 'No tempo sessions logged yet.' }));
   }
@@ -2358,60 +2612,270 @@
       ui.mode === 'history' ? tempoLog() : metronome());
   }
 
+
+  /* ==========================================================
+     Rounds: scores and the Tiger 5
+     The Tiger 5 are five things Tiger Woods tries to avoid in a round. Here the fourth is "missed greens with a 9 iron or less".
+     ========================================================== */
+  const T5 = [
+    ['parFiveBogeys', 'Bogeys or worse on par 5s', 'Par 5s where you made bogey or worse.'],
+    ['doubles', 'Double bogeys or worse', 'Any hole of double bogey or worse.'],
+    ['threePutts', '3-putts', 'Holes where you took three putts or more.'],
+    ['missedGreens', 'Missed greens with a 9 iron or less', 'Approach shots with a 9 iron or a wedge that missed the green.'],
+    ['doubleChips', 'Double chips', 'Holes where it took two chips or pitches to reach the green.']
+  ];
+  const tiger5 = (r) => T5.reduce((a, [k]) => a + (r[k] || 0), 0);
+  const vsParText = (n) => (n === 0 ? 'E' : n > 0 ? '+' + n : '\u2212' + Math.abs(n));
+  const vsPar = (r) => r.score - r.par;
+  const pctText = (a, b) => (b > 0 ? Math.round((a / b) * 100) + '%' : '\u2013');
+
+  function roundBody(r) {
+    const line = (label, value) => h('p', null, h('strong', { text: label + ': ' }), value);
+    return [
+      line('Course', r.course || 'Not recorded'),
+      line('Tees', r.tees || 'Not recorded'),
+      line('Score', r.score + ' on a par ' + r.par + ' (' + vsParText(vsPar(r)) + '), ' + r.holes + ' holes'),
+      h('div', { class: 'hist-item' },
+        h('strong', { text: 'Tiger 5: ' + tiger5(r) }),
+        T5.map(([k, label]) => h('p', { text: label + ': ' + r[k] }))),
+      h('div', { class: 'hist-item' },
+        line('Greens in regulation', r.gir + ' of ' + r.holes + ' (' + pctText(r.gir, r.holes) + ')'),
+        line('Drivers not in play', String(r.driversOut)),
+        line('Up and downs', r.udChances > 0 ? r.udMade + ' of ' + r.udChances + ' (' + pctText(r.udMade, r.udChances) + ')' : String(r.udMade))),
+      para('Notes', r.notes)
+    ];
+  }
+  const roundSummary = (r) => [h('span', { class: 'd', text: fmtDate(r.date) }), h('span', { class: 'sum', text: (r.course ? r.course + ', ' : '') + r.score + ' (' + vsParText(vsPar(r)) + ')' })];
+
+  // A plain line chart for values that are not percentages (scores, counts), with its own range.
+  function valueChart(dates, vals, label, opts) {
+    const o = opts || {};
+    const W = 320, H = 170, L = 36, R = 8, T = 10, B = 24;
+    const got = vals.filter((v) => v != null);
+    let lo = Math.min(...got);
+    let hi = Math.max(...got);
+    if (o.min != null) lo = Math.min(lo, o.min);
+    if (o.max != null) hi = Math.max(hi, o.max);
+    if (hi - lo < 2) { hi += 1; lo -= 1; }
+    if (!o.noPad) { const pad = (hi - lo) * 0.1; lo -= pad; hi += pad; }
+    const fmt = o.fmt || ((v) => String(Math.round(v * 10) / 10));
+    const x = (i) => L + (dates.length === 1 ? 0 : (i * (W - L - R)) / (dates.length - 1));
+    const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+    const svg = s('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart', role: 'img', 'aria-label': label });
+    [lo, (lo + hi) / 2, hi].forEach((v) => {
+      svg.append(s('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' }), s('text', { x: L - 4, y: y(v) + 3, class: 'axis', 'text-anchor': 'end' }, fmt(v)));
+    });
+    const pts = vals.map((v, i) => (v == null ? null : { x: x(i), y: y(v) })).filter(Boolean);
+    if (pts.length > 1) svg.append(s('polyline', { points: pts.map((q) => q.x.toFixed(1) + ',' + q.y.toFixed(1)).join(' '), class: 'line l0' }));
+    pts.forEach((q) => svg.append(s('circle', { cx: q.x.toFixed(1), cy: q.y.toFixed(1), r: 3, class: 'pt l0' })));
+    svg.append(s('text', { x: L, y: H - 8, class: 'axis' }, shortDate(dates[0])), s('text', { x: W - R, y: H - 8, class: 'axis', 'text-anchor': 'end' }, shortDate(dates[dates.length - 1])));
+    return svg;
+  }
+
+  function roundForm() {
+    const d = drafts.round;
+    const editing = !!d.id;
+    const rounds = session.data.rounds;
+    const uniq = (key) => [...new Set(rounds.map((r) => r[key]).filter(Boolean))];
+    const sumEl = h('p', { class: 'avg' });
+    const t5El = h('p', { class: 'avg' });
+    const num0 = (v) => Number(String(v).replace(/[^0-9]/g, ''));
+    function refresh() {
+      const sc = num0(d.score); const pr = num0(d.par);
+      sumEl.textContent = sc > 0 && pr > 0 ? 'Score ' + sc + ' on a par ' + pr + ': ' + vsParText(sc - pr) + ' vs par' : 'Enter your score and the par to see your score vs par.';
+      t5El.textContent = 'Tiger 5 total: ' + T5.reduce((a, [k]) => a + d[k], 0);
+    }
+    function counter(key, label, hint) {
+      const out = h('output', { class: 'score-out', text: String(d[key]) });
+      const step = (delta) => () => { d[key] = Math.min(d.holes, Math.max(0, d[key] + delta)); out.textContent = String(d[key]); refresh(); };
+      return h('div', { class: 'count-row' },
+        h('div', { class: 'count-text' }, h('strong', { text: label }), hint ? h('span', { class: 'hint', text: hint }) : null),
+        h('div', { class: 'stepper' },
+          h('button', { type: 'button', class: 'ghost', text: '\u2212', 'aria-label': 'One fewer: ' + label, onclick: step(-1) }),
+          out,
+          h('button', { type: 'button', class: 'ghost', text: '+', 'aria-label': 'One more: ' + label, onclick: step(1) })));
+    }
+    const numInput = (key, label, max) => {
+      const el = h('input', { type: 'text', inputmode: 'numeric', maxlength: max, 'aria-label': label, value: String(d[key]) });
+      el.addEventListener('input', () => { d[key] = el.value.replace(/[^0-9]/g, ''); refresh(); });
+      return el;
+    };
+    const holeBtns = h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Holes played' }, [18, 9].map((n) => h('button', {
+      type: 'button', class: 'seg-btn', text: n + ' holes', 'aria-pressed': String(d.holes === n),
+      onclick: () => {
+        if (d.holes === n) return;
+        if (num0(d.par) > 0) d.par = Math.round((num0(d.par) * n) / d.holes); // keep the par in step with the number of holes (72 becomes 36)
+        d.holes = n;
+        ['threePutts', 'parFiveBogeys', 'doubles', 'missedGreens', 'doubleChips', 'driversOut', 'gir', 'udMade', 'udChances'].forEach((k) => { d[k] = Math.min(d[k], n); });
+        renderApp();
+      }
+    })));
+    const courseEl = h('input', { type: 'text', maxlength: 120, list: 'course-list', placeholder: 'For example: Royal Birkdale', value: d.course });
+    courseEl.addEventListener('input', () => { d.course = courseEl.value; });
+    const teesEl = h('input', { type: 'text', maxlength: 40, list: 'tees-list', placeholder: 'For example: White', value: d.tees });
+    teesEl.addEventListener('input', () => { d.tees = teesEl.value; });
+
+    async function save() {
+      const score = num0(d.score); const par = num0(d.par);
+      if (!(score >= d.holes && score <= 300)) { toast('Enter your total score'); return; }
+      if (!(par >= d.holes * 3 && par <= d.holes * 5)) { toast('Enter the par for the holes played: about ' + (d.holes === 9 ? '36' : '72')); return; }
+      if (d.gir > d.holes || d.udMade > d.holes) { toast('Those counts are more than the holes played'); return; }
+      if (d.udChances > 0 && d.udMade > d.udChances) { toast('Up and downs made cannot be more than the chances'); return; }
+      upsert(session.data.rounds, {
+        id: d.id || uid(),
+        date: isDate(d.date) ? d.date : today(),
+        course: d.course.trim().slice(0, 120),
+        tees: d.tees.trim().slice(0, 40),
+        holes: d.holes,
+        score, par,
+        threePutts: d.threePutts, parFiveBogeys: d.parFiveBogeys, doubles: d.doubles, missedGreens: d.missedGreens, doubleChips: d.doubleChips,
+        driversOut: d.driversOut, gir: d.gir, udMade: d.udMade, udChances: d.udChances,
+        notes: d.notes.trim().slice(0, 3000)
+      });
+      await persist();
+      leaveEdit(d, 'history');
+      drafts.round = freshRound();
+      renderApp(true);
+      toast(editing ? 'Changes saved' : 'Round saved');
+    }
+    refresh();
+    return h('div', { class: 'stack' },
+      editing ? h('p', { class: 'banner', text: 'Editing an earlier round' }) : null,
+      h('datalist', { id: 'course-list' }, uniq('course').map((c) => h('option', { value: c }))),
+      h('datalist', { id: 'tees-list' }, uniq('tees').map((c) => h('option', { value: c }))),
+      field('Date', dateInput(d)),
+      field('Where the round was', courseEl),
+      field('Tees', teesEl),
+      holeBtns,
+      h('div', { class: 'two-up' }, field('Total score', numInput('score', 'Total score', 3)), field('Par', numInput('par', 'Course par', 2))),
+      sumEl,
+      h('h3', { class: 'sub', text: 'Tiger 5' }),
+      h('p', { class: 'hint', text: 'Count each of these during the round. Fewer is better.' }),
+      h('div', { class: 'panel count-list' }, T5.map(([k, label, hint]) => counter(k, label, hint))),
+      t5El,
+      h('h3', { class: 'sub', text: 'Other stats' }),
+      h('div', { class: 'panel count-list' },
+        counter('gir', 'Greens in regulation'),
+        counter('driversOut', 'Drivers not in play', 'Tee shots with a driver that finished out of play: out of bounds, lost, a penalty or no shot at the green.'),
+        counter('udMade', 'Up and downs made'),
+        counter('udChances', 'Up and down chances', 'Holes where you missed the green and had a chance to save par or better.')),
+      field('Notes', textArea(d, 'notes', 4, 3000)),
+      h('div', { class: 'actions' },
+        h('button', { type: 'button', class: 'primary', text: editing ? 'Save changes' : 'Save round', onclick: save }),
+        editing ? h('button', { type: 'button', class: 'ghost', text: 'Cancel edit', onclick: () => { leaveEdit(d); drafts.round = freshRound(); renderApp(true); } }) : null));
+  }
+
+  function roundHistory() {
+    const list = [...session.data.rounds].sort(byDateDesc);
+    if (!list.length) return h('p', { class: 'empty', text: 'No rounds yet. Add your first one under New round.' });
+    return h('div', { class: 'group' }, list.map((rec) => entryShell(roundSummary(rec), roundBody(rec), () => startEdit('round', rec), () => removeRecord('rounds', rec.id))));
+  }
+
+  function roundStats() {
+    const all = [...session.data.rounds].sort((a, b) => a.date.localeCompare(b.date));
+    if (!all.length) return h('p', { class: 'empty', text: 'No rounds yet. Your averages and charts appear here once you save a round.' });
+    const last5 = all.slice(-5);
+    // Counts are shown per 18 holes so a nine-hole round counts for half.
+    const per18 = (rs, f) => { const holes = rs.reduce((a, r) => a + r.holes, 0); return holes ? (rs.reduce((a, r) => a + f(r), 0) / holes) * 18 : null; };
+    const one = (v) => (v == null ? '\u2013' : String(Math.round(v * 10) / 10));
+    const rowsDef = [
+      ['Rounds', (rs) => String(rs.length)],
+      ['Score vs par (18 holes)', (rs) => { const v = per18(rs, vsPar); return v == null ? '\u2013' : (v > 0 ? '+' : v < 0 ? '\u2212' : '') + Math.abs(Math.round(v * 10) / 10); }],
+      ['Tiger 5 total', (rs) => one(per18(rs, tiger5))],
+      ...T5.map(([k, label]) => ['\u00a0\u00a0' + label, (rs) => one(per18(rs, (r) => r[k]))]),
+      ['Greens in regulation', (rs) => pctText(rs.reduce((a, r) => a + r.gir, 0), rs.reduce((a, r) => a + r.holes, 0))],
+      ['Drivers not in play', (rs) => one(per18(rs, (r) => r.driversOut))],
+      ['Up and downs made', (rs) => one(per18(rs, (r) => r.udMade))],
+      ['Up and down success', (rs) => { const w = rs.filter((r) => r.udChances > 0); return pctText(w.reduce((a, r) => a + r.udMade, 0), w.reduce((a, r) => a + r.udChances, 0)); }]
+    ];
+    const table = h('table', { class: 'stats-table' },
+      h('thead', null, h('tr', null, h('th', { text: 'Per 18 holes' }), h('th', { text: 'All rounds' }), h('th', { text: 'Last 5' }))),
+      h('tbody', null, rowsDef.map(([label, f]) => h('tr', null, h('th', { scope: 'row', text: label }), h('td', { text: f(all) }), h('td', { text: f(last5) })))));
+    const dates = all.map((r) => r.date);
+    const chart = (title, vals, opts, hint) => (all.length > 1
+      ? h('div', { class: 'stack card' }, sectionHead('rounds', title), valueChart(dates, vals, title, opts), hint ? h('p', { class: 'hint', text: hint }) : null)
+      : null);
+    return h('div', { class: 'stack' },
+      h('div', { class: 'card stack' }, sectionHead('rounds', 'Averages'), table,
+        h('p', { class: 'hint', text: 'Counts are scaled to 18 holes, so a nine-hole round counts for half. Fewer is better for the Tiger 5, drivers not in play and score vs par.' })),
+      all.length > 1 ? null : h('p', { class: 'hint', text: 'Save two or more rounds to see charts over time.' }),
+      chart('Score vs par', all.map((r) => (r.score - r.par) / r.holes * 18), { fmt: (v) => vsParText(Math.round(v)) }, 'Lower is better. Nine-hole rounds are doubled.'),
+      chart('Tiger 5 total', all.map((r) => tiger5(r) / r.holes * 18), { min: 0 }, 'Lower is better. Per 18 holes.'),
+      chart('Greens in regulation', all.map((r) => (r.gir / r.holes) * 100), { min: 0, max: 100, noPad: true, fmt: (v) => Math.round(v) + '%' }),
+      chart('Up and down success', all.map((r) => (r.udChances > 0 ? (r.udMade / r.udChances) * 100 : null)), { min: 0, max: 100, noPad: true, fmt: (v) => Math.round(v) + '%' }, 'Rounds with no up and down chances recorded are left out.'));
+  }
+
+  function roundsView() {
+    if (!['new', 'history', 'stats'].includes(ui.mode)) ui.mode = 'new';
+    return h('section', null,
+      pageTitle('rounds', 'Rounds'),
+      modeBar([['new', 'New round'], ['history', 'History'], ['stats', 'Stats']]),
+      ui.mode === 'history' ? roundHistory() : ui.mode === 'stats' ? roundStats() : roundForm());
+  }
+
   /* ==========================================================
      Practice log: every session, with its drills, notes and scores
      ========================================================== */
+  const LOG_NAMES = { calibration: 'Calibration', transfer: 'Transfer', shortgame: 'Short game', putting: 'Putting' };
   function logView() {
     const f = ui.logFilter;
-    const filters = [['all', 'All'], ['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['tempo', 'Tempo']];
+    const filters = [['all', 'All'], ['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['shortgame', 'Short game'], ['putting', 'Putting'], ['tempo', 'Tempo'], ['rounds', 'Rounds']];
     const entries = [];
     if (f === 'all' || f === 'technique') {
       session.data.protocols.forEach((rec) => entries.push({ type: 'protocol', rec }));
       session.data.technique.forEach((rec) => entries.push({ type: 'log', rec }));
     }
-    if (f === 'all' || f === 'calibration') session.data.calibration.forEach((rec) => entries.push({ type: 'calibration', rec }));
-    if (f === 'all' || f === 'transfer') session.data.transfer.forEach((rec) => entries.push({ type: 'transfer', rec }));
+    ['calibration', 'transfer', 'shortgame', 'putting'].forEach((k) => { if (f === 'all' || f === k) session.data[k].forEach((rec) => entries.push({ type: k, rec })); });
     if (f === 'all' || f === 'tempo') session.data.tempo.forEach((rec) => entries.push({ type: 'tempo', rec }));
+    if (f === 'all' || f === 'rounds') session.data.rounds.forEach((rec) => entries.push({ type: 'round', rec }));
     entries.sort((a, b) => b.rec.date.localeCompare(a.rec.date));
 
     const latest = (kind) => {
       const rec = [...session.data[kind]].sort(byDateDesc).find((r) => hitShare(r.items));
       return rec ? Math.round(hitShare(rec.items).pct) + '%' : null;
     };
-    const lc = latest('calibration');
-    const lt = latest('transfer');
+    const lastLine = ['calibration', 'transfer', 'shortgame', 'putting'].map((k) => (latest(k) ? LOG_NAMES[k].toLowerCase() + ' ' + latest(k) : null)).filter(Boolean);
 
     const nodes = entries.map(({ type, rec }) => {
-      let tag; let sum; let body;
-      if (type === 'log') { tag = 'Quick log'; sum = h('span', { class: 'sum', text: rec.mechanics }); body = logBody(rec); }
+      let tag; let sum; let body; let icon = type;
+      if (type === 'log') { tag = 'Quick log'; sum = h('span', { class: 'sum', text: rec.mechanics }); body = logBody(rec); icon = 'technique'; }
       else if (type === 'protocol') {
         const fp = furthestPassed(rec);
         tag = 'Technique protocol, ' + protocolMinutes(rec) + ' min';
         sum = h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') });
         body = protocolBody(rec);
+        icon = 'technique';
       } else if (type === 'tempo') {
         tag = 'Tempo, ' + rec.ratio;
         sum = h('span', { class: 'sum', text: rec.bpm + ' BPM' });
         body = tempoBody(rec);
+      } else if (type === 'round') {
+        tag = 'Round, ' + rec.holes + ' holes';
+        sum = h('span', { class: 'sum', text: (rec.course ? rec.course + ', ' : '') + rec.score + ' (' + vsParText(vsPar(rec)) + ')' });
+        body = roundBody(rec);
+        icon = 'rounds';
       } else {
-        tag = (type === 'calibration' ? 'Calibration' : 'Transfer') + ', ' + protocolMinutes(rec) + ' min';
+        tag = LOG_NAMES[type] + ', ' + protocolMinutes(rec) + ' min';
         sum = sessionSum(type, rec);
         body = sessionBody(type, rec);
       }
       return h('details', { class: 'entry' },
-        h('summary', null, iconTile(type === 'calibration' || type === 'transfer' || type === 'tempo' ? type : 'technique'), h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
-        h('div', { class: 'entry-body' }, body));
+        h('summary', null, iconTile(icon), h('span', { class: 'd' }, fmtDate(rec.date), h('br'), h('span', { class: 'tag', text: tag })), sum),
+        h('div', { class: 'entry-body' }, body,
+          h('div', { class: 'actions' },
+            h('button', { type: 'button', class: 'ghost', text: 'Edit', onclick: () => startEdit(type, rec, 'log') }),
+            h('button', { type: 'button', class: 'danger', text: 'Delete', onclick: () => removeRecord(DATA_KEY[type], rec.id) }))));
     });
 
     return h('section', { class: 'stack' },
       pageTitle('log', 'Practice log'),
-      h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Show' },
+      h('div', { class: 'chips log-filter', role: 'group', 'aria-label': 'Show' },
         filters.map(([id, label]) => h('button', {
-          type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(f === id),
+          type: 'button', class: 'chip', text: label, 'aria-pressed': String(f === id),
           onclick: () => { ui.logFilter = id; renderApp(); }
         }))),
-      (lc || lt) ? h('p', { class: 'lead', text: 'Latest average score: ' + [lc ? 'calibration ' + lc : null, lt ? 'transfer ' + lt : null].filter(Boolean).join(', ') + ' of the maximum.' }) : null,
-      h('p', { class: 'hint', text: 'Each calibration and transfer session shows its average score as a percentage of the maximum. Each drill is scored against its own maximum and the drills are averaged. See Practice trends for how it moves over time. To edit or delete a session, open it in the History of its own tab.' }),
+      lastLine.length ? h('p', { class: 'lead', text: 'Latest average score: ' + lastLine.join(', ') + ' of the maximum.' }) : null,
+      h('p', { class: 'hint', text: 'Open any session to edit or delete it. Each calibration, transfer, short game and putting session shows its average score as a percentage of the maximum. Each drill is scored against its own maximum and the drills are averaged. See Practice trends for how it moves over time.' }),
       entries.length ? h('div', { class: 'group' }, nodes) : h('p', { class: 'empty', text: 'Nothing logged here yet. Sessions appear as you save them.' }));
   }
 
