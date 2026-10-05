@@ -35,8 +35,8 @@
 
   // G(name, setup, play, interleave rule, scoring) builds a practice game.
   // Every game must have an interleave rule: change club, target, shot or set-up from ball to ball.
-  const G = (name, setup, play, interleave, score, cat, balls, pointsMax) => ({
-    name, cat, balls, pointsMax,
+  const G = (name, setup, play, interleave, score, cat, balls, pointsMax, strokes) => ({
+    name, cat, balls, pointsMax, strokes: strokes || null, // strokes: { base, par } when the score is a base number minus your shots
     how: ['Setup: ' + setup, 'Play: ' + play, 'Interleave: ' + interleave, 'Score: ' + score].join('\n')
   });
   const PICK = 'Use a die, a deck of cards or a random-number app to choose.';
@@ -352,11 +352,11 @@
   const PUTT_FOCUS = 'Focus: full routine on every putt. Decide the pace first and keep your attention on where the ball should stop.';
   const SHORTGAME_BASE = [
     G('Par 21',
-      'Pick nine spots around a green and a hole for each: three easy (clean lie, 5 to 10 yards), three medium (rough, or a slope, 10 to 20 yards) and three hard (bunker, tight or downhill lie, short-sided). Easy and medium holes are par 2 and hard holes are par 3, so the course is par 21. A scorecard and one ball.',
-      'One ball per hole. Chip, pitch or splash it, then putt out. Count every stroke, no re-hits, full routine every shot. Play the holes in a random order you draw.',
-      'Different spot, club and shot on every hole, and the order is reshuffled each time you play it.',
-      'Holes finished in par or better, out of 9. Write your total strokes in the notes (21 or fewer is the target). Mark it passed at 6 or more.',
-      'Course simulation', 9, 9),
+      'Pick nine chips around a green: three easy, three medium and three hard. Easy is a clean lie with plenty of green to work with. Medium has a little less green, or some rough or a slope. Hard is a tight lie, a downhill lie, a bunker or short-sided. One ball, a hole (move it for different chips) and a scorecard.',
+      'Play the nine chips one at a time. Chip the ball, then putt it out before you move to the next chip. Count every shot, chips and putts. No re-hits, full routine every shot. Par for the nine is 21.',
+      'Mix the easy, medium and hard chips in a random order you draw, and change the club and landing spot from chip to chip.',
+      'Points are 30 minus your total shots, so 21 shots (par) is 9 points, 20 shots is 10 and 18 shots or fewer is the maximum of 12. Mark it passed at par or better, 9 or more.',
+      'Course simulation', 9, 12, { base: 30, par: 21 }),
     G('Up and down for pars, nine lies',
       'Nine different lies around the green: fairway, fringe, rough, a downhill lie, an uphill lie, a tight lie, a bunker, short-sided and a long chip. One ball and one hole, any hole you like.',
       'Chip, pitch or splash from each lie, then putt out. An up and down is par. Full routine every shot, no re-hits.',
@@ -424,19 +424,95 @@
       'Points, out of 24. Mark it passed at 8 or more.',
       'Scoring game', 8, 24)
   ];
-  const SHORTGAME = SHORTGAME_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + SG_FOCUS }));
+  const SHORTGAME = SHORTGAME_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, strokes: g.strokes, how: g.how + '\n' + SG_FOCUS }));
 
-  // The putting drills use Scott Fawcett's distance-control ideas: speed matters more than line, so the target is how far the
-  // ball stops, in gates and zones, not whether it drops.
+
+  // Short game on a hitting mat with a launch monitor or simulator (a Foresight, for example). Every ball is hit from the same spot on
+  // the mat, so nothing changes lie. Distance, club and trajectory change instead, and the simulator's carry, total distance, offline
+  // and distance-to-target numbers do the scoring. There is no putting.
+  const SIM_FOCUS = 'Focus: full routine on every ball. Pick the number first, then read the carry and offline from the simulator after the shot, not during it. Every ball is hit from the same spot on the mat.';
+  const SIMGAMES_BASE = [
+    G('Simulator nine',
+      'Choose nine targets on the simulator: three short (25, 30 and 35 yards), three medium (45, 55 and 65 yards) and three long (75, 85 and 95 yards). Wedges and short irons. Use yards, and watch the carry and the distance to the target.',
+      'Play each target once, in a random order you draw, one ball each. Full routine every ball, no re-hits. A shot counts if it finishes inside 20 feet of the target on the simulator.',
+      'Target distance and club change on every ball, so you never hit two shots in a row at the same number.',
+      'Shots inside 20 feet of the target, out of 9. Mark it passed at 5 or more.',
+      'Course simulation', 9),
+    G('Random numbers',
+      'Write the distances 20 to 100 yards in steps of 5 on cards and shuffle them. Four wedges or short irons.',
+      '12 balls. Draw a card for every ball, choose the club that fits, then hit it. The carry must be within 10 percent of the number, for example 5 yards either side of 50.',
+      'A new distance on every ball, drawn before the routine starts.',
+      'Balls with a carry inside the 10 percent window, out of 12. Mark it passed at 7 or more.',
+      'Course simulation', 12),
+    G('Wedge ladder',
+      'Targets at 20, 30, 40, 50, 60, 70, 80 and 90 yards. One wedge or the club that fits each number.',
+      'One ball at each target, in a random order you draw. The carry must be within 10 percent of the target: 2 yards at 20, 5 at 50 and 9 at 90.',
+      'Target distance changes on every ball.',
+      'Balls with a carry inside the window, out of 8. Mark it passed at 5 or more.',
+      'Distance control', 8),
+    G('Carry ladder, five lives',
+      'Start with a 20-yard target. The targets go up in 10-yard steps: 20, 30, 40, 50, 60, 70, 80, 90 and 100 yards.',
+      'Hit one ball at the current target. If the carry is within 10 percent, move up to the next target. If it is not, you lose a life and hit the same target again. You have five lives. Stop when you lose the fifth or reach 100 yards.',
+      'The target changes after every good shot, and the club changes with the distance.',
+      'Targets cleared, out of 9. Mark it passed at 6 or more.',
+      'Distance control', 9),
+    G('Proximity points',
+      'Targets between 30 and 90 yards, drawn at random. Wedges and short irons.',
+      '10 balls. A target and club are drawn for every ball. A ball finishing inside 10 feet of the target scores 3 points, inside 20 feet 2 points and inside 30 feet 1 point, using the distance to the target the simulator shows. Full routine every ball.',
+      'Target distance and club change on every ball.',
+      'Points, out of 30. Mark it passed at 14 or more.',
+      'Scoring game', 10, 30),
+    G('Tight window',
+      'Start with 10 points. Targets between 30 and 80 yards, drawn at random.',
+      '10 balls. Each ball that misses its window costs 1 point. The window is a carry within 5 percent of the target, for example 2 yards either side of 40, and no more than 3 yards offline. Full routine every ball.',
+      'Target and club change on every ball.',
+      'Balls inside the window, out of 10 (your points left equal your balls inside). Mark it passed at 6 or more.',
+      'Pressure game', 10),
+    G('Three clubs, one number',
+      'One target carry, for example 40 yards, and three wedges: lob, sand and pitching.',
+      '9 balls, 3 with each club, in an order you draw. Adjust the swing length so each club carries the same distance. The carry must be within 3 yards of the target.',
+      'The club changes on every ball, never the same club twice in a row.',
+      'Balls with a carry inside 3 yards of the target, out of 9. Mark it passed at 5 or more.',
+      'Distance control', 9),
+    G('Swing-length matrix',
+      'One wedge and three swing lengths, for example hip high, chest high and full. First hit 3 balls at each length, one length at a time, and write down the average carry for each.',
+      'Then 9 test balls, 3 at each swing length, in a random order you draw. Each ball must carry within 3 yards of the average you wrote for that swing length.',
+      'Swing length changes on every test ball.',
+      'Test balls with a carry inside 3 yards of their number, out of 9. Mark it passed at 5 or more.',
+      'Distance control', 9),
+    G('Total distance windows',
+      'Chip-and-run shots with a 7, 8 or 9 iron. Total distance targets of 15, 25, 35, 45 and 55 yards, using the total distance the simulator shows (carry plus roll).',
+      '10 balls, 2 at each distance, in a random order you draw. The total must be within 3 yards of the target. Full routine every ball.',
+      'Target distance changes on every ball, and so does the club if you like.',
+      'Balls inside the window, out of 10. Mark it passed at 6 or more.',
+      'Distance control', 10),
+    G('Trajectory pairs',
+      'One target carry of 45 yards. Check the apex (peak height) on the simulator after every ball.',
+      '10 balls, as 5 pairs: a low ball, then a high ball, both to the target. Both carries must be within 3 yards of the target and the high ball must peak higher than the low ball.',
+      'Trajectory alternates low and high on every ball.',
+      'Pairs that meet both rules, out of 5. Mark it passed at 3 or more.',
+      'Distance control', 10, 5),
+    G('Same numbers, again',
+      'One target carry of 35 yards and two wedges. Hit 3 balls with each wedge and write down its average launch angle and spin rate from the simulator.',
+      'Then 10 test balls, alternating the two wedges. A ball counts if its carry is within 3 yards of the target, its spin is within 10 percent of that wedge\'s average and its launch angle is within 2 degrees of that average.',
+      'The wedge changes on every test ball.',
+      'Balls that meet all three rules, out of 10. Mark it passed at 5 or more.',
+      'Pressure game', 10)
+  ];
+  const SIMGAMES = SIMGAMES_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, strokes: g.strokes, how: g.how + '\n' + SIM_FOCUS }));
+
+  // The putting drills are about distance control: speed matters more than line, so the target is how far the ball stops, in
+  // gates and zones, not whether it drops.
+  const PACE_LADDER = 'Essential pace ladder'; // first in every putting session
   const PUTTING_BASE = [
-    G('Fawcett ladder, five lives',
-      'Four ball marks one foot apart in a line behind the hole (A, B, C and D); the first is the target. Mark starting points 5, 10, 20 and 30 feet from the first mark. Four or more balls. This is Scott Fawcett\'s distance-control ladder.',
+    G(PACE_LADDER,
+      'Four ball marks one foot apart in a line behind the hole (A, B, C and D); the first is the target. Mark starting points 5, 10, 20 and 30 feet from the first mark. Four or more balls.',
       'Start at 5 feet. From 5 to 10 feet the ball must stop between marks A and B (1 foot deep), from 10 to 20 feet between A and C (2 feet), and from 20 to 30 feet between A and D (3 feet). Each good putt moves you back 6 inches. You have five lives and lose one for every putt that finishes outside the gate. If you lose all five, stop.',
       'Distance changes after every good putt, and you putt from the same spot only again after a miss.',
       'Good putts before you ran out of lives, out of 50 (50 means you reached 30 feet). Mark it passed at 30 or more, which is about 20 feet.',
       'Distance control', 50),
     G('Twenty-foot depth test',
-      'A tee or coin 20 feet away on a flat part of the green. No hole matters. This is the test Scott Fawcett uses to show how deep your speed pattern is.',
+      'A tee or coin 20 feet away on a flat part of the green. No hole matters. This test shows how deep your speed pattern is.',
       '10 balls to the spot, trying to stop each one on it. Look at the pattern: how many feet between your shortest and longest ball? Most golfers are three to six times deeper than they are wide.',
       'Use a different ball and a different roll each time, and take a full routine before every ball.',
       'Balls that finish within 1 foot of the spot, front or back, out of 10. Mark it passed at 6 or more.',
@@ -649,16 +725,20 @@
      ========================================================== */
   const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [] });
 
+  // Two blocks were renamed. Games saved under the earlier name, and any text that mentioned a person, are brought up to date.
+  const renamed = (name) => (name === 'Set the target' ? 'Set your goal' : /^\w+ ladder, five lives$/.test(name) ? 'Essential pace ladder' : name);
+  const scrubHow = (text) => text.replace(/ ?[^.\n]*Scott F\w+[^.\n]*\./g, '');
   const cleanItem = (i) => ({
     id: str(i.id, 64) || uid(),
     cat: str(i.cat, 40),
-    name: str(i.name, 120) === 'Set the target' ? 'Set your goal' : str(i.name, 120), // the block was renamed
-    how: str(i.how, 1500),
+    name: renamed(str(i.name, 120)),
+    how: scrubHow(str(i.how, 1500)),
     minutes: num(i.minutes, 0, 120),
     max: i.max == null ? null : Math.round(num(i.max, 1, 100)), // top of the score slider; null on older sessions scored out of 10
     unit: i.unit === 'points' ? 'points' : 'balls',
     dist: i.dist == null ? 150 : Math.round(num(i.dist, 30, 400)), // distance the window sizes are scaled to
     balls: i.balls == null ? null : Math.round(num(i.balls, 1, 100)), // balls played, used to weight a points game in the trends
+    strokes: i.strokes && typeof i.strokes === 'object' ? { base: Math.round(num(i.strokes.base, 1, 200)), par: Math.round(num(i.strokes.par, 1, 200)) } : null, // a game scored as a base number minus your shots, such as Par 21
     score: i.score == null ? null : Math.min(Math.round(num(i.score, 0, 100)), i.max == null ? 10 : Math.round(num(i.max, 1, 100))),
     passed: i.passed === true,
     notes: str(i.notes, 3000),
@@ -722,6 +802,7 @@
         out[kind].push({
           id: str(rec.id, 64) || uid(),
           date: isDate(rec.date) ? rec.date : today(),
+          ...(kind === 'shortgame' ? { place: rec.place === 'sim' ? 'sim' : 'area' } : {}),
           items: arr(rec.items).slice(0, 20).map(cleanItem)
         });
       }
@@ -761,7 +842,7 @@
   function loadSync() {
     try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(600, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
   }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', place: 'area', tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -1124,9 +1205,20 @@
       return h('p', { class: /^\d+\. /.test(line) ? 'how-line how-step' : 'how-line', text: line });
     });
   }
+  // For a game scored as a base number minus your shots (Par 21), say how many shots that was and how it compares with par.
+  function shotsNote(it) {
+    if (!it.strokes || it.score == null) return '';
+    const { base, par } = it.strokes;
+    const shots = base - it.score;
+    const diff = shots - par;
+    const vs = diff === 0 ? 'par' : diff < 0 ? Math.abs(diff) + ' under par' : diff + ' over par';
+    if (it.score === 0) return ' (' + base + ' shots or more, ' + (base - par) + ' or more over par)';
+    if (it.score === it.max) return ' (' + shots + ' shots or fewer, ' + vs + ' or better)';
+    return ' (' + shots + ' shots, ' + vs + ')';
+  }
   const scoreText = (kind, it) => (it.score == null ? 'Not scored'
     : (it.max == null ? 'Score ' + it.score + ' / 10' : it.score + ' of ' + it.max + (it.unit === 'points' ? ' points' : ' balls'))
-      + (kind !== 'calibration' ? (it.passed ? ', passed' : ', not passed') : ''));
+      + shotsNote(it) + (kind !== 'calibration' ? (it.passed ? ', passed' : ', not passed') : ''));
   function sessionBody(kind, rec) {
     const r = hitShare(rec.items);
     return [
@@ -1171,7 +1263,7 @@
       drafts.round = { ...rec, returnTo };
       ui.tab = 'rounds'; ui.mode = 'new';
     } else if (type === 'calibration' || type === 'transfer' || type === 'shortgame' || type === 'putting') {
-      drafts[type] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null }, returnTo };
+      drafts[type] = { id: rec.id, date: rec.date, items: rec.items.map((i) => ({ ...i })), timer: { base: 0, startedAt: null }, returnTo, place: rec.place };
       ui.tab = type; ui.mode = 'new';
     } else if (type === 'tempo') {
       drafts.tempo = { ...rec, returnTo };
@@ -1298,11 +1390,11 @@
   function progressBlock() {
     const list = progressByMechanic();
     if (!list.length) return h('p', { class: 'hint', text: 'Your progress ladder appears here after your first protocol.' });
-    return h('div', { class: 'ladders' }, list.map((e) => h('div', { class: 'ladder' },
+    return h('div', { class: 'stack' }, h('h3', { class: 'sub', text: 'Practice Ladder Overview' }), h('div', { class: 'ladders' }, list.map((e) => h('div', { class: 'ladder' },
       h('div', { class: 'ladder-top' },
         h('strong', { text: e.name }),
         h('span', { class: 'tag', text: e.furthest < 0 ? 'No stage completed yet' : 'Furthest: ' + STAGE_NAMES[e.furthest] })),
-      h('div', { class: 'pips', 'aria-hidden': 'true' }, STAGE_SHORT.map((n, i) => h('span', { class: 'pip' + (i <= e.furthest ? ' on' : ''), text: n }))))));
+      h('div', { class: 'pips', 'aria-hidden': 'true' }, STAGE_SHORT.map((n, i) => h('span', { class: 'pip' + (i <= e.furthest ? ' on' : ''), text: n })))))));
   }
 
   /* ==========================================================
@@ -1459,13 +1551,22 @@
         { name: ANCHOR, cls: 'l4', filter: (it) => it.name === ANCHOR },
         { name: 'All games', cls: 'l3', filter: null }
       ], 'No transfer sessions scored yet. Your average score as a percentage of the maximum appears here, for each type of game.'),
-      trendBlock('shortgame', 'Short game progress', session.data.shortgame, [
+      trendBlock('shortgame', 'Short game progress', session.data.shortgame.filter((r) => r.place !== 'sim'), [
         { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
         { name: 'Pressure game', cls: 'l1', filter: (it) => it.cat === 'Pressure game' },
         { name: 'Scoring game', cls: 'l2', filter: (it) => it.cat === 'Scoring game' },
         { name: 'Distance control', cls: 'l4', filter: (it) => it.cat === 'Distance control' },
         { name: 'All games', cls: 'l3', filter: null }
       ], 'No short game sessions scored yet. Your average score as a percentage of the maximum appears here, for each type of game.'),
+      session.data.shortgame.some((r) => r.place === 'sim')
+        ? trendBlock('shortgame', 'Simulator short game progress', session.data.shortgame.filter((r) => r.place === 'sim'), [
+          { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
+          { name: 'Pressure game', cls: 'l1', filter: (it) => it.cat === 'Pressure game' },
+          { name: 'Scoring game', cls: 'l2', filter: (it) => it.cat === 'Scoring game' },
+          { name: 'Distance control', cls: 'l4', filter: (it) => it.cat === 'Distance control' },
+          { name: 'All games', cls: 'l3', filter: null }
+        ], 'No simulator sessions scored yet.')
+        : null,
       trendBlock('putting', 'Putting progress', session.data.putting, [
         { name: 'Distance control', cls: 'l4', filter: (it) => it.cat === 'Distance control' },
         { name: 'Course simulation', cls: 'l0', filter: (it) => it.cat === 'Course simulation' },
@@ -1506,7 +1607,7 @@
     if (len === ui.len[kind]) return;
     if (d && d.items.some((i) => i.score !== null) && !window.confirm('Change the length? Scores you entered on this plan will be lost.')) { renderApp(); return; }
     ui.len[kind] = len;
-    if (d) drafts[kind] = { id: null, date: d.date, items: META[kind].gen(len), timer: { base: 0, startedAt: null }, len };
+    if (d) drafts[kind] = { id: null, date: d.date, items: META[kind].gen(len), timer: { base: 0, startedAt: null }, len, place: d.place };
     renderApp();
   }
 
@@ -1713,7 +1814,7 @@
   /* ==========================================================
      Sections 2 and 3: timed sessions
      ========================================================== */
-  const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, dist: 150, max: x.pointsMax || x.balls, unit: x.pointsMax ? 'points' : 'balls', balls: x.balls, score: null, passed: false, notes: '' });
+  const mkItem = (x, cat, minutes) => ({ id: uid(), cat, name: x.name, how: x.how, minutes, dist: 150, max: x.pointsMax || x.balls, unit: x.pointsMax ? 'points' : 'balls', balls: x.balls, strokes: x.strokes || null, score: null, passed: false, notes: '' });
 
   // Names of games used in your two most recent sessions, so a new plan avoids repeating them.
   function recentNames(kind) {
@@ -1750,29 +1851,31 @@
     return [anchor, ...rest].map((x) => mkItem(x, x.cat, TRANSFER_BLOCK_MINUTES));
   }
 
-  // Short game and putting sessions: one course-style game first (Par 21 and the like for the short game, a Fawcett distance-control
-  // game for putting), then others at random, avoiding the games you played in your last two sessions.
-  function genFromPool(kind, pool, firstCat, len) {
+  // Short game and putting sessions: one game first, then others at random, avoiding the games you played in your last two sessions.
+  // The short game starts with a course-style game such as Par 21. Putting always starts with the Essential pace ladder.
+  function genFromPool(kind, pool, firstCat, len, firstName) {
     const n = Math.max(3, Math.round((len || 30) / TRANSFER_BLOCK_MINUTES));
     const seen = recentNames(kind);
     const fresh = (list) => { const f = list.filter((g) => !seen.has(g.name)); return f.length ? f : list; };
-    const first = shuffle(fresh(pool.filter((g) => g.cat === firstCat)))[0];
+    const first = firstName ? pool.find((g) => g.name === firstName) : shuffle(fresh(pool.filter((g) => g.cat === firstCat)))[0];
     const rest = pool.filter((g) => g !== first);
     let others = rest.filter((g) => !seen.has(g.name));
     if (others.length < n - 1) others = rest;
     return [first, ...shuffle(others).slice(0, n - 1)].map((x) => mkItem(x, x.cat, TRANSFER_BLOCK_MINUTES));
   }
-  const genShortGame = (len) => genFromPool('shortgame', SHORTGAME, 'Course simulation', len);
-  const genPutting = (len) => genFromPool('putting', PUTTING, 'Distance control', len);
+  const genShortGame = (len) => genFromPool('shortgame', ui.place === 'sim' ? SIMGAMES : SHORTGAME, 'Course simulation', len);
+  const genPutting = (len) => genFromPool('putting', PUTTING, 'Distance control', len, PACE_LADDER);
 
   const META = {
     shortgame: {
       title: 'Short game practice', unit: 'game', gen: genShortGame,
-      intro: (len) => lenWord(len) + ' of short game practice scored on the same slider as transfer training: ' + NUMWORD[len / 10] + ' ten-minute games drawn from twelve, always starting with a course-style game such as Par 21. Lie, club and landing spot change on every ball, you use your full routine, and every game has a score and a pass mark.'
+      intro: (len) => ui.place === 'sim'
+        ? lenWord(len) + ' of short game practice on a hitting mat with a launch monitor or simulator: ' + NUMWORD[len / 10] + ' ten-minute games drawn from eleven, always starting with a course-style game. Every ball is hit from the same spot, so distance, club and trajectory change instead of the lie, and the simulator\'s carry and distance-to-target numbers do the scoring. There is no putting. Scored on the same slider as transfer training.'
+        : lenWord(len) + ' of short game practice scored on the same slider as transfer training: ' + NUMWORD[len / 10] + ' ten-minute games drawn from twelve, always starting with a course-style game such as Par 21. Lie, club and landing spot change on every ball, you use your full routine, and every game has a score and a pass mark.'
     },
     putting: {
       title: 'Putting practice', unit: 'game', gen: genPutting,
-      intro: (len) => lenWord(len) + ' of putting practice scored on the same slider as transfer training: ' + NUMWORD[len / 10] + ' ten-minute games drawn from ten, always starting with a distance-control game based on Scott Fawcett\'s ideas. Speed matters more than line, so most games score where the ball stops. Distance and break change on every putt.'
+      intro: (len) => lenWord(len) + ' of putting practice scored on the same slider as transfer training: ' + NUMWORD[len / 10] + ' ten-minute games. Every session starts with the Essential pace ladder and the rest are drawn at random from the other nine. Speed matters more than line, so most games score where the ball stops. Distance and break change on every putt.'
     },
     calibration: {
       title: 'Calibration practice', unit: 'drill', gen: genCalibration,
@@ -1784,12 +1887,27 @@
     }
   };
 
+  // Short game only: practise at the short game area, or on a mat with a simulator.
+  function setPlace(place) {
+    if (ui.place === place) return;
+    const d = drafts.shortgame;
+    if (d && !d.id && d.items.some((i) => i.score !== null) && !window.confirm('Switch? Scores you entered on this plan will be lost.')) { renderApp(); return; }
+    ui.place = place;
+    if (d && !d.id) { const len = d.len || ui.len.shortgame; drafts.shortgame = { id: null, date: d.date, items: META.shortgame.gen(len), timer: { base: 0, startedAt: null }, len, place }; }
+    renderApp();
+  }
+  const placeToggle = () => h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Where you are practising' },
+    [['area', 'Short game area'], ['sim', 'Simulator']].map(([id, label]) => h('button', {
+      type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(ui.place === id), onclick: () => setPlace(id)
+    })));
+
   function sessionsView(kind) {
     const meta = META[kind];
     if (ui.mode === 'log') ui.mode = 'new';
     return h('section', null,
       pageTitle(kind, meta.title),
       modeBar('New session'),
+      kind === 'shortgame' && ui.mode !== 'history' && !(drafts.shortgame && drafts.shortgame.id) ? placeToggle() : null,
       ui.mode !== 'history' && !(drafts[kind] && drafts[kind].id) ? lengthControl(kind, (len) => setSessionLength(kind, len)) : null,
       ui.mode === 'history' ? sessionHistory(kind) : sessionNew(kind));
   }
@@ -1801,7 +1919,7 @@
         h('p', { class: 'lead', text: meta.intro(ui.len[kind]) }),
         h('button', {
           type: 'button', class: 'primary', text: 'Generate ' + lenLabel(ui.len[kind]) + ' session',
-          onclick: () => { const len = ui.len[kind]; drafts[kind] = { id: null, date: today(), items: meta.gen(len), timer: { base: 0, startedAt: null }, len }; renderApp(); }
+          onclick: () => { const len = ui.len[kind]; drafts[kind] = { id: null, date: today(), items: meta.gen(len), timer: { base: 0, startedAt: null }, len, place: ui.place }; renderApp(); }
         }));
     }
     return sessionForm(kind);
@@ -1811,10 +1929,10 @@
     const total = item.max == null ? 10 : item.max; // older sessions were scored out of 10
     const points = item.unit === 'points';
     const unit = item.max == null ? ' / 10' : ' of ' + total + (points ? ' points' : ' balls');
-    const out = h('output', { class: 'score-out', text: item.score == null ? 'Not scored' : item.score + unit });
+    const out = h('output', { class: 'score-out', text: item.score == null ? 'Not scored' : item.score + unit + shotsNote(item) });
     const range = h('input', { type: 'range', min: 0, max: total, step: 1, 'aria-label': (points ? 'Points scored in ' : 'Balls hit in ') + item.name });
     range.value = item.score == null ? 0 : item.score;
-    range.addEventListener('input', () => { item.score = Number(range.value); out.textContent = item.score + unit; });
+    range.addEventListener('input', () => { item.score = Number(range.value); out.textContent = item.score + unit + shotsNote(item); });
 
     const howEl = h('div', { class: 'how' }, howNodes(renderHow(item.how, item.dist)));
     let sizePicker = null;
@@ -1842,7 +1960,7 @@
         h('span', { class: 'tag', text: item.cat + ', ' + item.minutes + ' min' })),
       howEl,
       sizePicker,
-      h('div', { class: 'score-row' }, range, out),
+      h('div', { class: 'score-row' + (item.strokes ? ' has-shots' : '') }, range, out),
       passed, notes);
   }
 
@@ -2028,6 +2146,7 @@
       upsert(session.data[kind], {
         id: d.id || uid(),
         date: isDate(d.date) ? d.date : today(),
+        ...(kind === 'shortgame' ? { place: d.place === 'sim' ? 'sim' : 'area' } : {}),
         items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, max: i.max, unit: i.unit, balls: i.balls, dist: i.dist, score: i.score, passed: !!i.passed, notes: i.notes.trim() }))
       });
       await persist();
@@ -2065,7 +2184,7 @@
 
   // Summary cell for a calibration or transfer session.
   function sessionSum(kind, rec) {
-    return h('span', { class: 'sum', text: sessionSummary(kind, rec) });
+    return h('span', { class: 'sum', text: (rec.place === 'sim' ? 'Simulator, ' : '') + sessionSummary(kind, rec) });
   }
 
   function sessionSummary(kind, rec) {
@@ -2855,7 +2974,7 @@
         body = roundBody(rec);
         icon = 'rounds';
       } else {
-        tag = LOG_NAMES[type] + ', ' + protocolMinutes(rec) + ' min';
+        tag = LOG_NAMES[type] + (rec.place === 'sim' ? ' (simulator)' : '') + ', ' + protocolMinutes(rec) + ' min';
         sum = sessionSum(type, rec);
         body = sessionBody(type, rec);
       }

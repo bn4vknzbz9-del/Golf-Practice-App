@@ -345,6 +345,9 @@ input[type="checkbox"]:checked {
 .how-step { padding-left: 12px; }
 .reminder { margin-bottom: 16px; }
 .score-row { display: flex; align-items: center; gap: 12px; }
+.score-row.has-shots { flex-wrap: wrap; gap: 4px 12px; } /* a game that shows its shots has a longer reading, so it goes on its own line */
+.score-row.has-shots input[type="range"] { flex: 1 1 100%; }
+.score-row.has-shots .score-out { flex: 1 1 100%; text-align: right; white-space: normal; }
 .score-out { min-width: 7.5em; white-space: nowrap; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--label); }
 .drill textarea { margin-top: 8px; min-height: 64px; }
 .drill .field { margin-bottom: 12px; }
