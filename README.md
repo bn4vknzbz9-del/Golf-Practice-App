@@ -110,3 +110,21 @@ The tab bar scrolls sideways now that there are nine tabs; the current tab alway
 The Short game tab has a toggle between **Short game area** and **Simulator**. The area games use real lies around a green (Par 21 and the like). The simulator games are for a hitting mat with a launch monitor or simulator such as a Foresight: every ball is hit from the same spot, so nothing changes lie and there is no putting. Distance, club and trajectory change on every ball instead, and the simulator's carry, total distance, offline, apex, spin, launch and distance-to-target numbers do the scoring. A simulator session draws three to six ten-minute games from eleven (a course-style game first, then others at random), scored on the same slider and pass marks as transfer training. Each saved session remembers where it was played: History and the Practice log mark simulator sessions, and Practice trends shows Simulator short game progress separately from the short game area. Switching the toggle with scores already entered asks you first, because it builds a new plan. Earlier sessions count as short game area sessions.
 
 The progress ladders on the Technique tab are headed Practice Ladder Overview.
+
+## Tiger 5 trends
+
+The Tiger 5 tab turns your saved rounds into trends and shows where you are weakest. Choose the handicap you want to compare with (0, 5, 10, 15 or 20, remembered between visits) and whether to look at your last five rounds or all of them. Every number is per 18 holes, so a nine-hole round counts for half.
+
+- **Top card:** your Tiger 5 total against a golfer at the chosen handicap, the handicap your results match, how much it moved since the five rounds before, and two stacked bars showing what your Tiger 5 is made of next to the benchmark's.
+- **Work on first:** your biggest gaps in order, with roughly how many shots a round each is worth, a suggestion and a button that takes you to the tab that practises it (for example 3-putts lead to Putting and its Essential pace ladder).
+- **Where you stand:** every stat on one handicap scale from 0 to 20. The dot is the handicap your results match and the highlighted mark is the one you chose, so a dot to the right of it is a weakness. The Tiger 5 are bogeys or worse on par 5s, double bogeys or worse, 3-putts, missed greens with a 9 iron or less and double chips. The other stats are greens in regulation, up and down success, drivers not in play and score vs par.
+- **Over time:** your Tiger 5 total for each round, and a small chart for every stat with a dashed line at the benchmark.
+
+**Where the benchmarks come from.** Doubles or worse, 3-putts, greens in regulation, up and down success and score are averages from large sets of tracked amateur rounds. Four stats have no published per-round figure, so they are built from the closest tracked data and marked with an asterisk:
+
+- **Drivers not in play** (1.3, 1.8, 2.5, 3.1 and 3.7 a round at handicaps 0, 5, 10, 15 and 20). Tracked driving data gives the share of driver tee shots that end in a penalty or a recovery shot (12 percent at 0 to 4.9, about 23 percent at 10 to 15, 38 percent at 25 to 30). The figures fill in between those and assume about twelve drivers a round. This is the best grounded of the four.
+- **Missed greens with a 9 iron or less** (2.0, 2.6, 3.1, 3.6 and 4.0). The miss rate comes from tracked hit rates (from 100 yards 74, 65, 57, 49 and 42 percent; with a 9 iron 60, 47, 40, 32 and about 27 percent). The number of such approaches a round is not published, so about six is assumed.
+- **Bogeys or worse on par 5s** (0.8, 1.7, 2.4, 2.9 and 3.4). Modelled from the average score on par 5s at each handicap, assuming four par 5s a round.
+- **Double chips** (0.2, 0.3, 0.5, 0.7 and 0.9). The only related figure is that golfers who shoot in the 90s miss the green from inside 20 yards about 10 percent of the time. Treat this one as the weakest.
+
+The About the benchmarks section at the bottom of the tab explains each one. Different sets of tracked rounds disagree (for example scratch golfers average between about 0.5 and 1.7 three-putts a round), so use them as a guide. The shots-a-round figures in Work on first are rough, and the stats overlap, since a 3-putt can also cause a double.

@@ -32,6 +32,10 @@
   --a-shortgame: #a2845e;
   --a-putting: #34c759;
   --a-rounds: #d99a00;
+  --a-tiger5: #32ade6;
+  --good: #1e9e46;
+  --warn: #d98200;
+  --bad: #e0342b;
   --note: rgba(255, 204, 0, 0.2);
   --c0: #007aff;
   --c1: #ff9500;
@@ -77,6 +81,10 @@
     --a-shortgame: #ac8e68;
     --a-putting: #30d158;
     --a-rounds: #ffd60a;
+    --a-tiger5: #64d2ff;
+    --good: #30d158;
+    --warn: #ffb340;
+    --bad: #ff6961;
     --note: rgba(255, 214, 10, 0.18);
     --c0: #0a84ff;
     --c1: #ff9f0a;
@@ -262,7 +270,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .tab[aria-current="page"] { color: var(--a, var(--tint)); }
 .t-technique { --a: var(--a-technique); } .t-calibration { --a: var(--a-calibration); } .t-transfer { --a: var(--a-transfer); }
 .t-trends { --a: var(--a-trends); } .t-tempo { --a: var(--a-tempo); } .t-log { --a: var(--a-log); }
-.t-shortgame { --a: var(--a-shortgame); } .t-putting { --a: var(--a-putting); } .t-rounds { --a: var(--a-rounds); }
+.t-shortgame { --a: var(--a-shortgame); } .t-putting { --a: var(--a-putting); } .t-rounds { --a: var(--a-rounds); } .t-tiger5 { --a: var(--a-tiger5); }
 @media (min-width: 720px) { .tab { flex: 1 0 0; } }
 
 /* Lock screen */
@@ -462,7 +470,7 @@ input[type="checkbox"]:checked {
 .tile svg { width: 18px; height: 18px; fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .tile-technique { --tile: var(--a-technique); } .tile-calibration { --tile: var(--a-calibration); } .tile-transfer { --tile: var(--a-transfer); }
 .tile-trends { --tile: var(--a-trends); } .tile-tempo { --tile: var(--a-tempo); } .tile-log { --tile: var(--a-log); }
-.tile-shortgame { --tile: var(--a-shortgame); } .tile-putting { --tile: var(--a-putting); } .tile-rounds { --tile: var(--a-rounds); }
+.tile-shortgame { --tile: var(--a-shortgame); } .tile-putting { --tile: var(--a-putting); } .tile-rounds { --tile: var(--a-rounds); } .tile-tiger5 { --tile: var(--a-tiger5); }
 .page-title { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; }
 .page-title h2 { margin: 0; font-size: clamp(24px, 7vw, 30px); min-width: 0; }
 .page-title .tile { width: 36px; height: 36px; border-radius: 9px; }
@@ -534,6 +542,7 @@ body[data-area="tempo"] { --tint: #d6143f; --tint-fill: rgba(214, 20, 63, 0.12);
 body[data-area="shortgame"] { --tint: #8f6b3f; --tint-fill: rgba(143, 107, 63, 0.13); }
 body[data-area="putting"] { --tint: #1e7f34; --tint-fill: rgba(30, 127, 52, 0.12); }
 body[data-area="rounds"] { --tint: #8a6500; --tint-fill: rgba(138, 101, 0, 0.13); }
+body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12); }
 @media (prefers-color-scheme: dark) {
   body[data-area="technique"] { --tint: #bf5af2; --tint-fill: rgba(191, 90, 242, 0.22); }
   body[data-area="calibration"] { --tint: #0a84ff; --tint-fill: rgba(10, 132, 255, 0.22); }
@@ -541,6 +550,7 @@ body[data-area="rounds"] { --tint: #8a6500; --tint-fill: rgba(138, 101, 0, 0.13)
   body[data-area="shortgame"] { --tint: #ac8e68; --tint-fill: rgba(172, 142, 104, 0.22); }
   body[data-area="putting"] { --tint: #30d158; --tint-fill: rgba(48, 209, 88, 0.2); }
   body[data-area="rounds"] { --tint: #ffd60a; --tint-fill: rgba(255, 214, 10, 0.2); }
+  body[data-area="tiger5"] { --tint: #64d2ff; --tint-fill: rgba(100, 210, 255, 0.2); }
   body[data-area="tempo"] { --tint: #ff375f; --tint-fill: rgba(255, 55, 95, 0.22); }
 }
 .fold-wrap { display: grid; gap: 4px; }
@@ -563,3 +573,63 @@ body[data-area="rounds"] { --tint: #8a6500; --tint-fill: rgba(138, 101, 0, 0.13)
 .stats-table thead th { font-size: 12px; color: var(--label2); text-transform: uppercase; letter-spacing: 0.04em; }
 .log-filter { margin: 0 0 8px; }
 .log-filter .chip[aria-pressed="true"] { background: var(--a-log); }
+
+/* Tiger 5 trends */
+.st-good { color: var(--good); }
+.st-ok { color: var(--warn); }
+.st-bad { color: var(--bad); }
+.t5-controls { gap: 8px; }
+.t5-label { font-size: 13px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 4px; }
+.t5-hero { gap: 12px; }
+.t5-hero-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.t5-hero-side { text-align: right; }
+.t5-small { font-size: 13px; color: var(--label2); font-weight: 600; }
+.t5-big { font-size: 56px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.t5-mid { font-size: 30px; line-height: 1.1; font-weight: 700; color: var(--label2); font-variant-numeric: tabular-nums; }
+.t5-line { margin: 0; font-size: 16px; line-height: 1.4; }
+.delta { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.delta.good { color: var(--good); }
+.delta.bad { color: var(--bad); }
+.stack-row { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 10px; }
+.stack-label { font-size: 13px; font-weight: 600; color: var(--label2); }
+.stack-bar { display: flex; height: 30px; border-radius: 9px; overflow: hidden; background: var(--fill2); }
+.stack-bar.you { height: 38px; }
+.stack-bar .seg { display: flex; align-items: center; justify-content: center; min-width: 0; font-size: 13px; font-weight: 700; color: #fff; border-right: 1.5px solid var(--card); }
+.stack-bar .seg:last-child { border-right: 0; }
+.t5-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--label2); }
+.t5-legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.t5-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.work { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 10px 0; border-top: 0.5px solid var(--sep); }
+.work:first-of-type { border-top: 0; }
+.work-n { width: 34px; height: 34px; border-radius: 50%; background: var(--tint); color: var(--on-tint); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+.work-body { display: grid; gap: 6px; min-width: 0; }
+.work-nums { font-size: 15px; }
+.work-nums .st-bad { font-weight: 800; }
+.work-body .ghost { justify-self: start; }
+.rule-row { display: grid; gap: 4px; padding: 10px 0; border-top: 0.5px solid var(--sep); }
+.rule-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.rule-val { font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; display: inline-flex; gap: 8px; align-items: baseline; white-space: nowrap; }
+.rule-track { position: relative; height: 12px; margin: 10px 8px 0; border-radius: 6px; background: linear-gradient(90deg, rgba(52, 199, 89, 0.45), rgba(255, 204, 0, 0.45) 50%, rgba(255, 59, 48, 0.45)); }
+.rule-tick { position: absolute; top: -3px; width: 2px; height: 18px; margin-left: -1px; border-radius: 1px; background: var(--card); }
+.rule-tick.target { top: -6px; height: 24px; width: 3px; margin-left: -1.5px; background: var(--label); }
+.rule-pin { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 3px solid var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); background: currentColor; }
+.rule-labels { position: relative; height: 16px; margin: 6px 8px 0; font-size: 11px; color: var(--label3); font-weight: 600; }
+.rule-labels span { position: absolute; transform: translateX(-50%); }
+.rule-labels span.target { color: var(--label); font-weight: 800; }
+.rule-foot { font-size: 13px; color: var(--label2); }
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini { display: grid; gap: 4px; padding: 10px; border-radius: 12px; background: var(--fill2); min-width: 0; }
+.mini-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.mini-label { font-size: 12px; font-weight: 700; color: var(--label2); }
+.mini-val { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.mini-foot { font-size: 11px; color: var(--label2); }
+.spark { width: 100%; height: auto; display: block; overflow: visible; }
+.spark .bench, .chart .bench { stroke: var(--label2); stroke-width: 1.3; stroke-dasharray: 4 3; fill: none; }
+.spark-line { fill: none; stroke: var(--label2); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.spark-pt { fill: var(--label2); }
+.spark-pt.last { stroke: var(--card); stroke-width: 1.5; fill: currentColor; }
+.spark-empty { font-size: 12px; color: var(--label3); padding: 14px 0; }
+.chart .bench-label { fill: var(--label2); font-weight: 600; }
+.bench-table th, .bench-table td { font-size: 14px; padding: 7px 4px; }
+.bench-table td.cur { font-weight: 800; color: var(--tint); background: var(--tint-fill); }
+.bench-table tr.total th, .bench-table tr.total td { border-top: 1.5px solid var(--sep); font-weight: 800; }
