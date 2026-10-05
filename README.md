@@ -113,7 +113,7 @@ The progress ladders on the Technique tab are headed Practice Ladder Overview.
 
 ## Tiger 5 trends
 
-The Tiger 5 tab turns your saved rounds into trends and shows where you are weakest. Choose the handicap you want to compare with (0, 5, 10, 15 or 20, remembered between visits) and whether to look at your last five rounds or all of them. Every number is per 18 holes, so a nine-hole round counts for half.
+The Tiger 5 tab turns your saved rounds into trends and shows where you are weakest. Choose the handicap you want to compare with (0, 5, 10, 15 or 20). The tab always opens comparing with a 5 handicap and whether to look at your last five rounds or all of them. Every number is per 18 holes, so a nine-hole round counts for half.
 
 - **Top card:** your Tiger 5 total against a golfer at the chosen handicap, the handicap your results match, how much it moved since the five rounds before, and two stacked bars showing what your Tiger 5 is made of next to the benchmark's.
 - **Work on first:** your biggest gaps in order, with roughly how many shots a round each is worth, a suggestion and a button that takes you to the tab that practises it (for example 3-putts lead to Putting and its Essential pace ladder).
@@ -131,4 +131,4 @@ The About the benchmarks section at the bottom of the tab explains each one. Dif
 
 ## Bottom tabs
 
-Each tab at the bottom wears the colour of its page: Technique purple, Calibration blue, Transfer orange, Short game sand, Putting green, Tempo pink, Rounds gold, Tiger 5 cyan, Practice trends teal and Practice log indigo. The current tab is shown with a soft coloured pill behind its icon and a heavier label. The colours are the darker text shades in light mode and the brighter ones in dark mode, so the small labels stay readable.
+Each tab at the bottom wears the colour of its page: Technique purple, Calibration blue, Transfer orange, Short game sand, Putting green, Tempo pink, Rounds gold, Tiger 5 cyan, Practice trends teal and Practice log indigo. The tabs are sized to be easy to see and tap, about five show at once and the bar scrolls sideways for the rest. The current tab is shown with a soft coloured pill behind its icon and a heavier label. The colours are the darker text shades in light mode and the brighter ones in dark mode, so the small labels stay readable.

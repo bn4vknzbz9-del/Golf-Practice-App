@@ -842,7 +842,8 @@
   function loadSync() {
     try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(600, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
   }
-  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', place: 'area', t5: { level: loadT5Level(), win: 'last5' }, tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
+  const T5_DEFAULT_LEVEL = 5; // the handicap the Tiger 5 tab compares with each time it is opened
+  const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', place: 'area', t5: { level: T5_DEFAULT_LEVEL, win: 'last5' }, tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
   let tickHandle = null;
@@ -1131,7 +1132,7 @@
       TABS.map(([id, label]) => h('button', {
         type: 'button', class: 'tab t-' + id,
         'aria-current': ui.tab === id ? 'page' : false,
-        onclick: () => { ui.tab = id; renderApp(true); }
+        onclick: () => { if (id === 'tiger5' && ui.tab !== 'tiger5') ui.t5.level = T5_DEFAULT_LEVEL; ui.tab = id; renderApp(true); } // Tiger 5 opens comparing with a 5 handicap
       }, tabIcon(id), h('span', { text: label }))));
     const reminder = backupDue() ? h('div', { class: 'stack reminder' },
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
@@ -2942,9 +2943,6 @@
      All numbers are per 18 holes, so a nine-hole round counts for half.
      ========================================================== */
   const T5_LEVELS = [0, 5, 10, 15, 20];
-  const T5_LEVEL_KEY = 'golfpractice.tiger5.level.v1';
-  function loadT5Level() { try { const v = Number(localStorage.getItem(T5_LEVEL_KEY)); return T5_LEVELS.includes(v) ? v : 10; } catch (e) { return 10; } }
-  function saveT5Level(v) { try { localStorage.setItem(T5_LEVEL_KEY, String(v)); } catch (e) { /* ignore */ } }
 
   // vals: the typical figure at handicaps 0, 5, 10, 15, 20. est: true when it is modelled from related published data rather than
   // published directly. cost: rough strokes lost for each extra event, used only to put the stats in order of what to work on.
@@ -3064,7 +3062,7 @@
     const win = ui.t5.win;
     const rs = win === 'all' ? all : all.slice(-5);
     const prev = win === 'last5' && all.length >= 6 ? all.slice(Math.max(0, all.length - 10), all.length - 5) : null;
-    const setLevel = (v) => { ui.t5.level = v; saveT5Level(v); renderApp(); };
+    const setLevel = (v) => { ui.t5.level = v; renderApp(); }; // a choice lasts until you leave the tab
 
     const controls = h('div', { class: 'stack t5-controls' },
       h('div', { class: 't5-label', text: 'Compare with a handicap of' }),
