@@ -260,14 +260,15 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   padding: 4px 0 2px;
   border: 0;
   background: none;
-  color: var(--label2);
+  color: var(--ink, var(--label2));
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.15;
   letter-spacing: 0;
 }
 .tab svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.tab[aria-current="page"] { color: var(--a, var(--tint)); }
+.tab[aria-current="page"] { font-weight: 800; }
+.tab[aria-current="page"] svg { width: 36px; padding: 0 5px; border-radius: 13px; background: var(--ink-fill, transparent); stroke-width: 1.9; box-sizing: border-box; }
 .t-technique { --a: var(--a-technique); } .t-calibration { --a: var(--a-calibration); } .t-transfer { --a: var(--a-transfer); }
 .t-trends { --a: var(--a-trends); } .t-tempo { --a: var(--a-tempo); } .t-log { --a: var(--a-log); }
 .t-shortgame { --a: var(--a-shortgame); } .t-putting { --a: var(--a-putting); } .t-rounds { --a: var(--a-rounds); } .t-tiger5 { --a: var(--a-tiger5); }
@@ -633,3 +634,27 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 .bench-table th, .bench-table td { font-size: 14px; padding: 7px 4px; }
 .bench-table td.cur { font-weight: 800; color: var(--tint); background: var(--tint-fill); }
 .bench-table tr.total th, .bench-table tr.total td { border-top: 1.5px solid var(--sep); font-weight: 800; }
+
+/* The bottom tabs: each wears the colour of its page. The colours are the darker text shades so the small labels stay readable. */
+.t-technique { --ink: #9b3fd0; --ink-fill: rgba(155, 63, 208, 0.14); }
+.t-calibration { --ink: #0062cc; --ink-fill: rgba(0, 98, 204, 0.14); }
+.t-transfer { --ink: #b85c00; --ink-fill: rgba(184, 92, 0, 0.14); }
+.t-shortgame { --ink: #8f6b3f; --ink-fill: rgba(143, 107, 63, 0.16); }
+.t-putting { --ink: #1e7f34; --ink-fill: rgba(30, 127, 52, 0.14); }
+.t-tempo { --ink: #d6143f; --ink-fill: rgba(214, 20, 63, 0.14); }
+.t-rounds { --ink: #8a6500; --ink-fill: rgba(138, 101, 0, 0.15); }
+.t-tiger5 { --ink: #0a7aa0; --ink-fill: rgba(10, 122, 160, 0.14); }
+.t-trends { --ink: #1a7f93; --ink-fill: rgba(26, 127, 147, 0.14); }
+.t-log { --ink: #5856d6; --ink-fill: rgba(88, 86, 214, 0.14); }
+@media (prefers-color-scheme: dark) {
+  .t-technique { --ink: #bf5af2; --ink-fill: rgba(191, 90, 242, 0.24); }
+  .t-calibration { --ink: #0a84ff; --ink-fill: rgba(10, 132, 255, 0.24); }
+  .t-transfer { --ink: #ff9f0a; --ink-fill: rgba(255, 159, 10, 0.24); }
+  .t-shortgame { --ink: #ac8e68; --ink-fill: rgba(172, 142, 104, 0.26); }
+  .t-putting { --ink: #30d158; --ink-fill: rgba(48, 209, 88, 0.22); }
+  .t-tempo { --ink: #ff375f; --ink-fill: rgba(255, 55, 95, 0.24); }
+  .t-rounds { --ink: #ffd60a; --ink-fill: rgba(255, 214, 10, 0.22); }
+  .t-tiger5 { --ink: #64d2ff; --ink-fill: rgba(100, 210, 255, 0.22); }
+  .t-trends { --ink: #40c8e0; --ink-fill: rgba(64, 200, 224, 0.22); }
+  .t-log { --ink: #7d7aff; --ink-fill: rgba(125, 122, 255, 0.24); }
+}

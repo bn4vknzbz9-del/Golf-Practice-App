@@ -128,3 +128,7 @@ The Tiger 5 tab turns your saved rounds into trends and shows where you are weak
 - **Double chips** (0.2, 0.3, 0.5, 0.7 and 0.9). The only related figure is that golfers who shoot in the 90s miss the green from inside 20 yards about 10 percent of the time. Treat this one as the weakest.
 
 The About the benchmarks section at the bottom of the tab explains each one. Different sets of tracked rounds disagree (for example scratch golfers average between about 0.5 and 1.7 three-putts a round), so use them as a guide. The shots-a-round figures in Work on first are rough, and the stats overlap, since a 3-putt can also cause a double.
+
+## Bottom tabs
+
+Each tab at the bottom wears the colour of its page: Technique purple, Calibration blue, Transfer orange, Short game sand, Putting green, Tempo pink, Rounds gold, Tiger 5 cyan, Practice trends teal and Practice log indigo. The current tab is shown with a soft coloured pill behind its icon and a heavier label. The colours are the darker text shades in light mode and the brighter ones in dark mode, so the small labels stay readable.

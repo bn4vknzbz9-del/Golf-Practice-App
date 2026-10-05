@@ -3090,7 +3090,7 @@
         pageTitle('tiger5', 'Tiger 5'),
         controls,
         h('p', { class: 'empty', text: 'No rounds yet. Save a round in the Rounds tab and your Tiger 5, greens, up and downs and score appear here, set against what golfers at each handicap typically make.' }),
-        h('div', { class: 'card stack' }, sectionHead('tiger5', 'What each handicap typically makes'), benchTable, h('p', { class: 'hint', text: 'Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are estimates; the notes in About the benchmarks (on this tab once you have a round) say how each was built.' })));
+        h('div', { class: 'card stack' }, sectionHead('tiger5', 'What each handicap typically makes'), benchTable, h('p', { class: 'hint', text: 'Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are estimates.' })));
     }
 
     // ---- the top card: your Tiger 5 total against the benchmark, with what it is made of ----
