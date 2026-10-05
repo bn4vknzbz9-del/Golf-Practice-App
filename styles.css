@@ -245,11 +245,11 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   backdrop-filter: saturate(180%) blur(20px);
   border-top: 0.5px solid var(--sep);
 }
-/* ten tabs: five show at once, with the next one just peeking in, and the bar scrolls sideways */
+/* ten tabs: five and a bit show at once, so part of the sixth always peeks in and shows the bar scrolls sideways */
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
-  flex: 0 0 calc(100% / 5.05);
-  min-width: 76px;
+  flex: 0 0 calc(100% / 5.4);
+  min-width: 70px;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
