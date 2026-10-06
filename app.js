@@ -3040,7 +3040,7 @@
     if (m.kind === 'vspar') return v <= b ? 'good' : v <= b + 2 ? 'ok' : 'bad';
     return v <= b ? 'good' : v <= b * 1.25 || v - b <= 0.4 ? 'ok' : 'bad';
   }
-  const hcpWords = (h) => (h < -0.5 ? 'better than scratch' : h > 20.5 ? 'worse than a 20' : 'about a ' + Math.max(0, Math.round(h)) + ' handicap');
+  const hcpWords = (h) => (h < -0.5 ? 'better than scratch' : h > 20.5 ? 'worse than a 20 handicap' : 'about a ' + Math.max(0, Math.round(h)) + ' handicap');
   // How far you are from the benchmark, in plain words. Greens are counted as greens hit a round; everything else is in shots a round,
   // worked out the same way as Work on first (a miss is worth m.cost shots; an up and down is worth a shot, on your own number of chances).
   const gapWords = (m, v, b, chances) => {
@@ -3145,7 +3145,7 @@
         h('div', { class: 't5-hero-side' },
           h('div', { class: 't5-small', text: 'A ' + level + ' handicap' }),
           h('div', { class: 't5-mid', text: fmt1(tb) }))),
-      h('p', { class: 't5-line' }, 'You are making Tiger 5 mistakes like ', h('strong', { text: hcpWords(totalHcp) }), ' over ' + (win === 'all' ? 'all ' + rs.length : 'your last ' + rs.length) + (rs.length === 1 ? ' round.' : ' rounds.'),
+      h('p', { class: 't5-line' }, 'Over ' + (rs.length === 1 ? 'your round' : win === 'all' ? 'all ' + rs.length + ' rounds' : 'your last ' + rs.length + ' rounds') + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with '), h('strong', { text: hcpWords(totalHcp) }), '.',
         diff != null && Math.abs(diff) >= 0.05 ? h('span', { class: 'delta ' + (diff < 0 ? 'good' : 'bad'), text: (diff < 0 ? ' \u25BC ' : ' \u25B2 ') + fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than the 5 rounds before' }) : null),
       bar('You', yourVals, true),
       bar(level + ' hcp', T5_FIVE.map((m) => bench(m, level)), false),
@@ -3167,7 +3167,7 @@
             h('button', { type: 'button', class: 'ghost', text: 'Practise: ' + TABS.find(([id]) => id === p.m.tab)[1], onclick: goTo(p.m.tab) }))))
         : [h('p', { text: 'You are at or ahead of a ' + level + ' handicap on every stat over these rounds. Well played.' }),
           level > 0 ? h('div', { class: 'actions' }, h('button', { type: 'button', class: 'ghost', text: 'Compare with a ' + lowerLevel + ' handicap', onclick: () => setLevel(lowerLevel) })) : null],
-      pri.length ? h('p', { class: 'hint', text: 'Ranked by about how many shots a round you would save by matching a ' + level + ' handicap. The stats overlap (a 3-putt can also cause a double), so use it as a guide.' }) : null);
+      pri.length ? h('p', { class: 'hint', text: 'Ranked by roughly how many shots a round you could save by matching a ' + level + ' handicap. The stats overlap, since a 3-putt can also cause a double.' }) : null);
 
     // ---- every stat on the same handicap ruler ----
     const levelIdx = T5_LEVELS.indexOf(level);
@@ -3202,11 +3202,11 @@
           v == null ? null : styled(h('span', { class: 'rule-pin st-' + st, 'aria-hidden': 'true' }), { left: pos.toFixed(1) + '%' }),
           you),
         h('div', { class: 'rule-labels', 'aria-hidden': 'true' }, T5_LEVELS.map((lv, i) => styled(h('span', { class: i === levelIdx ? 'target' : '', text: i === levelIdx ? 'Goal ' + lv : String(lv) }), { left: xOf(lv).toFixed(1) + '%' }))),
-        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'About a ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b, udChances) + ' a ' + level + ' (' + t5Fmt(m, b) + ')' }));
+        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'About a ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b, udChances) + (level === 0 ? ' scratch' : ' a ' + level + ' handicap') }));
     };
     const rulers = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Where you stand'),
-      h('p', { class: 'hint', text: 'Each stat is placed on a handicap scale where left is better and right is worse. The dot labelled You is your result. The dark bar labelled Goal is the handicap you chose, so a dot to the right of it is a weakness. A result beyond the scale sits at the edge with an arrow. The green or red arrow beside each result is the change since the 5 rounds before. The gap is in shots a round, worked out as in Work on first (a green in regulation about a shot, a miss with a short club 0.8, a driver out of play 1.2, the other Tiger 5 mistakes 1), except greens, which are shown as greens hit.' }),
+      h('p', { class: 'hint', text: 'Each stat sits on a handicap scale where left is better and right is worse. The green or red arrow beside each result is the change since the 5 rounds before.' }),
       h('h3', { class: 'sub', text: 'Tiger 5' }),
       T5_FIVE.map(ruler),
       h('h3', { class: 'sub', text: 'Other stats' }),
