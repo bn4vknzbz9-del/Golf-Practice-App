@@ -3236,32 +3236,29 @@
       all.length > 1 ? h('div', { class: 'mini-grid' }, T5_METRICS.map(trendCard)) : null,
       all.length > 1 ? h('p', { class: 'hint', text: 'Your last ' + recent.length + ' rounds, per 18 holes. The dot on the right is your latest round, and it is green when it is at or better than a ' + level + ' handicap.' }) : null);
 
-    // The route: the next benchmark below the handicap your Tiger 5 matches, and how many shots a round each stat would gain on the way.
-    const below = T5_LEVELS.filter((l) => l < totalHcp - 0.05);
-    const goal = below.length ? below[below.length - 1] : null;
+    // The route to the handicap chosen at the top: how many shots a round each of four stats would gain on the way.
+    const goalName = level === 0 ? 'scratch' : level + ' handicap';
     const routeRows = [['gir', 'Greens in regulation'], ['driversOut', 'Drivers not in play'], ['threePutts', '3-putts'], ['ud', 'Up and down %']].map(([key, label]) => {
       const m = T5_METRICS.find((x) => x.key === key);
       const v = t5Value(rs, m);
-      if (goal == null || v == null) return { label, m, v, b: null, gap: null };
-      const b = bench(m, goal);
+      if (v == null) return { label, m, v, b: null, gap: null };
+      const b = bench(m, level);
       const d = m.kind === 'pct' ? b - v : v - b; // positive: you are behind the goal
       const shots = m.key === 'gir' ? (d / 100) * 18 * m.cost : m.key === 'ud' ? (d / 100) * udChances * m.cost : d * m.cost;
       return { label, m, v, b, gap: Math.round(shots * 10) / 10 };
     });
     const routeTotal = Math.round(routeRows.reduce((s, r) => s + (r.gap != null && r.gap > 0 ? r.gap : 0), 0) * 10) / 10;
     const route = h('div', { class: 'card stack' },
-      sectionHead('tiger5', goal == null ? 'Route to the next goal' : 'Route to a ' + (goal === 0 ? 'scratch' : goal + ' handicap')),
-      goal == null
-        ? h('p', { class: 'hint', text: 'Your Tiger 5 already matches a scratch handicap, the best benchmark here.' })
-        : h('table', { class: 'stats-table bench-table route-table' },
-          h('thead', null, h('tr', null, h('th', { text: '' }), h('th', { text: 'You' }), h('th', { text: goal === 0 ? 'Scratch' : goal + ' hcp' }), h('th', { text: 'Gap in shots' }))),
-          h('tbody', null,
-            routeRows.map((r) => h('tr', null,
-              h('th', { scope: 'row', text: r.label }),
-              h('td', { text: r.v == null ? '\u2013' : t5Fmt(r.m, r.v) }),
-              h('td', { text: r.b == null ? '\u2013' : t5Fmt(r.m, r.b) }),
-              r.gap == null ? h('td', { text: '\u2013' }) : r.gap > 0 ? h('td', { class: 'gap', text: fmt1(r.gap) }) : h('td', { class: 'gap st-good', text: 'Ahead' }))),
-            h('tr', { class: 'total' }, h('th', { scope: 'row', text: 'Shots to find' }), h('td', { text: '' }), h('td', { text: '' }), h('td', { class: 'gap', text: fmt1(routeTotal) })))));
+      sectionHead('tiger5', 'Route to ' + (level === 0 ? 'scratch' : 'a ' + goalName)),
+      h('table', { class: 'stats-table bench-table route-table' },
+        h('thead', null, h('tr', null, h('th', { text: '' }), h('th', { text: 'You' }), h('th', { text: level === 0 ? 'Scratch' : level + ' hcp' }), h('th', { text: 'Gap in shots' }))),
+        h('tbody', null,
+          routeRows.map((r) => h('tr', null,
+            h('th', { scope: 'row', text: r.label }),
+            h('td', { text: r.v == null ? '\u2013' : t5Fmt(r.m, r.v) }),
+            h('td', { text: r.b == null ? '\u2013' : t5Fmt(r.m, r.b) }),
+            r.gap == null ? h('td', { text: '\u2013' }) : r.gap > 0 ? h('td', { class: 'gap', text: fmt1(r.gap) }) : h('td', { class: 'gap st-good', text: 'Ahead' }))),
+          h('tr', { class: 'total' }, h('th', { scope: 'row', text: 'Shots to find' }), h('td', { text: '' }), h('td', { text: '' }), h('td', { class: 'gap', text: fmt1(routeTotal) })))));
 
     return h('section', { class: 'stack' },
       pageTitle('tiger5', 'Tiger 5'),
