@@ -587,7 +587,8 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 .t5-controls { gap: 8px; }
 .t5-label { font-size: 13px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 4px; }
 .t5-hero { gap: 12px; }
-.t5-hero-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.t5-hero-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 4px 12px; }
+.t5-hero-top > div { min-width: 0; }
 .t5-hero-side { text-align: right; }
 .t5-small { font-size: 13px; color: var(--label2); font-weight: 600; }
 .t5-big { font-size: 56px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
@@ -671,3 +672,12 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
   .t-trends { --ink: #40c8e0; --ink-fill: rgba(64, 200, 224, 0.22); }
   .t-log { --ink: #7d7aff; --ink-fill: rgba(125, 122, 255, 0.24); }
 }
+
+/* The route to the next handicap goal */
+.route-table { table-layout: fixed; }
+.route-table thead th { vertical-align: bottom; }
+.route-table thead th:nth-child(1) { width: 38%; }
+.route-table thead th:nth-child(2), .route-table thead th:nth-child(3) { width: 20%; }
+.route-table thead th:nth-child(4) { width: 22%; }
+.route-table td.gap { font-weight: 800; }
+.route-table tr.total td.gap { color: var(--tint); }
