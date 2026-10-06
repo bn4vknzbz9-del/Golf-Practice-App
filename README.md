@@ -146,3 +146,9 @@ At the bottom of the Tiger 5 page a table shows the route to the handicap you ch
 ## Export the Tiger 5 report as a PDF
 
 At the very bottom of the Tiger 5 page, Export as PDF makes a PDF of the report for the rounds and handicap you have selected. It has the top summary and what each stat is made of, Work on first, the route to your target handicap, every stat on the handicap ruler, what each handicap typically makes, and the rounds included. On an iPhone it opens the share sheet, where you can send it by message or email, or choose Save to Files. Where sharing is not available the PDF downloads instead. The PDF is made on your device and nothing is uploaded.
+
+## Your own target handicap
+
+Under the five handicap buttons on the Tiger 5 page there is a box for your own target, any handicap from 0 to 20 in tenths (for example 8 or 7.5). Everything on the page then compares with that target: the top card, the bars, Work on first, the gaps under each ruler, the route table and the PDF report. The benchmarks for a handicap that falls between two of the reference levels are worked out by joining the five levels with straight lines, so a target of 8 sits 60 percent of the way from the 5 column to the 10 column. The rulers keep their look, with the Goal marker placed at your target, and the table of what each handicap typically makes still shows only the five reference levels.
+
+Your target is saved with your other data (it is included in backups) and the page opens at it each time. The five buttons still work as a quick look at another level without changing your saved target. Clear the box to go back to opening at a 5 handicap.

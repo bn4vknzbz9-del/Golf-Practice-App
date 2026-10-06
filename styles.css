@@ -681,3 +681,10 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 .route-table thead th:nth-child(4) { width: 22%; }
 .route-table td.gap { font-weight: 800; }
 .route-table tr.total td.gap { color: var(--tint); }
+
+/* Your own Tiger 5 target handicap */
+.t5-target { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.t5-target span { font-size: 15px; color: var(--label2); }
+.t5-target span { flex: 1 1 auto; }
+.t5-target .t5-target-input { width: 104px; flex: 0 0 104px; text-align: center; }
+.t5-target-input.on { border-color: var(--tint); box-shadow: 0 0 0 1px var(--tint); }
