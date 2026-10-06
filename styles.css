@@ -615,13 +615,21 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 .rule-row { display: grid; gap: 4px; padding: 10px 0; border-top: 0.5px solid var(--sep); }
 .rule-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .rule-val { font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; display: inline-flex; gap: 8px; align-items: baseline; white-space: nowrap; }
-.rule-track { position: relative; height: 12px; margin: 10px 8px 0; border-radius: 6px; background: linear-gradient(90deg, rgba(52, 199, 89, 0.45), rgba(255, 204, 0, 0.45) 50%, rgba(255, 59, 48, 0.45)); }
+.rule-track { position: relative; height: 12px; margin: 26px 8px 0; border-radius: 6px; background: linear-gradient(90deg, rgba(52, 199, 89, 0.45), rgba(255, 204, 0, 0.45) 50%, rgba(255, 59, 48, 0.45)); }
 .rule-tick { position: absolute; top: -3px; width: 2px; height: 18px; margin-left: -1px; border-radius: 1px; background: var(--card); }
 .rule-tick.target { top: -6px; height: 24px; width: 3px; margin-left: -1.5px; background: var(--label); }
 .rule-pin { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 3px solid var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); background: currentColor; }
 .rule-labels { position: relative; height: 16px; margin: 6px 8px 0; font-size: 11px; color: var(--label3); font-weight: 600; }
 .rule-labels span { position: absolute; transform: translateX(-50%); }
-.rule-labels span.target { color: var(--label); font-weight: 800; }
+.rule-labels span.target { color: var(--card); background: var(--label); padding: 1px 8px; border-radius: 9px; font-weight: 800; white-space: nowrap; }
+/* You: a label above your dot, coloured like it. A result beyond the scale gets the label at the edge with an arrow. */
+.rule-you { position: absolute; top: -25px; transform: translateX(-50%); padding: 2px 8px; border-radius: 9px; background: currentColor; white-space: nowrap; line-height: 14px; }
+.rule-you b { color: #fff; font-size: 11px; font-weight: 800; }
+.rule-you::after { content: ""; position: absolute; left: 50%; bottom: -4px; margin-left: -4px; border: 4px solid transparent; border-top-color: currentColor; border-bottom: 0; }
+.rule-you.edge-r { right: -8px; transform: none; }
+.rule-you.edge-l { left: -8px; transform: none; }
+.rule-you.edge-r::after { left: auto; right: 14px; margin-left: 0; }
+.rule-you.edge-l::after { left: 14px; margin-left: 0; }
 .rule-foot { font-size: 13px; color: var(--label2); }
 .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .mini { display: grid; gap: 4px; padding: 10px; border-radius: 12px; background: var(--fill2); min-width: 0; }

@@ -2965,31 +2965,36 @@
 
   // vals: the typical figure at handicaps 0, 5, 10, 15, 20. est: true when it is modelled from related published data rather than
   // published directly. cost: rough strokes lost for each extra event, used only to put the stats in order of what to work on.
+  // About what one missed green costs against hitting it. Tracked rounds show about 2.2 shots to finish after finding the green from long
+  // range and 3.5 after missing it, but from wedge range a miss is much closer to the green and the gap is nearer 0.6 to 0.9. So a green
+  // in regulation (any distance) is worth about a shot, and a miss with a short club a little less.
+  const MISSED_GREEN_SHOTS = 0.8; // a miss with a 9 iron or less
+  const GIR_SHOTS = 1.0;          // greens in regulation, from any distance
   const T5_METRICS = [
-    { key: 'parFiveBogeys', kind: 'count', tiger: true, label: 'Bogeys or worse on par 5s', short: 'Par 5 bogeys', color: '#af52de', vals: [0.8, 1.7, 2.4, 2.9, 3.4], est: true, cost: 1,
+    { key: 'parFiveBogeys', kind: 'count', tiger: true, label: 'Bogeys or worse on par 5s', short: 'Par 5 bogeys', color: '#af52de', vals: [0.6, 1.4, 2.1, 2.8, 3.2], est: true, cost: 1,
       tab: 'transfer', fix: 'Par 5s are won with a tee shot in play and a sensible second. Play the course games in Transfer training with your driver and your lay-up club, and pick the number you will lay up to before you start.',
-      basis: 'There is no published per-round figure for this. It is modelled from the average score on par 5s at each handicap (4.8, 5.3, 5.6, 6.0 and 6.3), turned into the share of par 5s ending in bogey or worse (about 20, 42, 60, 72 and 85 percent) and applied to four par 5s a round. A course with fewer par 5s will give you lower counts.' },
+      basis: 'Nobody publishes this count, so it is built in two steps. First, the share of all holes that finish in bogey or worse at each handicap (about 29, 44, 58, 69 and 75 percent) is adjusted to each handicap\'s average score on par 5s (4.8, 5.3, 5.6, 6.0 and 6.3). Then it is checked against what is published for par 5s alone: scratch-level golfers average about a tenth of a shot over par on par 5s and make birdie or better one time in five, while golfers at 20 and over average about a shot and a half over and make double bogey or worse almost half the time. That gives bogey or worse on about 15, 35, 52, 70 and 80 percent of par 5s, applied to four par 5s a round. It puts a 15 handicap at a plain bogey on about 43 percent of par 5s, in line with the 40 to 45 percent reported for that level. A course with fewer par 5s will give you lower counts.' },
     { key: 'doubles', kind: 'count', tiger: true, label: 'Double bogeys or worse', short: 'Doubles', color: '#007aff', vals: [0.3, 1.6, 2.9, 4.7, 6.7], est: false, cost: 1,
       tab: 'transfer', fix: 'Doubles come from one bad swing followed by a bad decision. The pressure and course games in Transfer training build the recovery routine. On the course, take the safe spot and make your bogey.',
       basis: 'Averages from large sets of tracked amateur rounds.' },
     { key: 'threePutts', kind: 'count', tiger: true, label: '3-putts', short: '3-putts', color: '#34c759', vals: [0.8, 1.5, 2.4, 3.8, 4.6], est: false, cost: 1,
       tab: 'putting', fix: 'Most 3-putts start with the first putt. Every Putting session opens with the Essential pace ladder, which trains your speed from 5 to 30 feet.',
       basis: 'Averages from large sets of tracked amateur rounds. Other sets of tracked rounds give similar or lower figures.' },
-    { key: 'missedGreens', kind: 'count', tiger: true, label: 'Missed greens with a 9 iron or less', short: 'Missed greens', color: '#ff9500', vals: [2.0, 2.6, 3.1, 3.6, 4.0], est: true, cost: 0.5,
+    { key: 'missedGreens', kind: 'count', tiger: true, label: 'Missed greens with a 9 iron or less', short: 'Missed greens', color: '#ff9500', vals: [3.8, 4.3, 4.5, 4.6, 5.0], est: true, cost: MISSED_GREEN_SHOTS,
       tab: 'calibration', fix: 'Missing with a scoring club comes down to strike and distance. Use the Calibration drills for face strike, low point and clubface direction with your wedges and short irons, then the wedge distance games in Short game.',
-      basis: 'The miss rate comes from tracked approach shots: from 100 yards in the fairway golfers at 0, 5, 10, 15 and 20 hit the green 74, 65, 57, 49 and 42 percent of the time, and with a 9 iron 60, 47, 40, 32 and about 27 percent. Blended for a 9 iron down to a wedge, that is roughly 33, 44, 52, 60 and 66 percent missed. The number of such approaches a round is not published, so about six a round is assumed.' },
-    { key: 'doubleChips', kind: 'count', tiger: true, label: 'Double chips', short: 'Double chips', color: '#ff2d55', vals: [0.2, 0.3, 0.5, 0.7, 0.9], est: true, cost: 1,
+      basis: 'Nobody publishes this count, so it has two parts. The miss rate comes from tracked approach shots: from 100 yards in the fairway golfers at 0, 5, 10, 15 and 20 hit the green 74, 65, 57, 49 and 42 percent of the time, and from 100 to 150 yards golfers who shoot 80, 90 and 100 hit 63, 47 and 35 percent. Allowing for rough lies and par 3s, about 34, 45, 54, 61 and 67 percent of approaches with a 9 iron or less miss the green. The number of such approaches comes from a simple model of a round, scaled to the roughly 14 approach shots a round that tracked golfers hit: about 11, 10, 9, 8 and 8 at 0, 5, 10, 15 and 20, because better players are close to the green more often. That is why the figures change so little with handicap.' },
+    { key: 'doubleChips', kind: 'count', tiger: true, label: 'Double chips', short: 'Double chips', color: '#ff2d55', vals: [0.3, 0.7, 1.0, 1.5, 1.9], est: true, cost: 1,
       tab: 'shortgame', fix: 'Two chips usually means a poor strike or the wrong landing spot. The Short game games, such as Par 21 and the bunker and short-sided games, put those shots under pressure.',
-      basis: 'There is no published figure for double chips. The one related figure is that golfers who shoot in the 90s miss the green from inside 20 yards about 10 percent of the time. That is scaled down for better players and multiplied by the chips a round (about 60 percent of the greens you miss). Treat it as the weakest benchmark here.' },
-    { key: 'gir', kind: 'pct', label: 'Greens in regulation', short: 'Greens', vals: [56.8, 46.1, 37.3, 26.4, 22.4], est: false, cost: 0.5,
+      basis: 'Nobody publishes double chips. Tracked short game data says a 5 handicap finds the green with 94 percent of shots from inside 25 yards, and golfers who shoot in the 90s miss it about 10 percent of the time. Missing rates of about 4, 6, 8, 10 and 12 percent inside 25 yards (and double that from 25 to 50 yards) are applied to the chips and pitches in a round, about 70 percent of the greens you miss. Treat it as the weakest benchmark here.' },
+    { key: 'gir', kind: 'pct', label: 'Greens in regulation', short: 'Greens', vals: [56.8, 46.1, 37.3, 26.4, 22.4], est: false, cost: GIR_SHOTS,
       tab: 'calibration', fix: 'Greens come from approach distance and face direction. Work through the Calibration drills, then the Transfer games, with your mid and short irons.',
       basis: 'Average from a large set of tracked amateur rounds, with other sets within a few points.' },
     { key: 'ud', kind: 'pct', label: 'Up and down success', short: 'Up and downs', vals: [50.0, 37.7, 31.6, 25.1, 21.7], est: false, cost: 1,
       tab: 'shortgame', fix: 'Up and downs come from the landing spot and a holeable second putt. The Short game area games and Up and down streak give you reps under pressure.',
       basis: 'Average from a large set of tracked amateur rounds.' },
-    { key: 'driversOut', kind: 'count', label: 'Drivers not in play', short: 'Drivers out', vals: [1.3, 1.8, 2.5, 3.1, 3.7], est: true, cost: 1.5,
+    { key: 'driversOut', kind: 'count', label: 'Drivers not in play', short: 'Drivers out', vals: [1.3, 1.8, 2.5, 3.1, 3.7], est: true, cost: 1.2,
       tab: 'calibration', fix: 'Drivers out of play are a face-direction problem. The Clubface direction drills in Calibration score where the ball finishes, not where it starts. Use them with the driver.',
-      basis: 'Tracked driving data gives the share of driver tee shots that end in a penalty or a recovery shot: 12 percent for 0 to 4.9 handicaps, about 23 percent for 10 to 15, 38 percent for 25 to 30 and 45 percent for 30 and over. The figures here fill in between those at about 11, 15, 20, 26 and 31 percent and apply them to about twelve drivers a round, which fits one to two a round for scratch golfers.' },
+      basis: 'Large-scale tracked driving data gives the share of driver tee shots that end in a penalty or a recovery shot: 12 percent for 0 to 4.9 handicaps, about 23 percent for 10 to 15, 38 percent for 25 to 30 and 45 percent for 30 and over. The figures here fill in between those at about 11, 15, 20, 26 and 31 percent and apply them to about twelve drivers a round, which fits one to two a round for scratch golfers.' },
     { key: 'vspar', kind: 'vspar', label: 'Score vs par', short: 'Score', vals: [2.6, 7.0, 12.6, 17.3, 21.7], est: false, cost: 0,
       basis: 'Average gross scores of 74.6, 79.0, 84.6, 89.3 and 93.7 from tracked rounds, against a par of 72.' }
   ];
@@ -3036,11 +3041,18 @@
     return v <= b ? 'good' : v <= b * 1.25 || v - b <= 0.4 ? 'ok' : 'bad';
   }
   const hcpWords = (h) => (h < -0.5 ? 'better than scratch' : h > 20.5 ? 'worse than a 20' : 'about a ' + Math.max(0, Math.round(h)) + ' handicap');
-  const gapWords = (m, v, b) => {
+  // How far you are from the benchmark, in plain words. Greens are counted as greens hit a round; everything else is in shots a round,
+  // worked out the same way as Work on first (a miss is worth m.cost shots; an up and down is worth a shot, on your own number of chances).
+  const gapWords = (m, v, b, chances) => {
     const d = m.kind === 'pct' ? b - v : v - b; // positive means worse than the benchmark
-    const unit = m.kind === 'pct' ? ' points' : '';
-    const n = m.kind === 'pct' ? String(Math.round(Math.abs(d))) : fmt1(Math.abs(d));
-    return Math.abs(d) < (m.kind === 'pct' ? 0.5 : 0.05) ? 'level with' : n + unit + (d > 0 ? ' worse than' : ' better than');
+    const worse = d > 0;
+    if (m.key === 'gir') {
+      const n = fmt1((Math.abs(d) / 100) * 18);
+      return Number(n) === 0 ? 'level with' : n + (worse ? ' fewer ' : ' more ') + (n === '1' ? 'green' : 'greens') + ' hit than';
+    }
+    const shots = m.key === 'ud' ? (Math.abs(d) / 100) * chances * m.cost : m.kind === 'vspar' ? Math.abs(d) : Math.abs(d) * m.cost;
+    const n = fmt1(shots);
+    return Number(n) === 0 ? 'level with' : n + (n === '1' ? ' shot ' : ' shots ') + (worse ? 'worse than' : 'better than');
   };
 
   function t5Priorities(rs, level) {
@@ -3098,7 +3110,7 @@
         T5_METRICS.filter((m) => !m.tiger).map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v)) }))))));
     const about = disclosure('t5-about', 'About the benchmarks', 'Hide the benchmarks', [
       benchTable,
-      h('p', { class: 'hint', text: 'The columns are the handicap. Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are estimates, because no direct per-round figure exists; the notes below say how each was built. The rest are averages from large sets of tracked amateur rounds. Drivers not in play and missed greens rest on tracked rates and need only one assumption each (drives and approaches a round). Different sets of tracked rounds give different figures, for example scratch golfers average anywhere from about 0.5 to 1.7 three-putts a round, so treat the benchmarks as a guide, not a target to the decimal.' }),
+      h('p', { class: 'hint', text: 'The columns are the handicap. Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are estimates, because no direct per-round figure exists; the notes below say how each was built. The rest are averages from large sets of tracked amateur rounds. Drivers not in play rests on tracked rates and one assumption (twelve drivers a round). The other three are built from related tracked data and assumptions about how many chances a round has, so they are less certain, missed greens most of all. Different sets of tracked rounds give different figures, for example scratch golfers average anywhere from about 0.5 to 1.7 three-putts a round, so treat the benchmarks as a guide, not a target to the decimal.' }),
       h('div', { class: 'stack' }, T5_METRICS.map((m) => h('p', { class: 'hint' }, h('strong', { text: m.label + ': ' }), m.basis)))
     ]);
 
@@ -3159,29 +3171,42 @@
 
     // ---- every stat on the same handicap ruler ----
     const levelIdx = T5_LEVELS.indexOf(level);
+    const udChances = sumBy(rs, (r) => r.udChances) / (sumBy(rs, (r) => r.holes) || 1) * 18; // your up and down chances a round
+    // The scale runs a little past 0 and 20 on both sides so most results fit; a result that is still beyond it sits at the edge with an arrow.
+    const DMIN = -6; const DMAX = 26;
+    const xOf = (x) => ((x - DMIN) / (DMAX - DMIN)) * 100;
     const ruler = (m) => {
       const v = t5Value(rs, m);
       const b = bench(m, level);
       const st = t5Status(m, v, b);
       const hv = v == null ? null : handicapOf(m.vals, v);
-      const pos = hv == null ? 0 : Math.min(104, Math.max(-4, (hv / 20) * 100));
+      const off = hv == null ? 0 : hv < DMIN + 1 ? -1 : hv > DMAX - 1 ? 1 : 0;
+      const pos = hv == null ? 0 : xOf(Math.min(DMAX - 1, Math.max(DMIN + 1, hv)));
       const prevV = prev ? t5Value(prev, m) : null;
       let trend = null;
-      if (v != null && prevV != null && Math.abs(v - prevV) >= (m.kind === 'pct' ? 0.5 : 0.05)) {
+      if (v != null && prevV != null) { // the change since the previous block of rounds, in greens or shots
         const better = m.kind === 'pct' ? v > prevV : v < prevV;
-        trend = h('span', { class: 'delta ' + (better ? 'good' : 'bad'), text: (v > prevV ? '\u25B2' : '\u25BC') + ' ' + (m.kind === 'pct' ? Math.round(Math.abs(v - prevV)) + ' pts' : fmt1(Math.abs(v - prevV))) });
+        const dif = Math.abs(v - prevV);
+        const amount = m.key === 'gir' ? (dif / 100) * 18 : m.key === 'ud' ? (dif / 100) * udChances * m.cost : m.kind === 'vspar' ? dif : dif * m.cost;
+        const n = fmt1(amount);
+        if (Number(n) > 0) {
+          const words = m.key === 'gir' ? n + (better ? ' more ' : ' fewer ') + (n === '1' ? 'green' : 'greens') : n + (n === '1' ? ' shot ' : ' shots ') + (better ? 'better' : 'worse');
+          trend = h('span', { class: 'delta ' + (better ? 'good' : 'bad'), text: (better ? '\u25B2 ' : '\u25BC ') + words });
+        }
       }
+      const you = v == null ? null : styled(h('span', { class: 'rule-you st-' + st + (off ? (off > 0 ? ' edge-r' : ' edge-l') : ''), 'aria-hidden': 'true' }, h('b', { text: off < 0 ? '\u2039 You' : off > 0 ? 'You \u203A' : 'You' })), off ? {} : { left: pos.toFixed(1) + '%' });
       return h('div', { class: 'rule-row' },
         h('div', { class: 'rule-head' }, h('strong', { text: m.label }), h('span', { class: 'rule-val st-' + st }, t5Fmt(m, v), trend)),
         h('div', { class: 'rule-track' },
-          T5_LEVELS.map((lv, i) => styled(h('span', { class: 'rule-tick' + (i === levelIdx ? ' target' : '') }), { left: i * 25 + '%' })),
-          v == null ? null : styled(h('span', { class: 'rule-pin st-' + st, 'aria-hidden': 'true' }), { left: pos.toFixed(1) + '%' })),
-        h('div', { class: 'rule-labels', 'aria-hidden': 'true' }, T5_LEVELS.map((lv, i) => styled(h('span', { class: i === levelIdx ? 'target' : '', text: String(lv) }), { left: i * 25 + '%' }))),
-        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'About a ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b) + ' a ' + level + ' (' + t5Fmt(m, b) + ')' }));
+          T5_LEVELS.map((lv, i) => styled(h('span', { class: 'rule-tick' + (i === levelIdx ? ' target' : '') }), { left: xOf(lv).toFixed(1) + '%' })),
+          v == null ? null : styled(h('span', { class: 'rule-pin st-' + st, 'aria-hidden': 'true' }), { left: pos.toFixed(1) + '%' }),
+          you),
+        h('div', { class: 'rule-labels', 'aria-hidden': 'true' }, T5_LEVELS.map((lv, i) => styled(h('span', { class: i === levelIdx ? 'target' : '', text: i === levelIdx ? 'Goal ' + lv : String(lv) }), { left: xOf(lv).toFixed(1) + '%' }))),
+        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'About a ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b, udChances) + ' a ' + level + ' (' + t5Fmt(m, b) + ')' }));
     };
     const rulers = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Where you stand'),
-      h('p', { class: 'hint', text: 'Each stat is placed on the handicap scale, from 0 on the left to 20 on the right. The dot shows the handicap your results match, and the highlighted mark is the one you chose. A dot to the right of it is a weakness.' }),
+      h('p', { class: 'hint', text: 'Each stat is placed on a handicap scale where left is better and right is worse. The dot labelled You is your result. The dark bar labelled Goal is the handicap you chose, so a dot to the right of it is a weakness. A result beyond the scale sits at the edge with an arrow. The green or red arrow beside each result is the change since the 5 rounds before. The gap is in shots a round, estimated as in Work on first (a green in regulation about a shot, a miss with a short club 0.8, a driver out of play 1.2, the other Tiger 5 mistakes 1), except greens, which are shown as greens hit.' }),
       h('h3', { class: 'sub', text: 'Tiger 5' }),
       T5_FIVE.map(ruler),
       h('h3', { class: 'sub', text: 'Other stats' }),
