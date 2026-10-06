@@ -3087,6 +3087,285 @@
     return svg;
   }
 
+  /* ==========================================================
+     The Tiger 5 report as a PDF. A small PDF writer (A4, the standard Helvetica fonts, plain shapes and text) so nothing else is needed.
+     ========================================================== */
+  const PDF_W = 595.28; const PDF_H = 841.89;
+  const HELV_W = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+  const HELV_BOLD_W = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+  const PDF_ODD = { '\x96': [556, 556], '\x92': [222, 278], '\xb7': [278, 278], '\x95': [350, 350], '\xd7': [584, 584] };
+  // Turns text into characters the standard fonts can show; anything else becomes a plain stand-in.
+  const pdfClean = (s) => String(s).replace(/[\u2013\u2014]/g, '\x96').replace(/\u2212/g, '-').replace(/[\u2018\u2019]/g, '\x92').replace(/\u00b7/g, '\xb7').replace(/\u2022/g, '\x95').replace(/\u00d7/g, '\xd7').replace(/\u25B2/g, '+').replace(/\u25BC/g, '-').replace(/[^\x20-\x7e\x92\x95\x96\xb7\xd7]/g, '?');
+  const pdfWidth = (s, size, bold) => {
+    let w = 0;
+    for (const ch of pdfClean(s)) { const c = ch.charCodeAt(0); w += c >= 32 && c <= 126 ? (bold ? HELV_BOLD_W : HELV_W)[c - 32] : (PDF_ODD[ch] || [556, 556])[bold ? 1 : 0]; }
+    return (w * size) / 1000;
+  };
+  const pdfWrap = (s, size, bold, maxW) => {
+    const lines = []; let cur = '';
+    for (const wd of pdfClean(s).split(' ')) {
+      const t = cur ? cur + ' ' + wd : wd;
+      if (!cur || pdfWidth(t, size, bold) <= maxW) cur = t; else { lines.push(cur); cur = wd; }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  const pdfFit = (s, size, bold, maxW) => { // shortens text with dots so it fits one line
+    let t = pdfClean(s);
+    if (pdfWidth(t, size, bold) <= maxW) return t;
+    while (t.length > 1 && pdfWidth(t + '...', size, bold) > maxW) t = t.slice(0, -1);
+    return t + '...';
+  };
+
+  function pdfDoc() {
+    const pages = []; let ops = null;
+    const n = (x) => String(Math.round(x * 100) / 100);
+    const col = (hex) => { const v = parseInt(hex.slice(1), 16); return n(((v >> 16) & 255) / 255) + ' ' + n(((v >> 8) & 255) / 255) + ' ' + n((v & 255) / 255); };
+    const esc = (s) => pdfClean(s).replace(/([\\()])/g, '\\$1');
+    return {
+      addPage() { ops = []; pages.push(ops); return pages.length - 1; },
+      use(i) { ops = pages[i]; },
+      count: () => pages.length,
+      rect(x, y, w, h, hex) { ops.push(col(hex) + ' rg ' + n(x) + ' ' + n(PDF_H - y - h) + ' ' + n(w) + ' ' + n(h) + ' re f'); },
+      round(x, y, w, h, r, hex) {
+        r = Math.min(r, w / 2, h / 2); const k = r * 0.5523; const X = x; const Y = PDF_H - y - h; const W = w; const H = h;
+        ops.push(col(hex) + ' rg ' + [
+          n(X + r) + ' ' + n(Y) + ' m', n(X + W - r) + ' ' + n(Y) + ' l',
+          n(X + W - r + k) + ' ' + n(Y) + ' ' + n(X + W) + ' ' + n(Y + r - k) + ' ' + n(X + W) + ' ' + n(Y + r) + ' c',
+          n(X + W) + ' ' + n(Y + H - r) + ' l',
+          n(X + W) + ' ' + n(Y + H - r + k) + ' ' + n(X + W - r + k) + ' ' + n(Y + H) + ' ' + n(X + W - r) + ' ' + n(Y + H) + ' c',
+          n(X + r) + ' ' + n(Y + H) + ' l',
+          n(X + r - k) + ' ' + n(Y + H) + ' ' + n(X) + ' ' + n(Y + H - r + k) + ' ' + n(X) + ' ' + n(Y + H - r) + ' c',
+          n(X) + ' ' + n(Y + r) + ' l',
+          n(X) + ' ' + n(Y + r - k) + ' ' + n(X + r - k) + ' ' + n(Y) + ' ' + n(X + r) + ' ' + n(Y) + ' c', 'h f'].join(' '));
+      },
+      circle(cx, cy, r, hex) {
+        const k = r * 0.5523; const X = cx; const Y = PDF_H - cy;
+        ops.push(col(hex) + ' rg ' + [n(X + r) + ' ' + n(Y) + ' m',
+          n(X + r) + ' ' + n(Y + k) + ' ' + n(X + k) + ' ' + n(Y + r) + ' ' + n(X) + ' ' + n(Y + r) + ' c',
+          n(X - k) + ' ' + n(Y + r) + ' ' + n(X - r) + ' ' + n(Y + k) + ' ' + n(X - r) + ' ' + n(Y) + ' c',
+          n(X - r) + ' ' + n(Y - k) + ' ' + n(X - k) + ' ' + n(Y - r) + ' ' + n(X) + ' ' + n(Y - r) + ' c',
+          n(X + k) + ' ' + n(Y - r) + ' ' + n(X + r) + ' ' + n(Y - k) + ' ' + n(X + r) + ' ' + n(Y) + ' c', 'h f'].join(' '));
+      },
+      text(s, x, y, size, hex, o) {
+        o = o || {};
+        const w = pdfWidth(s, size, o.bold);
+        const xx = o.align === 'right' ? x - w : o.align === 'center' ? x - w / 2 : x;
+        ops.push('BT /' + (o.bold ? 'F2' : 'F1') + ' ' + n(size) + ' Tf ' + col(hex) + ' rg ' + n(xx) + ' ' + n(PDF_H - y) + ' Td (' + esc(s) + ') Tj ET');
+      },
+      build(title) {
+        const objs = [null];
+        objs.push('<< /Type /Catalog /Pages 2 0 R >>');
+        objs.push('<< /Type /Pages /Kids [' + pages.map((_, i) => (5 + i * 2) + ' 0 R').join(' ') + '] /Count ' + pages.length + ' >>');
+        objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+        objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+        pages.forEach((p, i) => {
+          const stream = p.join('\n');
+          objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + n(PDF_W) + ' ' + n(PDF_H) + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + (6 + i * 2) + ' 0 R >>');
+          objs.push('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
+        });
+        objs.push('<< /Title (' + esc(title) + ') /Producer (Golf practice log) /CreationDate (D:' + new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14) + 'Z) >>');
+        let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const offs = [0];
+        for (let i = 1; i < objs.length; i++) { offs[i] = out.length; out += i + ' 0 obj\n' + objs[i] + '\nendobj\n'; }
+        const xr = out.length;
+        out += 'xref\n0 ' + objs.length + '\n0000000000 65535 f \n';
+        for (let i = 1; i < objs.length; i++) out += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+        out += 'trailer\n<< /Size ' + objs.length + ' /Root 1 0 R /Info ' + (objs.length - 1) + ' 0 R >>\nstartxref\n' + xr + '\n%%EOF\n';
+        const bytes = new Uint8Array(out.length);
+        for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 255;
+        return bytes;
+      }
+    };
+  }
+
+  // Lays the report out (a plain object of finished text and numbers) over as many A4 pages as it needs.
+  function buildTiger5Pdf(r) {
+    const doc = pdfDoc();
+    const M = 40; const CW = PDF_W - M * 2; const BOTTOM = PDF_H - 50;
+    const INK = '#1c1c1e'; const GRAY = '#6e6e73'; const LINE = '#d1d1d6'; const TINT = '#0a7aa0';
+    const ST = { good: '#1e9e46', ok: '#c77c00', bad: '#e0342b' };
+    let y = M;
+    const page = () => { doc.addPage(); y = M; };
+    const ensure = (h) => { if (y + h > BOTTOM) page(); };
+    const heading = (t) => { ensure(70); doc.text(t, M, y + 14, 14, TINT, { bold: true }); doc.rect(M, y + 21, CW, 0.8, LINE); y += 32; };
+    const para = (t, size, hex, width, bold) => { const lines = pdfWrap(t, size, bold, width || CW); ensure(lines.length * (size + 4)); lines.forEach((ln) => { doc.text(ln, M, y + size, size, hex, { bold }); y += size + 4; }); };
+
+    page();
+    // ---- title ----
+    doc.text('Tiger 5 report', M, y + 24, 26, INK, { bold: true });
+    doc.text('Golf practice log', M + CW, y + 10, 10, GRAY, { align: 'right' });
+    doc.text(r.generated, M + CW, y + 24, 10, GRAY, { align: 'right' });
+    y += 36;
+    para(r.subtitle, 10.5, GRAY);
+    y += 10;
+
+    // ---- the top card ----
+    { const sent = pdfWrap(r.summary, 12, false, CW - 32);
+      const H = 16 + 60 + sent.length * 16 + (r.delta ? 16 : 0) + 8 + 52 + 8 + 16 + 14;
+      ensure(H);
+      doc.round(M, y, CW, H, 12, '#f2f2f7');
+      const x0 = M + 16; let yy = y + 16;
+      doc.text('Your Tiger 5 per 18 holes', x0, yy + 9, 10, GRAY, { bold: true });
+      doc.text(r.total, x0, yy + 48, 40, ST[r.totalStatus], { bold: true });
+      doc.text(r.levelLabel, M + CW - 16, yy + 9, 10, GRAY, { bold: true, align: 'right' });
+      doc.text(r.benchTotal, M + CW - 16, yy + 36, 24, INK, { bold: true, align: 'right' });
+      yy += 60;
+      sent.forEach((ln) => { doc.text(ln, x0, yy + 11, 12, INK); yy += 16; });
+      if (r.delta) { doc.text(r.delta.text, x0, yy + 11, 11, r.delta.good ? ST.good : ST.bad, { bold: true }); yy += 16; }
+      yy += 8;
+      const bx = x0 + 50; const bw = M + CW - 16 - bx;
+      r.bars.forEach((b) => {
+        doc.text(b.label, x0, yy + 13, 10, INK, { bold: true });
+        let cx = bx;
+        b.vals.forEach((v, i) => {
+          const w = (v / r.barScale) * bw;
+          if (w > 0) doc.rect(cx, yy, w, 18, r.parts[i].color);
+          if (w / bw >= 0.11) doc.text(v.toFixed(1).replace(/\.0$/, ''), cx + w / 2, yy + 13, 9, '#ffffff', { bold: true, align: 'center' });
+          cx += w;
+        });
+        yy += 26;
+      });
+      yy += 8;
+      let lx = x0;
+      r.parts.forEach((p) => { doc.rect(lx, yy + 1, 7, 7, p.color); doc.text(p.short, lx + 11, yy + 8, 9, GRAY); lx += 11 + pdfWidth(p.short, 9) + 14; });
+      y += H + 18; }
+
+    // ---- work on first ----
+    heading('Work on first');
+    if (r.work.length) {
+      r.work.forEach((p, i) => {
+        const nums = pdfWrap(p.nums, 10.5, false, CW - 30); const fix = pdfWrap(p.fix, 10, false, CW - 30);
+        const H = 22 + nums.length * 14 + fix.length * 13 + 12;
+        ensure(H);
+        doc.circle(M + 9, y + 9, 9, TINT);
+        doc.text(String(i + 1), M + 9, y + 13, 11, '#ffffff', { bold: true, align: 'center' });
+        doc.text(p.label, M + 30, y + 13, 12, INK, { bold: true });
+        let yy = y + 28;
+        nums.forEach((ln) => { doc.text(ln, M + 30, yy, 10.5, INK); yy += 14; });
+        fix.forEach((ln) => { doc.text(ln, M + 30, yy, 10, GRAY); yy += 13; });
+        y += H;
+      });
+      para(r.workHint, 9, GRAY);
+    } else para(r.workNone, 11, INK);
+    y += 8;
+
+    // ---- the route to the chosen handicap ----
+    heading(r.routeTitle);
+    { const X = [M + CW * 0.55, M + CW * 0.76, M + CW];
+      ensure(30 + r.route.length * 22 + 28);
+      doc.text('YOU', X[0], y + 10, 8.5, GRAY, { bold: true, align: 'right' });
+      doc.text(r.routeGoal.toUpperCase(), X[1], y + 10, 8.5, GRAY, { bold: true, align: 'right' });
+      doc.text('GAP IN SHOTS', X[2], y + 10, 8.5, GRAY, { bold: true, align: 'right' });
+      y += 16;
+      r.route.forEach((row) => {
+        doc.text(row.label, M, y + 14, 11, INK);
+        doc.text(row.you, X[0], y + 14, 11, INK, { align: 'right' });
+        doc.text(row.goal, X[1], y + 14, 11, INK, { align: 'right' });
+        doc.text(row.gap, X[2], y + 14, 11, row.ahead ? ST.good : INK, { bold: true, align: 'right' });
+        doc.rect(M, y + 21, CW, 0.5, LINE);
+        y += 22;
+      });
+      doc.rect(M, y, CW, 1.2, GRAY);
+      doc.text('Shots to find', M, y + 15, 11, INK, { bold: true });
+      doc.text(r.routeTotal, X[2], y + 15, 11, TINT, { bold: true, align: 'right' });
+      y += 30; }
+
+    // ---- every stat on the handicap ruler ----
+    page();
+    heading('Where you stand');
+    para(r.rulerHint, 9.5, GRAY);
+    y += 4;
+    const drawRuler = (row) => {
+      ensure(72);
+      const color = ST[row.st] || GRAY;
+      doc.text(row.label, M, y + 10, 11, INK, { bold: true });
+      doc.text(row.value, M + CW, y + 10, 12, color, { bold: true, align: 'right' });
+      if (row.trend) doc.text(row.trend.text, M + CW - pdfWidth(row.value, 12, true) - 10, y + 10, 8.5, row.trend.better ? ST.good : ST.bad, { align: 'right' });
+      const ty = y + 30; const px = (pct) => M + (pct / 100) * CW;
+      for (let i = 0; i < 40; i++) { // the heat line: green on the left, through amber, to red on the right
+        const t = i / 39; const a = t < 0.5 ? [[52, 199, 89], [255, 204, 0], t * 2] : [[255, 204, 0], [255, 59, 48], (t - 0.5) * 2];
+        const c = [0, 1, 2].map((k) => Math.round(255 - (255 - (a[0][k] + (a[1][k] - a[0][k]) * a[2])) * 0.5));
+        doc.rect(M + (i * CW) / 40, ty, CW / 40 + 0.4, 7, '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''));
+      }
+      r.ticks.forEach((tk, i) => {
+        const goal = i === r.goalIndex;
+        doc.rect(px(tk.x) - (goal ? 1 : 0.4), ty - (goal ? 4 : 2), goal ? 2 : 0.8, goal ? 15 : 11, goal ? INK : '#8e8e93');
+        if (goal) { const w = pdfWidth(tk.name, 8, true) + 12; doc.round(px(tk.x) - w / 2, ty + 11, w, 12, 6, INK); doc.text(tk.name, px(tk.x), ty + 20, 8, '#ffffff', { bold: true, align: 'center' }); }
+        else doc.text(String(tk.lv), px(tk.x), ty + 20, 8, GRAY, { align: 'center' });
+      });
+      if (row.has) {
+        const cx = M + 6 + (row.pos / 100) * (CW - 12);
+        const lab = row.off < 0 ? '< You' : row.off > 0 ? 'You >' : 'You';
+        const pw = pdfWidth(lab, 8, true) + 12; const px0 = Math.max(M, Math.min(M + CW - pw, cx - pw / 2));
+        doc.round(px0, y + 14, pw, 12, 6, color);
+        doc.text(lab, px0 + pw / 2, y + 23, 8, '#ffffff', { bold: true, align: 'center' });
+        doc.circle(cx, ty + 3.5, 7, '#ffffff'); doc.circle(cx, ty + 3.5, 5.2, color);
+      }
+      doc.text(row.foot, M, y + 64, 9.5, GRAY);
+      y += 72;
+    };
+    doc.use(doc.count() - 1);
+    para('Tiger 5', 10.5, GRAY, CW, true); r.rulers.tiger.forEach(drawRuler);
+    para('Other stats', 10.5, GRAY, CW, true); r.rulers.other.forEach(drawRuler);
+
+    // ---- what each handicap makes ----
+    ensure(60); heading(r.benchTitle);
+    { const colW = CW * 0.108; const X = r.levels.map((_, i) => M + CW * 0.46 + (i + 1) * colW);
+      const H = 18 + r.bench.length * 17;
+      ensure(H);
+      const gi = r.goalIndex; doc.rect(X[gi] - colW + 2, y - 2, colW - 2, H, '#e3f1f8');
+      r.levels.forEach((lv, i) => doc.text(lv, X[i] - 6, y + 10, 8.5, GRAY, { bold: true, align: 'right' }));
+      y += 16;
+      r.bench.forEach((row) => {
+        if (row.total) doc.rect(M, y + 1, CW, 0.8, GRAY);
+        doc.text(row.label, M, y + 13, 9.5, INK, { bold: row.total });
+        row.cells.forEach((c, i) => doc.text(c, X[i] - 6, y + 13, 9.5, INK, { bold: row.total || i === gi, align: 'right' }));
+        y += 17;
+      });
+      y += 14; }
+
+    // ---- the rounds behind it ----
+    heading('Rounds included');
+    { const X = [M, M + 92, M + CW * 0.84, M + CW];
+      ensure(24 + r.rounds.length * 18);
+      doc.text('DATE', X[0], y + 10, 8.5, GRAY, { bold: true });
+      doc.text('COURSE', X[1], y + 10, 8.5, GRAY, { bold: true });
+      doc.text('SCORE', X[2], y + 10, 8.5, GRAY, { bold: true, align: 'right' });
+      doc.text('VS PAR', X[3], y + 10, 8.5, GRAY, { bold: true, align: 'right' });
+      y += 16;
+      r.rounds.forEach((rd) => {
+        ensure(18);
+        doc.text(rd.date, X[0], y + 13, 10, INK);
+        doc.text(pdfFit(rd.course, 10, false, X[2] - X[1] - 50), X[1], y + 13, 10, INK);
+        doc.text(rd.score, X[2], y + 13, 10, INK, { align: 'right' });
+        doc.text(rd.vs, X[3], y + 13, 10, INK, { bold: true, align: 'right' });
+        doc.rect(M, y + 18, CW, 0.5, LINE);
+        y += 18;
+      });
+      if (r.moreRounds) { y += 4; para(r.moreRounds, 9, GRAY); } }
+
+    const total = doc.count();
+    for (let i = 0; i < total; i++) { doc.use(i); doc.text('Golf practice log \u00b7 Tiger 5 report \u00b7 page ' + (i + 1) + ' of ' + total, PDF_W / 2, PDF_H - 24, 8, GRAY, { align: 'center' }); }
+    return doc.build('Tiger 5 report');
+  }
+
+  // Uses the iPhone share sheet when available (Save to Files, Mail, Messages), otherwise downloads the file.
+  async function shareFile(bytes, name, mime, title) {
+    try {
+      const f = new File([bytes], name, { type: mime });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title }); return 'shared'; }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return 'cancelled'; // you closed the share sheet
+    }
+    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    const a = h('a', { href: url, download: name });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return 'downloaded';
+  }
+
   function tiger5View() {
     const all = [...session.data.rounds].sort((a, b) => a.date.localeCompare(b.date));
     const level = ui.t5.level;
@@ -3176,7 +3455,8 @@
     // The scale runs a little past 0 and 20 on both sides so most results fit; a result that is still beyond it sits at the edge with an arrow.
     const DMIN = -6; const DMAX = 26;
     const xOf = (x) => ((x - DMIN) / (DMAX - DMIN)) * 100;
-    const ruler = (m) => {
+    // Everything about one stat's place on the ruler, shared by the page and the PDF report.
+    const rulerInfo = (m) => {
       const v = t5Value(rs, m);
       const b = bench(m, level);
       const st = t5Status(m, v, b);
@@ -3190,11 +3470,14 @@
         const dif = Math.abs(v - prevV);
         const amount = m.key === 'gir' ? (dif / 100) * 18 : m.key === 'ud' ? (dif / 100) * udChances * m.cost : m.kind === 'vspar' ? dif : dif * m.cost;
         const n = fmt1(amount);
-        if (Number(n) > 0) {
-          const words = m.key === 'gir' ? n + (better ? ' more ' : ' fewer ') + (n === '1' ? 'green' : 'greens') : n + (n === '1' ? ' shot ' : ' shots ') + (better ? 'better' : 'worse');
-          trend = h('span', { class: 'delta ' + (better ? 'good' : 'bad'), text: (better ? '\u25B2 ' : '\u25BC ') + words });
-        }
+        if (Number(n) > 0) trend = { better, words: m.key === 'gir' ? n + (better ? ' more ' : ' fewer ') + (n === '1' ? 'green' : 'greens') : n + (n === '1' ? ' shot ' : ' shots ') + (better ? 'better' : 'worse') };
       }
+      const foot = v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'A ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b, udChances) + (level === 0 ? ' scratch' : ' a ' + level + ' handicap');
+      return { m, v, b, st, hv, off, pos, trend, foot };
+    };
+    const ruler = (m) => {
+      const { v, st, off, pos, trend: tr, foot } = rulerInfo(m);
+      const trend = tr ? h('span', { class: 'delta ' + (tr.better ? 'good' : 'bad'), text: (tr.better ? '\u25B2 ' : '\u25BC ') + tr.words }) : null;
       const you = v == null ? null : styled(h('span', { class: 'rule-you st-' + st + (off ? (off > 0 ? ' edge-r' : ' edge-l') : ''), 'aria-hidden': 'true' }, h('b', { text: off < 0 ? '\u2039 You' : off > 0 ? 'You \u203A' : 'You' })), off ? {} : { left: pos.toFixed(1) + '%' });
       return h('div', { class: 'rule-row' },
         h('div', { class: 'rule-head' }, h('strong', { text: m.label }), h('span', { class: 'rule-val st-' + st }, t5Fmt(m, v), trend)),
@@ -3203,7 +3486,7 @@
           v == null ? null : styled(h('span', { class: 'rule-pin st-' + st, 'aria-hidden': 'true' }), { left: pos.toFixed(1) + '%' }),
           you),
         h('div', { class: 'rule-labels', 'aria-hidden': 'true' }, T5_LEVELS.map((lv, i) => styled(h('span', { class: i === levelIdx ? 'target' : '', text: i === levelIdx ? 'Goal ' + lv : String(lv) }), { left: xOf(lv).toFixed(1) + '%' }))),
-        h('div', { class: 'rule-foot', text: v == null ? 'Nothing recorded yet' : (hv > 20.5 ? 'Worse than a 20 handicap' : hv < -0.5 ? 'Better than scratch' : 'A ' + Math.round(Math.max(0, hv)) + ' handicap') + ', ' + gapWords(m, v, b, udChances) + (level === 0 ? ' scratch' : ' a ' + level + ' handicap') }));
+        h('div', { class: 'rule-foot', text: foot }));
     };
     const rulers = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Where you stand'),
@@ -3260,10 +3543,55 @@
             r.gap == null ? h('td', { text: '\u2013' }) : r.gap > 0 ? h('td', { class: 'gap', text: fmt1(r.gap) }) : h('td', { class: 'gap st-good', text: 'Ahead' }))),
           h('tr', { class: 'total' }, h('th', { scope: 'row', text: 'Shots to find' }), h('td', { text: '' }), h('td', { text: '' }), h('td', { class: 'gap', text: fmt1(routeTotal) })))));
 
+    // ---- the report as a PDF to share ----
+    const makeReport = () => {
+      const pdate = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const goalWords = level === 0 ? 'scratch' : 'a ' + level + ' handicap';
+      const rows = (list) => list.map((m) => { const i = rulerInfo(m); return { label: m.label, value: t5Fmt(m, i.v), st: i.st, has: i.v != null, pos: i.pos, off: i.off, foot: i.foot, trend: i.trend ? { better: i.trend.better, text: i.trend.words + ' than before' } : null }; });
+      const benchCell = (m, v) => (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v));
+      const shown = [...rs].reverse().slice(0, 12);
+      return {
+        generated: pdate(today()),
+        subtitle: (win === 'all' ? 'All ' + rs.length + (rs.length === 1 ? ' round' : ' rounds') : 'Last ' + rs.length + (rs.length === 1 ? ' round' : ' rounds')) + ' \u00b7 ' + (pdate(rs[0].date) === pdate(rs[rs.length - 1].date) ? pdate(rs[0].date) : pdate(rs[0].date) + ' to ' + pdate(rs[rs.length - 1].date)) + ' \u00b7 per 18 holes \u00b7 compared with ' + goalWords,
+        total: fmt1(total), totalStatus, benchTotal: fmt1(tb), levelLabel: level === 0 ? 'Scratch' : 'A ' + level + ' handicap',
+        summary: 'Over ' + (rs.length === 1 ? 'your round' : win === 'all' ? 'all ' + rs.length + ' rounds' : 'your last ' + rs.length + ' rounds') + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with ') + hcpWords(totalHcp) + '.',
+        delta: diff != null && Math.abs(diff) >= 0.05 ? { good: diff < 0, text: fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than the 5 rounds before' } : null,
+        parts: T5_FIVE.map((m) => ({ short: m.short, color: m.color })),
+        bars: [{ label: 'You', vals: yourVals }, { label: level === 0 ? 'Scratch' : level + ' hcp', vals: T5_FIVE.map((m) => bench(m, level)) }],
+        barScale: scale,
+        work: pri.slice(0, 3).map((p) => ({ label: p.m.label, nums: t5Fmt(p.m, p.v) + ' against ' + t5Fmt(p.m, p.b) + ' for ' + goalWords + '. Worth ' + fmt1(p.strokes) + (p.strokes >= 1.05 || p.strokes < 0.95 ? ' shots' : ' shot') + ' a round.', fix: p.m.fix })),
+        workHint: 'Ranked by roughly how many shots a round you could save by matching ' + goalWords + '. The stats overlap, since a 3-putt can also cause a double.',
+        workNone: 'You are at or ahead of ' + goalWords + ' on every stat over these rounds.',
+        routeTitle: 'Route to ' + (level === 0 ? 'scratch' : 'a ' + level + ' handicap'), routeGoal: level === 0 ? 'Scratch' : level + ' hcp',
+        route: routeRows.map((r) => ({ label: r.label, you: r.v == null ? '-' : t5Fmt(r.m, r.v), goal: r.b == null ? '-' : t5Fmt(r.m, r.b), gap: r.gap == null ? '-' : r.gap > 0 ? fmt1(r.gap) : 'Ahead', ahead: r.gap != null && r.gap <= 0 })),
+        routeTotal: fmt1(routeTotal),
+        rulerHint: 'Each stat sits on a handicap scale where left is better and right is worse. The dot labelled You is your result and the dark bar is the handicap you chose.',
+        ticks: T5_LEVELS.map((lv, i) => ({ lv, x: xOf(lv), name: i === levelIdx ? 'Goal ' + lv : String(lv) })), goalIndex: levelIdx,
+        rulers: { tiger: rows(T5_FIVE), other: rows(T5_METRICS.filter((m) => !m.tiger)) },
+        benchTitle: 'What each handicap typically makes, per 18 holes', levels: T5_LEVELS.map(String),
+        bench: [...T5_FIVE.map((m) => ({ label: m.label, cells: m.vals.map(fmt1) })), { label: 'Tiger 5 total', total: true, cells: T5_TOTAL.map(fmt1) }, ...T5_METRICS.filter((m) => !m.tiger).map((m) => ({ label: m.label, cells: m.vals.map((v) => benchCell(m, v)) }))],
+        rounds: shown.map((rd) => ({ date: pdate(rd.date), course: (rd.course || 'Round') + (rd.holes === 9 ? ' (9 holes)' : ''), score: String(rd.score), vs: vsParText(rd.score - rd.par) })),
+        moreRounds: rs.length > shown.length ? 'The ' + shown.length + ' most recent of ' + rs.length + ' rounds are listed.' : ''
+      };
+    };
+    const exportBtn = h('button', { type: 'button', class: 'primary', text: 'Export as PDF' });
+    exportBtn.onclick = async () => {
+      exportBtn.disabled = true;
+      try {
+        const how = await shareFile(buildTiger5Pdf(makeReport()), 'tiger-5-report-' + today() + '.pdf', 'application/pdf', 'Tiger 5 report');
+        if (how === 'downloaded') toast('PDF saved');
+      } catch (err) { toast('Could not make the PDF.'); }
+      exportBtn.disabled = false;
+    };
+    const exportCard = h('div', { class: 'card stack' },
+      sectionHead('tiger5', 'Share this report'),
+      h('p', { class: 'hint', text: 'Makes a PDF of this report to send or save.' }),
+      h('div', { class: 'actions' }, exportBtn));
+
     return h('section', { class: 'stack' },
       pageTitle('tiger5', 'Tiger 5'),
       controls, hero, work, rulers, over,
-      h('div', { class: 'card stack' }, about), route);
+      h('div', { class: 'card stack' }, about), route, exportCard);
   }
 
   /* ==========================================================

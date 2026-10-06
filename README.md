@@ -142,3 +142,7 @@ The gap to your goal is written in plain terms. Greens in regulation are shown a
 ## Route to your target handicap
 
 At the bottom of the Tiger 5 page a table shows the route to the handicap you chose at the top of the page (0, 5, 10, 15 or 20), and it changes when you change that choice. For greens in regulation, drivers not in play, 3-putts and up and down % it shows your result, the target's figure and the gap in shots a round, worked out with the same shot values as Where you stand. A stat that is already at or better than the target reads Ahead, and the last row adds up the shots still to find.
+
+## Export the Tiger 5 report as a PDF
+
+At the very bottom of the Tiger 5 page, Export as PDF makes a PDF of the report for the rounds and handicap you have selected. It has the top summary and what each stat is made of, Work on first, the route to your target handicap, every stat on the handicap ruler, what each handicap typically makes, and the rounds included. On an iPhone it opens the share sheet, where you can send it by message or email, or choose Save to Files. Where sharing is not available the PDF downloads instead. The PDF is made on your device and nothing is uploaded.
