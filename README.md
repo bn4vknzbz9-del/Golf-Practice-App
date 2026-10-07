@@ -155,4 +155,12 @@ The icon of the selected tab at the bottom now has its coloured highlight centre
 
 ## Calibration: below or above a 10 handicap
 
-The Calibration page has a toggle for Below 10 handicap (all 32 drills, as before) and Above 10 handicap, which leaves out 13 of the harder drills and keeps 19, so each of face strike, low point and clubface direction still has at least five. The harder drills are the ones that switch between different outcomes on every ball, shape the ball on purpose, use very small tolerances, or score in several parts. Your choice is saved with your data. Switching while you have an unsaved session asks first, then builds a new session from the right drills.
+The Calibration page has a toggle for Below 10 handicap (all 32 drills, as before) and Above 10 handicap, which leaves out 12 of the harder drills and keeps 20, so each of face strike, low point and clubface direction still has at least six. The harder drills are the ones that switch between different outcomes on every ball, shape the ball on purpose, use very small tolerances, or score in several parts. Your choice is saved with your data. Switching while you have an unsaved session asks first, then builds a new session from the right drills.
+
+## Opening from the Home Screen
+
+While the app starts, the screen shows the icon and the name Road To Scratch, then the passphrase screen. The old line that began "Loading. If this message stays..." showed for a moment and looked like an error. It is still in the page for a real problem, such as a missing file, but it stays hidden for the first 12 seconds.
+
+## Tempo: keeps going if the phone holds something up
+
+The Tempo metronome now keeps itself going. The next swing is queued on a timer and also on every animation frame, so if the phone holds up one of them the other carries on. If the sound clock jumps or the timer is held up for a while, the pattern starts again cleanly from that moment instead of racing to catch up, and a tone that fails to play is skipped instead of stopping everything. Before this, a held-up timer could leave the last swing finished with nothing after it, which showed as every box full and no sound. If the phone itself interrupts the sound (a call, another app), it still stops and tells you to tap Start.

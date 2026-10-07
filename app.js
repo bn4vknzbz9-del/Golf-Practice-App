@@ -1850,7 +1850,7 @@
     'Face strike|Heel/Toe ladder', 'Face strike|Find your edges', 'Face strike|High and low switch', 'Face strike|Four corners switch',
     'Low point|Fat and thin switch', 'Low point|Brush and dig switch',
     'Clubface direction|Curve spectrum', 'Clubface direction|Hook to slice spectrum', 'Clubface direction|Face feel ladder',
-    'Clubface direction|Bias check and correct', 'Clubface direction|Draw and fade switch', 'Clubface direction|Shape and start line grid',
+    'Clubface direction|Bias check and correct', 'Clubface direction|Shape and start line grid',
     'Clubface direction|Shape and line on call'
   ]);
   const calPool = (c) => (session.data.calLevel === 'above' ? CAL[c].filter((g) => !CAL_ABOVE_SKIP.has(c + '|' + g.name)) : CAL[c]);
@@ -2442,22 +2442,38 @@
     }
   }
 
+  // Queues the swings. It keeps the next swing scheduled before the current one ends, and it never plays catch-up: if the phone held
+  // the timer up for a while, or the sound clock jumped, the pattern starts again cleanly from now. Before this a held-up timer left
+  // the last swing finished with nothing after it, which showed as every box full and no sound.
+  const TEMPO_HORIZON = 0.6; // seconds ahead that the next swing is queued
   function tempoSchedule() {
     const e = tempoEngine;
     const st = ui.tempo;
-    while (e.next < tempoClock() + 0.25) {
+    const clock = tempoClock();
+    if (!Number.isFinite(e.next) || e.next < clock - 0.4) { cutSound(); newMaster(); e.queue = []; e.next = clock + 0.15; }
+    const tone = (when, freq, len, vol) => { try { beep(e.ctx, when, freq, len, vol); } catch (err) { /* one tone failing must not stop the pattern */ } };
+    for (let guard = 0; guard < 6 && e.next < clock + TEMPO_HORIZON; guard += 1) {
       const c = tempoCycle(st.ratio, st.bpm, st.rest);
+      if (!Number.isFinite(c.total) || c.total < 0.05) { e.next = clock + 1; break; } // never loop on a bad length
       const cyc = { start: e.next, ...c };
       if (st.sound && e.ctx) {
-        beep(e.ctx, cyc.start, TONE_START, 0.1, 0.45); // takeaway
-        beep(e.ctx, cyc.start + c.back, TONE_TOP, 0.1, 0.5); // top of the backswing, where the downswing starts: a little higher
-        beep(e.ctx, cyc.start + c.back + c.down, TONE_IMPACT, 0.3, 0.9); // impact: a little higher again, and longer and louder to aim the strike at
-        if (st.ticks) c.beats.forEach((bx, i) => { if (i > 0 && bx.tone === null) beep(e.ctx, cyc.start + bx.start, TONE_CLICK, 0.02, 0.12); }); // an optional soft click on every beat that has no tone, through the rest as well
+        tone(cyc.start, TONE_START, 0.1, 0.45); // takeaway
+        tone(cyc.start + c.back, TONE_TOP, 0.1, 0.5); // top of the backswing, where the downswing starts: a little higher
+        tone(cyc.start + c.back + c.down, TONE_IMPACT, 0.3, 0.9); // impact: a little higher again, and longer and louder to aim the strike at
+        if (st.ticks) c.beats.forEach((bx, i) => { if (i > 0 && bx.tone === null) tone(cyc.start + bx.start, TONE_CLICK, 0.02, 0.12); }); // an optional soft click on every beat that has no tone, through the rest as well
       }
       e.queue.push(cyc);
       if (e.queue.length > 6) e.queue.shift();
       e.next += c.total;
     }
+  }
+  // One pass of the engine's upkeep. It runs from a timer and from every animation frame, so if the phone holds up one of them
+  // the other keeps the swings coming.
+  function tempoTick() {
+    const e = tempoEngine;
+    if (!e.running) return;
+    watchAudio();
+    if (e.running) tempoSchedule();
   }
   function tempoPaint() {
     const e = tempoEngine;
@@ -2484,6 +2500,8 @@
   function tempoFrame() {
     const e = tempoEngine;
     if (!e.running) return;
+    try { tempoTick(); } catch (err) { /* keep going */ }
+    if (!e.running) return; // the upkeep can stop the metronome (the sound was interrupted)
     try { tempoPaint(); } catch (err) { /* one bad frame must not stop the animation */ }
     e.raf = requestAnimationFrame(tempoFrame);
   }
@@ -2511,7 +2529,7 @@
       e.lastMove = nowMs();
       if (e.viz) e.viz.toggle.textContent = 'Stop';
       tempoSchedule();
-      e.timer = setInterval(() => { try { watchAudio(); if (e.running) tempoSchedule(); } catch (err) { /* keep ticking */ } }, 25);
+      e.timer = setInterval(() => { try { tempoTick(); } catch (err) { /* keep ticking */ } }, 25);
       e.raf = requestAnimationFrame(tempoFrame);
       try {
         if (navigator.wakeLock) {

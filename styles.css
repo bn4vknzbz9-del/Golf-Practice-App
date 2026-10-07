@@ -682,3 +682,7 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 .route-table thead th:nth-child(4) { width: 22%; }
 .route-table td.gap { font-weight: 800; }
 .route-table tr.total td.gap { color: var(--tint); }
+
+/* The start-up screen shows the app's name and icon straight away. The note about missing files only appears if loading takes a long time. */
+.boot-note { opacity: 0; font-size: 13px; color: var(--label2); animation: boot-note-in 0.01s linear 12s forwards; }
+@keyframes boot-note-in { to { opacity: 1; } }
