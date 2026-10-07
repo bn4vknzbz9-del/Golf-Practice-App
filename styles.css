@@ -686,3 +686,10 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 /* The start-up screen shows the app's name and icon straight away. The note about missing files only appears if loading takes a long time. */
 .boot-note { opacity: 0; font-size: 13px; color: var(--label2); animation: boot-note-in 0.01s linear 12s forwards; }
 @keyframes boot-note-in { to { opacity: 1; } }
+
+/* The long game preset speeds: a named button in two groups, the name over the number */
+.chips.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.chips.grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.chip.named { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 52px; padding: 4px 2px; font-size: 12px; font-weight: 500; line-height: 1.15; }
+.chip.named::before { content: attr(data-name); font-size: 13px; font-weight: 700; }
+.chips.grid5 .chip.named::before { font-size: 12px; }

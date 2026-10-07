@@ -168,3 +168,7 @@ The Tempo metronome now keeps itself going. The next swing is queued on a timer 
 ## Tempo opens at 30/10
 
 The Tempo page starts on the 3:1 long game ratio at the 30/10 speed (180 BPM). It starts there each time the app is opened or unlocked, and keeps whatever speed you choose until then.
+
+## Tempo preset speeds
+
+On the 3:1 long game the preset speeds are in two groups, each with a name. Technique Practice Speeds are 39/13 Slow, 36/12 Medium and 33/11 Quicker. On Course Speeds are 30/10 Slowest, 27/9 Slow, 24/8 Medium, 21/7 Fast and 18/6 Fastest. The 2:1 short game keeps its single list of presets (20/10, 18/9, 16/8 and 14/7). The speeds themselves, and the timing of the tones, have not changed.

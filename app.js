@@ -2272,7 +2272,14 @@
   const BPM_MAX = 300;
   // Backswing : downswing. Frames are backswing/downswing, slowest first. The speed is not limited to these.
   const TEMPO = {
-    '3:1': { name: 'Long game', parts: 3, frames: [[39, 13], [36, 12], [33, 11], [30, 10], [27, 9], [24, 8], [21, 7], [18, 6]] },
+    '3:1': {
+      name: 'Long game', parts: 3, frames: [[39, 13], [36, 12], [33, 11], [30, 10], [27, 9], [24, 8], [21, 7], [18, 6]],
+      // The preset speeds are shown in two groups, each speed with a plain name.
+      groups: [
+        { title: 'Technique Practice Speeds', speeds: [[39, 13, 'Slow'], [36, 12, 'Medium'], [33, 11, 'Quicker']] },
+        { title: 'On Course Speeds', speeds: [[30, 10, 'Slowest'], [27, 9, 'Slow'], [24, 8, 'Medium'], [21, 7, 'Fast'], [18, 6, 'Fastest']] }
+      ]
+    },
     '2:1': { name: 'Short game', parts: 2, frames: [[20, 10], [18, 9], [16, 8], [14, 7]] }
   };
   const TONE_START = 587; // takeaway (D5)
@@ -2330,8 +2337,8 @@
     const fast = list[list.length - 1][1];
     const hit = list.find(([, d]) => Math.abs(downFrames - d) <= 0.3);
     if (hit) return 'Matches the ' + hit[0] + '/' + hit[1] + ' preset.';
-    if (downFrames > slow) return 'Slower than the slowest preset (' + list[0][0] + '/' + slow + '), good for learning the feel.';
-    if (downFrames < fast) return 'Faster than the fastest preset (' + list[list.length - 1][0] + '/' + fast + ').';
+    if (downFrames > slow) return ratio === '3:1' ? 'Slower than the Technique Practice Speeds (' + list[0][0] + '/' + slow + '), good for learning the feel.' : 'Slower than the slowest preset (' + list[0][0] + '/' + slow + '), good for learning the feel.';
+    if (downFrames < fast) return ratio === '3:1' ? 'Faster than the fastest On Course Speed (' + list[list.length - 1][0] + '/' + fast + ').' : 'Faster than the fastest preset (' + list[list.length - 1][0] + '/' + fast + ').';
     return 'Between two presets.';
   }
   const tempoLabel = (rec) => rec.ratio + ' ' + TEMPO[rec.ratio].name.toLowerCase() + ' at ' + rec.bpm + ' BPM';
@@ -2609,7 +2616,7 @@
 
     const timeEl = h('p', { class: 'tempo-time' });
     const matchEl = h('p', { class: 'hint' });
-    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Preset speeds' });
+    const presetsEl = h('div', { class: 'stack' }); // the preset speed buttons, in groups for the long game
     const segBtns = [];
 
     function drawDial() {
@@ -2632,10 +2639,18 @@
       drawDial();
     }
     function drawChips() {
-      chips.replaceChildren(...TEMPO[st.ratio].frames.map(([tot, down]) => h('button', {
-        type: 'button', class: 'chip', text: tot + '/' + down, 'aria-pressed': String(Math.abs(st.bpm - presetBpm(down)) < 0.01),
-        onclick: () => setBpm(presetBpm(down), true)
-      })));
+      const chip = ([tot, down, name]) => {
+        const b = h('button', {
+          type: 'button', class: 'chip' + (name ? ' named' : ''), text: tot + '/' + down, 'aria-pressed': String(Math.abs(st.bpm - presetBpm(down)) < 0.01),
+          onclick: () => setBpm(presetBpm(down), true)
+        });
+        if (name) { b.setAttribute('data-name', name); b.setAttribute('aria-label', name + ', ' + tot + '/' + down); }
+        return b;
+      };
+      const groups = TEMPO[st.ratio].groups;
+      presetsEl.replaceChildren(...(groups
+        ? groups.flatMap((g) => [h('strong', { text: g.title }), h('div', { class: 'chips grid' + g.speeds.length, role: 'group', 'aria-label': g.title }, g.speeds.map(chip))])
+        : [h('strong', { text: 'Preset speeds' }), h('div', { class: 'chips', role: 'group', 'aria-label': 'Preset speeds' }, TEMPO[st.ratio].frames.map(chip))]));
     }
     function drawReadouts() {
       const c = tempoCycle(st.ratio, st.bpm, st.rest);
@@ -2731,9 +2746,7 @@
         bar,
         phase,
         toggle),
-      h('div', { class: 'card' },
-        h('strong', { text: 'Preset speeds' }),
-        chips),
+      h('div', { class: 'card' }, presetsEl),
       h('div', { class: 'card tempo-card' }, svg,
         timeEl, matchEl),
       h('div', { class: 'card stack' },
