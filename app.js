@@ -723,7 +723,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [] });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [], calLevel: 'below' });
 
   // Two blocks were renamed. Games saved under the earlier name, and any text that mentioned a person, are brought up to date.
   const renamed = (name) => (name === 'Set the target' ? 'Set your goal' : /^\w+ ladder, five lives$/.test(name) ? 'Essential pace ladder' : name);
@@ -761,6 +761,7 @@
   function cleanData(d) {
     const out = emptyData();
     if (!d || typeof d !== 'object') return out;
+    out.calLevel = d.calLevel === 'above' ? 'above' : 'below'; // which calibration drills you see: all of them, or without the harder ones
     for (const t of arr(d.technique)) {
       out.technique.push({
         id: str(t.id, 64) || uid(),
@@ -1113,7 +1114,7 @@
   // and about 40 percent of the sixth fit across the screen (so the next tab peeks in), or, where all ten fit, so they fill the bar.
   function fitTabs(nav) {
     try {
-      const labels = [...nav.children].map((tab) => tab.querySelector('span'));
+      const labels = [...nav.children].map((tab) => tab.querySelector('.tab-label'));
       const w = labels.map((l) => Math.max(30, l.getBoundingClientRect().width));
       const V = nav.clientWidth;
       if (!V || w.some((x) => !(x > 0))) return;
@@ -1151,7 +1152,7 @@
         type: 'button', class: 'tab t-' + id,
         'aria-current': ui.tab === id ? 'page' : false,
         onclick: () => { if (id === 'tiger5' && ui.tab !== 'tiger5') ui.t5.level = T5_DEFAULT_LEVEL; ui.tab = id; renderApp(true); } // Tiger 5 opens comparing with a 5 handicap
-      }, tabIcon(id), h('span', { text: label }))));
+      }, h('span', { class: 'tab-ico' }, tabIcon(id)), h('span', { class: 'tab-label', text: label }))));
     const reminder = backupDue() ? h('div', { class: 'stack reminder' },
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
       h('div', { class: 'actions' },
@@ -1843,6 +1844,16 @@
     return new Set([...session.data[kind]].sort(byDateDesc).slice(0, 2).flatMap((r) => r.items.map((i) => i.name)));
   }
 
+  // Above a 10 handicap the calibration games leave out the harder drills: switching between outcomes on every ball, shaping the ball on
+  // purpose, tiny tolerances and long multi-part scoring. Written as category|name because two categories share a drill name.
+  const CAL_ABOVE_SKIP = new Set([
+    'Face strike|Heel/Toe ladder', 'Face strike|Find your edges', 'Face strike|High and low switch', 'Face strike|Four corners switch',
+    'Low point|Fat and thin switch', 'Low point|Brush and dig switch',
+    'Clubface direction|Curve spectrum', 'Clubface direction|Hook to slice spectrum', 'Clubface direction|Face feel ladder',
+    'Clubface direction|Bias check and correct', 'Clubface direction|Draw and fade switch', 'Clubface direction|Shape and start line grid',
+    'Clubface direction|Shape and line on call'
+  ]);
+  const calPool = (c) => (session.data.calLevel === 'above' ? CAL[c].filter((g) => !CAL_ABOVE_SKIP.has(c + '|' + g.name)) : CAL[c]);
   function genCalibration(len) {
     const n = Math.max(3, Math.round((len || 30) / CAL_BLOCK_MINUTES)); // 3 games for 30 minutes up to 6 for one hour
     const cats = Object.keys(CAL);
@@ -1858,8 +1869,9 @@
     const seen = recentNames('calibration');
     const out = [];
     for (const c of cats) {
-      const fresh = CAL[c].filter((g) => !seen.has(g.name));
-      shuffle(fresh.length >= counts[c] ? fresh : CAL[c]).slice(0, counts[c]).forEach((g) => out.push(mkItem(g, c, CAL_BLOCK_MINUTES)));
+      const pool = calPool(c);
+      const fresh = pool.filter((g) => !seen.has(g.name));
+      shuffle(fresh.length >= counts[c] ? fresh : pool).slice(0, counts[c]).forEach((g) => out.push(mkItem(g, c, CAL_BLOCK_MINUTES)));
     }
     return out;
   }
@@ -1923,6 +1935,21 @@
       type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(ui.place === id), onclick: () => setPlace(id)
     })));
 
+  // Calibration only: all the drills (below a 10 handicap), or without the harder ones (above a 10 handicap).
+  function setCalLevel(level) {
+    if (session.data.calLevel === level) return;
+    const d = drafts.calibration;
+    if (d && !d.id && d.items.some((i) => i.score !== null) && !window.confirm('Switch? Scores you entered on this plan will be lost.')) { renderApp(); return; }
+    session.data.calLevel = level;
+    persist();
+    if (d && !d.id) { const len = d.len || ui.len.calibration; drafts.calibration = { id: null, date: d.date, items: META.calibration.gen(len), timer: { base: 0, startedAt: null }, len, place: d.place }; }
+    renderApp();
+  }
+  const calToggle = () => h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Your handicap' },
+    [['below', 'Below 10 handicap'], ['above', 'Above 10 handicap']].map(([id, label]) => h('button', {
+      type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(session.data.calLevel === id), onclick: () => setCalLevel(id)
+    })));
+
   function sessionsView(kind) {
     const meta = META[kind];
     if (ui.mode === 'log') ui.mode = 'new';
@@ -1930,6 +1957,7 @@
       pageTitle(kind, meta.title),
       modeBar('New session'),
       kind === 'shortgame' && ui.mode !== 'history' && !(drafts.shortgame && drafts.shortgame.id) ? placeToggle() : null,
+      kind === 'calibration' && ui.mode !== 'history' && !(drafts.calibration && drafts.calibration.id) ? calToggle() : null,
       ui.mode !== 'history' && !(drafts[kind] && drafts[kind].id) ? lengthControl(kind, (len) => setSessionLength(kind, len)) : null,
       ui.mode === 'history' ? sessionHistory(kind) : sessionNew(kind));
   }
@@ -3310,22 +3338,6 @@
     para('Tiger 5', 10.5, GRAY, CW, true); r.rulers.tiger.forEach(drawRuler);
     para('Other stats', 10.5, GRAY, CW, true); r.rulers.other.forEach(drawRuler);
 
-    // ---- what each handicap makes ----
-    ensure(60); heading(r.benchTitle);
-    { const colW = CW * 0.108; const X = r.levels.map((_, i) => M + CW * 0.46 + (i + 1) * colW);
-      const H = 18 + r.bench.length * 17;
-      ensure(H);
-      const gi = r.goalIndex; if (gi >= 0) doc.rect(X[gi] - colW + 2, y - 2, colW - 2, H, '#e3f1f8');
-      r.levels.forEach((lv, i) => doc.text(lv, X[i] - 6, y + 10, 8.5, GRAY, { bold: true, align: 'right' }));
-      y += 16;
-      r.bench.forEach((row) => {
-        if (row.total) doc.rect(M, y + 1, CW, 0.8, GRAY);
-        doc.text(row.label, M, y + 13, 9.5, INK, { bold: row.total });
-        row.cells.forEach((c, i) => doc.text(c, X[i] - 6, y + 13, 9.5, INK, { bold: row.total || i === gi, align: 'right' }));
-        y += 17;
-      });
-      y += 14; }
-
     // ---- the rounds behind it ----
     heading('Rounds included');
     { const X = [M, M + 92, M + CW * 0.84, M + CW];
@@ -3372,14 +3384,19 @@
     const all = [...session.data.rounds].sort((a, b) => a.date.localeCompare(b.date));
     const level = ui.t5.level;
     const win = ui.t5.win;
-    const rs = win === 'all' ? all : all.slice(-5);
-    const prev = win === 'last5' && all.length >= 6 ? all.slice(Math.max(0, all.length - 10), all.length - 5) : null;
+    const yearsAgo = (n) => { const [y, m, d] = today().split('-').map(Number); const dt = new Date(y - n, m - 1, d); return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); };
+    const from12 = yearsAgo(1);
+    const rs = win === 'all' ? all : win === 'last12' ? all.filter((r) => r.date >= from12) : all.slice(-5);
+    const prev12 = win === 'last12' ? all.filter((r) => r.date >= yearsAgo(2) && r.date < from12) : [];
+    const prev = win === 'last5' && all.length >= 6 ? all.slice(Math.max(0, all.length - 10), all.length - 5) : win === 'last12' && prev12.length ? prev12 : null;
+    const prevWords = win === 'last12' ? 'the 12 months before' : 'the 5 rounds before';
+    const periodWords = win === 'last12' ? 'the last 12 months (' + rs.length + (rs.length === 1 ? ' round' : ' rounds') + ')' : rs.length === 1 ? 'your round' : win === 'all' ? 'all ' + rs.length + ' rounds' : 'your last ' + rs.length + ' rounds';
     const setLevel = (v) => { ui.t5.level = v; renderApp(); }; // a choice lasts until you leave the tab
 
     const controls = h('div', { class: 'stack t5-controls' },
       h('div', { class: 't5-label', text: 'Compare with a handicap of' }),
       h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Compare with a handicap of' }, T5_LEVELS.map((v) => h('button', { type: 'button', class: 'seg-btn', text: String(v), 'aria-pressed': String(level === v), onclick: () => setLevel(v) }))),
-      h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Rounds to include' }, [['last5', 'Last 5 rounds'], ['all', 'All rounds']].map(([id, label]) => h('button', {
+      h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Rounds to include' }, [['last5', 'Last 5 rounds'], ['last12', 'Last 12 months'], ['all', 'All rounds']].map(([id, label]) => h('button', {
         type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(win === id), onclick: () => { ui.t5.win = id; renderApp(); }
       }))));
 
@@ -3401,6 +3418,13 @@
         controls,
         h('p', { class: 'empty', text: 'No rounds yet. Save a round in the Rounds tab and your Tiger 5, greens, up and downs and score appear here, set against what golfers at each handicap typically make.' }),
         h('div', { class: 'card stack' }, sectionHead('tiger5', 'What each handicap typically makes'), benchTable));
+    }
+    if (!rs.length) { // there are rounds, but none in the window you chose
+      return h('section', { class: 'stack' },
+        pageTitle('tiger5', 'Tiger 5'),
+        controls,
+        h('p', { class: 'empty', text: 'No rounds in the last 12 months. Choose All rounds to see everything you have saved.' }),
+        h('div', { class: 'card stack' }, about));
     }
 
     // ---- the top card: your Tiger 5 total against the benchmark, with what it is made of ----
@@ -3426,9 +3450,9 @@
         h('div', { class: 't5-hero-side' },
           h('div', { class: 't5-small', text: level === 0 ? 'Scratch' : capFirst(hcpN(level)) }),
           h('div', { class: 't5-mid', text: fmt1(tb) }))),
-      h('p', { class: 't5-line' }, 'Over ' + (rs.length === 1 ? 'your round' : win === 'all' ? 'all ' + rs.length + ' rounds' : 'your last ' + rs.length + ' rounds') + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with '), h('strong', { text: hcpWords(totalHcp) }), '.',
+      h('p', { class: 't5-line' }, 'Over ' + periodWords + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with '), h('strong', { text: hcpWords(totalHcp) }), '.',
         diff != null && Math.abs(diff) >= 0.05 ? ' ' : null,
-        diff != null && Math.abs(diff) >= 0.05 ? h('span', { class: 'delta ' + (diff < 0 ? 'good' : 'bad'), text: (diff < 0 ? '\u25BC ' : '\u25B2 ') + fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than the 5 rounds before' }) : null),
+        diff != null && Math.abs(diff) >= 0.05 ? h('span', { class: 'delta ' + (diff < 0 ? 'good' : 'bad'), text: (diff < 0 ? '\u25BC ' : '\u25B2 ') + fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than ' + prevWords }) : null),
       bar('You', yourVals, true),
       bar(hcpShort(level), T5_FIVE.map((m) => bench(m, level)), false),
       h('div', { class: 't5-legend' }, T5_FIVE.map((m) => h('span', { class: 'key' }, styled(h('i'), { background: m.color }), m.short))));
@@ -3449,7 +3473,7 @@
             h('button', { type: 'button', class: 'ghost', text: 'Practise: ' + TABS.find(([id]) => id === p.m.tab)[1], onclick: goTo(p.m.tab) }))))
         : [h('p', { text: 'You are at or ahead of ' + hcpOf(level) + ' on every stat over these rounds. Well played.' }),
           level > 0 ? h('div', { class: 'actions' }, h('button', { type: 'button', class: 'ghost', text: 'Compare with ' + hcpOf(lowerLevel), onclick: () => setLevel(lowerLevel) })) : null],
-      pri.length ? h('p', { class: 'hint', text: 'Ranked by roughly how many shots a round you could save by matching ' + hcpOf(level) + '. The stats overlap, since a 3-putt can also cause a double.' }) : null);
+      pri.length ? h('p', { class: 'hint', text: 'Ranked by how many shots a round you could save by matching ' + hcpOf(level) + '. The stats can overlap, since a 3-putt can also cause a double.' }) : null);
 
     // ---- every stat on the same handicap ruler ----
     const levelIdx = T5_LEVELS.indexOf(level);
@@ -3492,7 +3516,7 @@
     };
     const rulers = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Where you stand'),
-      h('p', { class: 'hint', text: 'Each stat sits on a handicap scale where left is better and right is worse. The green or red arrow beside each result is the change since the 5 rounds before.' }),
+      h('p', { class: 'hint', text: 'Each stat sits on a handicap scale where left is better and right is worse. The green or red arrow beside each result is the change since ' + prevWords + '.' }),
       h('h3', { class: 'sub', text: 'Tiger 5' }),
       T5_FIVE.map(ruler),
       h('h3', { class: 'sub', text: 'Other stats' }),
@@ -3550,19 +3574,18 @@
       const pdate = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const goalWords = hcpOf(level);
       const rows = (list) => list.map((m) => { const i = rulerInfo(m); return { label: m.label, value: t5Fmt(m, i.v), st: i.st, has: i.v != null, pos: i.pos, off: i.off, foot: i.foot, trend: i.trend ? { better: i.trend.better, text: i.trend.words + ' than before' } : null }; });
-      const benchCell = (m, v) => (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v));
       const shown = [...rs].reverse().slice(0, 12);
       return {
         generated: pdate(today()),
-        subtitle: (win === 'all' ? 'All ' + rs.length + (rs.length === 1 ? ' round' : ' rounds') : 'Last ' + rs.length + (rs.length === 1 ? ' round' : ' rounds')) + ' \u00b7 ' + (pdate(rs[0].date) === pdate(rs[rs.length - 1].date) ? pdate(rs[0].date) : pdate(rs[0].date) + ' to ' + pdate(rs[rs.length - 1].date)) + ' \u00b7 per 18 holes \u00b7 compared with ' + goalWords,
+        subtitle: (win === 'all' ? 'All ' + rs.length + (rs.length === 1 ? ' round' : ' rounds') : win === 'last12' ? 'Last 12 months, ' + rs.length + (rs.length === 1 ? ' round' : ' rounds') : 'Last ' + rs.length + (rs.length === 1 ? ' round' : ' rounds')) + ' \u00b7 ' + (pdate(rs[0].date) === pdate(rs[rs.length - 1].date) ? pdate(rs[0].date) : pdate(rs[0].date) + ' to ' + pdate(rs[rs.length - 1].date)) + ' \u00b7 per 18 holes \u00b7 compared with ' + goalWords,
         total: fmt1(total), totalStatus, benchTotal: fmt1(tb), levelLabel: level === 0 ? 'Scratch' : capFirst(hcpN(level)),
-        summary: 'Over ' + (rs.length === 1 ? 'your round' : win === 'all' ? 'all ' + rs.length + ' rounds' : 'your last ' + rs.length + ' rounds') + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with ') + hcpWords(totalHcp) + '.',
-        delta: diff != null && Math.abs(diff) >= 0.05 ? { good: diff < 0, text: fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than the 5 rounds before' } : null,
+        summary: 'Over ' + periodWords + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with ') + hcpWords(totalHcp) + '.',
+        delta: diff != null && Math.abs(diff) >= 0.05 ? { good: diff < 0, text: fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than ' + prevWords } : null,
         parts: T5_FIVE.map((m) => ({ short: m.short, color: m.color })),
         bars: [{ label: 'You', vals: yourVals }, { label: hcpShort(level), vals: T5_FIVE.map((m) => bench(m, level)) }],
         barScale: scale,
         work: pri.slice(0, 3).map((p) => ({ label: p.m.label, nums: t5Fmt(p.m, p.v) + ' against ' + t5Fmt(p.m, p.b) + ' for ' + goalWords + '. Worth ' + fmt1(p.strokes) + (p.strokes >= 1.05 || p.strokes < 0.95 ? ' shots' : ' shot') + ' a round.', fix: p.m.fix })),
-        workHint: 'Ranked by roughly how many shots a round you could save by matching ' + goalWords + '. The stats overlap, since a 3-putt can also cause a double.',
+        workHint: 'Ranked by how many shots a round you could save by matching ' + goalWords + '. The stats can overlap, since a 3-putt can also cause a double.',
         workNone: 'You are at or ahead of ' + goalWords + ' on every stat over these rounds.',
         routeTitle: 'Route to ' + hcpOf(level), routeGoal: hcpShort(level),
         route: routeRows.map((r) => ({ label: r.label, you: r.v == null ? '-' : t5Fmt(r.m, r.v), goal: r.b == null ? '-' : t5Fmt(r.m, r.b), gap: r.gap == null ? '-' : r.gap > 0 ? fmt1(r.gap) : 'Ahead', ahead: r.gap != null && r.gap <= 0 })),
@@ -3570,8 +3593,6 @@
         rulerHint: 'Each stat sits on a handicap scale where left is better and right is worse. The dot labelled You is your result and the dark bar is the handicap you chose.',
         ticks: T5_LEVELS.map((lv, i) => ({ lv, x: xOf(lv), name: i === levelIdx ? 'Goal ' + lv : String(lv), goal: i === levelIdx })), goalIndex: levelIdx,
         rulers: { tiger: rows(T5_FIVE), other: rows(T5_METRICS.filter((m) => !m.tiger)) },
-        benchTitle: 'What each handicap typically makes, per 18 holes', levels: T5_LEVELS.map(String),
-        bench: [...T5_FIVE.map((m) => ({ label: m.label, cells: m.vals.map(fmt1) })), { label: 'Tiger 5 total', total: true, cells: T5_TOTAL.map(fmt1) }, ...T5_METRICS.filter((m) => !m.tiger).map((m) => ({ label: m.label, cells: m.vals.map((v) => benchCell(m, v)) }))],
         rounds: shown.map((rd) => ({ date: pdate(rd.date), course: (rd.course || 'Round') + (rd.holes === 9 ? ' (9 holes)' : ''), score: String(rd.score), vs: vsParText(rd.score - rd.par) })),
         moreRounds: rs.length > shown.length ? 'The ' + shown.length + ' most recent of ' + rs.length + ' rounds are listed.' : ''
       };
@@ -3592,8 +3613,8 @@
 
     return h('section', { class: 'stack' },
       pageTitle('tiger5', 'Tiger 5'),
-      controls, hero, work, rulers, over,
-      h('div', { class: 'card stack' }, about), route, exportCard);
+      controls, hero, work, route, rulers, over,
+      exportCard, h('div', { class: 'card stack' }, about));
   }
 
   /* ==========================================================

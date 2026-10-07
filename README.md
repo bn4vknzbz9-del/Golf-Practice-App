@@ -146,3 +146,13 @@ At the bottom of the Tiger 5 page a table shows the route to the handicap you ch
 ## Export the Tiger 5 report as a PDF
 
 At the very bottom of the Tiger 5 page, Export as PDF makes a PDF of the report for the rounds and handicap you have selected. It has the top summary and what each stat is made of, Work on first, the route to your target handicap, every stat on the handicap ruler, what each handicap typically makes, and the rounds included. On an iPhone it opens the share sheet, where you can send it by message or email, or choose Save to Files. Where sharing is not available the PDF downloads instead. The PDF is made on your device and nothing is uploaded.
+
+## Last 12 months, a new order and a tidier PDF
+
+The Tiger 5 page has three choices for which rounds to use: Last 5 rounds, Last 12 months and All rounds. Last 12 months uses every round dated in the past year and compares the change with the 12 months before that. The page runs: top card, Work on first, Route to your target, Where you stand, Over time, Share this report and, last of all, About the benchmarks. The PDF no longer includes the table of what each handicap typically makes.
+
+The icon of the selected tab at the bottom now has its coloured highlight centred behind the whole icon.
+
+## Calibration: below or above a 10 handicap
+
+The Calibration page has a toggle for Below 10 handicap (all 32 drills, as before) and Above 10 handicap, which leaves out 13 of the harder drills and keeps 19, so each of face strike, low point and clubface direction still has at least five. The harder drills are the ones that switch between different outcomes on every ball, shape the ball on purpose, use very small tolerances, or score in several parts. Your choice is saved with your data. Switching while you have an unsaved session asks first, then builds a new session from the right drills.
