@@ -2270,14 +2270,16 @@
   const FPS = 30; // backswing and downswing are counted in frames of video at 30 per second
   const BPM_MIN = 80;
   const BPM_MAX = 300;
+  const SMOOTHIE_BPM = 45; // the Smoothie preset: a 4 second backswing (3 beats of 1.33 s), below the dial's 80 BPM end
   // Backswing : downswing. Frames are backswing/downswing, slowest first. The speed is not limited to these.
   const TEMPO = {
     '3:1': {
       name: 'Long game', parts: 3, frames: [[39, 13], [36, 12], [33, 11], [30, 10], [27, 9], [24, 8], [21, 7], [18, 6]],
       // The preset speeds are shown in two groups, each speed with a plain name.
       groups: [
-        { title: 'Technique Practice Speeds', speeds: [[39, 13, 'Slow'], [36, 12, 'Medium'], [33, 11, 'Quicker']] },
-        { title: 'On Course Speeds', speeds: [[30, 10, 'Slowest'], [27, 9, 'Slow'], [24, 8, 'Medium'], [21, 7, 'Fast'], [18, 6, 'Fastest']] }
+        // Smoothie is below the dial's scale (4 seconds from takeaway to top is 45 BPM), so it is set by its button; the dial then rests at its slow end.
+        { title: 'Technique Practice Speeds', cols: 3, speeds: [[120, 40, 'Smoothie (ultra slow)', true], [39, 13, 'Slow'], [36, 12, 'Medium'], [33, 11, 'Quicker']] },
+        { title: 'On Course Speeds', cols: 5, speeds: [[30, 10, 'Slowest'], [27, 9, 'Slow'], [24, 8, 'Medium'], [21, 7, 'Fast'], [18, 6, 'Fastest']] }
       ]
     },
     '2:1': { name: 'Short game', parts: 2, frames: [[20, 10], [18, 9], [16, 8], [14, 7]] }
@@ -2336,6 +2338,7 @@
     const slow = list[0][1];
     const fast = list[list.length - 1][1];
     const hit = list.find(([, d]) => Math.abs(downFrames - d) <= 0.3);
+    if (ratio === '3:1' && Math.abs(bpm - SMOOTHIE_BPM) < 0.01) return 'Matches the Smoothie (ultra slow) preset.';
     if (hit) return 'Matches the ' + hit[0] + '/' + hit[1] + ' preset.';
     if (downFrames > slow) return ratio === '3:1' ? 'Slower than the Technique Practice Speeds (' + list[0][0] + '/' + slow + '), good for learning the feel.' : 'Slower than the slowest preset (' + list[0][0] + '/' + slow + '), good for learning the feel.';
     if (downFrames < fast) return ratio === '3:1' ? 'Faster than the fastest On Course Speed (' + list[list.length - 1][0] + '/' + fast + ').' : 'Faster than the fastest preset (' + list[list.length - 1][0] + '/' + fast + ').';
@@ -2620,7 +2623,7 @@
     const segBtns = [];
 
     function drawDial() {
-      const a = angleOf(st.bpm);
+      const a = Math.max(-135, angleOf(st.bpm)); // below the scale (Smoothie) the knob rests at its slow end
       rotor.setAttribute('transform', 'rotate(' + a.toFixed(2) + ' ' + CX + ' ' + CY + ')');
       scale.forEach(([b, line]) => line.classList.toggle('lit', b <= st.bpm + 0.01));
       dotEls.forEach(([b, d]) => d.classList.toggle('on', Math.abs(b - st.bpm) < 0.01));
@@ -2639,17 +2642,17 @@
       drawDial();
     }
     function drawChips() {
-      const chip = ([tot, down, name]) => {
+      const chip = ([tot, down, name, wide]) => {
         const b = h('button', {
-          type: 'button', class: 'chip' + (name ? ' named' : ''), text: tot + '/' + down, 'aria-pressed': String(Math.abs(st.bpm - presetBpm(down)) < 0.01),
+          type: 'button', class: 'chip' + (name ? ' named' : '') + (wide ? ' wide' : ''), text: tot + '/' + down + (wide ? ' \u00b7 ' + Math.round(tot / FPS) + ' s backswing' : ''), 'aria-pressed': String(Math.abs(st.bpm - presetBpm(down)) < 0.01),
           onclick: () => setBpm(presetBpm(down), true)
         });
-        if (name) { b.setAttribute('data-name', name); b.setAttribute('aria-label', name + ', ' + tot + '/' + down); }
+        if (name) { b.setAttribute('data-name', name); b.setAttribute('aria-label', name + ', ' + (wide ? Math.round(tot / FPS) + ' second backswing' : tot + '/' + down)); }
         return b;
       };
       const groups = TEMPO[st.ratio].groups;
       presetsEl.replaceChildren(...(groups
-        ? groups.flatMap((g) => [h('strong', { text: g.title }), h('div', { class: 'chips grid' + g.speeds.length, role: 'group', 'aria-label': g.title }, g.speeds.map(chip))])
+        ? groups.flatMap((g) => [h('strong', { text: g.title }), h('div', { class: 'chips grid' + g.cols, role: 'group', 'aria-label': g.title }, g.speeds.map(chip))])
         : [h('strong', { text: 'Preset speeds' }), h('div', { class: 'chips', role: 'group', 'aria-label': 'Preset speeds' }, TEMPO[st.ratio].frames.map(chip))]));
     }
     function drawReadouts() {
@@ -2658,7 +2661,7 @@
       matchEl.textContent = presetMatch(st.ratio, st.bpm);
     }
     function setBpm(b, exact) {
-      const v = Math.min(BPM_MAX, Math.max(BPM_MIN, exact ? b : Math.round(b)));
+      const v = Math.min(BPM_MAX, Math.max(exact && st.ratio === '3:1' ? Math.min(BPM_MIN, SMOOTHIE_BPM) : BPM_MIN, exact ? b : Math.round(b)));
       st.bpm = v;
       drawDial(); drawChips(); drawReadouts();
     }
@@ -2674,7 +2677,7 @@
     }
     svg.addEventListener('pointerdown', (e) => {
       if (svg.setPointerCapture) { try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
-      turn = { prev: pointerDeg(e), angle: angleOf(st.bpm) };
+      turn = { prev: pointerDeg(e), angle: Math.max(-135, angleOf(st.bpm)) };
       e.preventDefault();
     });
     svg.addEventListener('pointermove', (e) => {

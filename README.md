@@ -172,3 +172,7 @@ The Tempo page starts on the 3:1 long game ratio at the 30/10 speed (180 BPM). I
 ## Tempo preset speeds
 
 On the 3:1 long game the preset speeds are in two groups, each with a name. Technique Practice Speeds are 39/13 Slow, 36/12 Medium and 33/11 Quicker. On Course Speeds are 30/10 Slowest, 27/9 Slow, 24/8 Medium, 21/7 Fast and 18/6 Fastest. The 2:1 short game keeps its single list of presets (20/10, 18/9, 16/8 and 14/7). The speeds themselves, and the timing of the tones, have not changed.
+
+### Smoothie (ultra slow)
+
+The first button under Technique Practice Speeds is Smoothie (ultra slow), 120/40: a 4 second backswing (3 beats of 1.33 seconds, which is 45 BPM), then 1.55 seconds from the top to impact, and a rest as long as the whole swing, 5.55 seconds. 45 BPM is below the dial's 80 BPM end, so the Smoothie button sets it and the dial rests at its slow end while the centre shows 45. Turning the dial, or the arrow keys, takes it back onto the dial's scale from 80 BPM.
