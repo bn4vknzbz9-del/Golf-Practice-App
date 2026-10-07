@@ -1,4 +1,4 @@
-# Golf practice log
+# Road To Scratch
 
 A private practice tracker with these sections:
 
@@ -137,7 +137,7 @@ Each tab at the bottom wears the colour of its page: Technique purple, Calibrati
 
 Each stat sits on a handicap scale where left is better and right is worse. The dot labelled **You** is your result and the dark bar labelled **Goal** is the handicap you chose, so a dot to the right of the bar is a weakness. The scale runs a little past 0 and 20 on both sides, and a result that is still beyond it is drawn at the edge with an arrow.
 
-The gap to your goal is written in plain terms. Greens in regulation are shown as greens hit a round (for example "1.5 fewer greens hit than a 10 handicap"). Everything else is in shots a round. A green in regulation is worth about a shot (tracked rounds show roughly 2.2 shots to finish after finding the green from long range and 3.5 after missing it), and a miss with a 9 iron or less a little less, 0.8, because the ball is closer to the green. A driver out of play is worth 1.2 (a penalty costs about two shots and a recovery about one), the other Tiger 5 stats and score to par one each, and up and downs are counted on your own number of chances. The same figures rank Work on first. The green or red arrow beside each result is the change since the 5 rounds before, in greens for greens in regulation and in shots for everything else.
+The gap to your goal is written in plain terms. Greens in regulation are shown as greens hit a round (for example "1.5 fewer greens hit than a 10 handicap"). Everything else is in shots a round, and every one counts as a single shot: each extra double bogey, 3-putt, missed green, driver out of play and so on is one shot, a green in regulation is one shot, and an up and down is one shot on your own number of chances. So the shots a stat is worth are simply the difference between your number and the benchmark (3 drivers out of play against 1.8 is 1.2 shots). The same figures rank Work on first. The green or red arrow beside each result is the change since the 5 rounds before, in greens for greens in regulation and in shots for everything else.
 
 ## Route to your target handicap
 
@@ -146,9 +146,3 @@ At the bottom of the Tiger 5 page a table shows the route to the handicap you ch
 ## Export the Tiger 5 report as a PDF
 
 At the very bottom of the Tiger 5 page, Export as PDF makes a PDF of the report for the rounds and handicap you have selected. It has the top summary and what each stat is made of, Work on first, the route to your target handicap, every stat on the handicap ruler, what each handicap typically makes, and the rounds included. On an iPhone it opens the share sheet, where you can send it by message or email, or choose Save to Files. Where sharing is not available the PDF downloads instead. The PDF is made on your device and nothing is uploaded.
-
-## Your own target handicap
-
-Under the five handicap buttons on the Tiger 5 page there is a box for your own target, any handicap from 0 to 20 in tenths (for example 8 or 7.5). Everything on the page then compares with that target: the top card, the bars, Work on first, the gaps under each ruler, the route table and the PDF report. The benchmarks for a handicap that falls between two of the reference levels are worked out by joining the five levels with straight lines, so a target of 8 sits 60 percent of the way from the 5 column to the 10 column. The rulers keep their look, with the Goal marker placed at your target, and the table of what each handicap typically makes still shows only the five reference levels.
-
-Your target is saved with your other data (it is included in backups) and the page opens at it each time. The five buttons still work as a quick look at another level without changing your saved target. Clear the box to go back to opening at a 5 handicap.

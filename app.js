@@ -723,7 +723,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [], t5Target: null });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [] });
 
   // Two blocks were renamed. Games saved under the earlier name, and any text that mentioned a person, are brought up to date.
   const renamed = (name) => (name === 'Set the target' ? 'Set your goal' : /^\w+ ladder, five lives$/.test(name) ? 'Essential pace ladder' : name);
@@ -761,7 +761,6 @@
   function cleanData(d) {
     const out = emptyData();
     if (!d || typeof d !== 'object') return out;
-    if (d.t5Target != null && Number.isFinite(Number(d.t5Target)) && Number(d.t5Target) >= 0 && Number(d.t5Target) <= 20) out.t5Target = Math.round(Number(d.t5Target) * 10) / 10; // your own Tiger 5 target handicap
     for (const t of arr(d.technique)) {
       out.technique.push({
         id: str(t.id, 64) || uid(),
@@ -843,8 +842,7 @@
   function loadSync() {
     try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(600, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
   }
-  const T5_DEFAULT_LEVEL = 5; // the handicap the Tiger 5 tab compares with each time it is opened, unless you have saved a target of your own
-  const t5StartLevel = () => (session && session.data && typeof session.data.t5Target === 'number' ? session.data.t5Target : T5_DEFAULT_LEVEL);
+  const T5_DEFAULT_LEVEL = 5; // the handicap the Tiger 5 tab compares with each time it is opened
   const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', place: 'area', t5: { level: T5_DEFAULT_LEVEL, win: 'last5' }, tempo: { ratio: '3:1', bpm: 100, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
@@ -943,7 +941,7 @@
   }
 
   function eraseAll() {
-    const typed = window.prompt('This permanently deletes your practice log from this device. Type ERASE to continue.');
+    const typed = window.prompt('This permanently deletes everything in Road To Scratch from this device. Type ERASE to continue.');
     if (typed !== 'ERASE') return;
     localStorage.removeItem(VAULT_KEY);
     localStorage.removeItem(LOCK_KEY);
@@ -995,7 +993,7 @@
       msg, btn);
     return h('div', { class: 'lock' },
       appIcon(),
-      h('h1', { text: 'Golf practice log' }),
+      h('h1', { text: 'Road To Scratch' }),
       h('p', { text: 'Create a passphrase. Your log is encrypted on this device with it and nothing is uploaded. If you forget the passphrase, the data cannot be recovered.' }),
       form);
   }
@@ -1052,7 +1050,7 @@
 
     const view = h('div', { class: 'lock' },
       appIcon(),
-      h('h1', { text: 'Golf practice log' }),
+      h('h1', { text: 'Road To Scratch' }),
       h('p', { text: 'Enter your passphrase to open your log.' }),
       form);
     setTimeout(refresh, 0);
@@ -1093,7 +1091,7 @@
 
   // App icon for the lock screen: a golf flag on a rounded square.
   function appIcon() {
-    return s('svg', { viewBox: '0 0 84 84', class: 'app-icon', role: 'img', 'aria-label': 'Golf practice log' },
+    return s('svg', { viewBox: '0 0 84 84', class: 'app-icon', role: 'img', 'aria-label': 'Road To Scratch' },
       s('rect', { width: 84, height: 84, rx: 19 }),
       s('path', { d: 'M33 64V20' }),
       s('path', { class: 'flag', d: 'M33 21l24 9.5l-24 9.5z' }),
@@ -1146,13 +1144,13 @@
 
     const header = h('header', { class: 'top' },
       h('button', { type: 'button', class: 'bar-btn', text: 'Lock', onclick: lock }),
-      h('h1', { text: 'Golf practice log' }),
+      h('h1', { text: 'Road To Scratch' }),
       h('button', { type: 'button', class: 'bar-btn', text: 'Settings', onclick: () => { ui.tab = 'settings'; renderApp(true); } }));
     const nav = h('nav', { class: 'tabs', 'aria-label': 'Sections' },
       TABS.map(([id, label]) => h('button', {
         type: 'button', class: 'tab t-' + id,
         'aria-current': ui.tab === id ? 'page' : false,
-        onclick: () => { if (id === 'tiger5' && ui.tab !== 'tiger5') ui.t5.level = t5StartLevel(); ui.tab = id; renderApp(true); } // Tiger 5 opens at your saved target, or a 5 handicap
+        onclick: () => { if (id === 'tiger5' && ui.tab !== 'tiger5') ui.t5.level = T5_DEFAULT_LEVEL; ui.tab = id; renderApp(true); } // Tiger 5 opens comparing with a 5 handicap
       }, tabIcon(id), h('span', { text: label }))));
     const reminder = backupDue() ? h('div', { class: 'stack reminder' },
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
@@ -2050,7 +2048,7 @@
       const p = a.el.play();
       if (p && p.catch) p.catch(() => { /* the on-screen timer still works */ });
       if (navigator.mediaSession && typeof MediaMetadata !== 'undefined') {
-        navigator.mediaSession.metadata = new MediaMetadata({ title: 'Practice timer', artist: 'Golf practice log' });
+        navigator.mediaSession.metadata = new MediaMetadata({ title: 'Practice timer', artist: 'Road To Scratch' });
         navigator.mediaSession.setActionHandler('pause', () => { if (a.ctl) a.ctl.pause(); });
         navigator.mediaSession.setActionHandler('stop', () => { if (a.ctl) a.ctl.dismiss(); });
       }
@@ -2966,12 +2964,7 @@
   const T5_LEVELS = [0, 5, 10, 15, 20];
 
   // vals: the typical figure at handicaps 0, 5, 10, 15, 20. est: true when it is modelled from related published data rather than
-  // published directly. cost: rough strokes lost for each extra event, used only to put the stats in order of what to work on.
-  // About what one missed green costs against hitting it. Tracked rounds show about 2.2 shots to finish after finding the green from long
-  // range and 3.5 after missing it, but from wedge range a miss is much closer to the green and the gap is nearer 0.6 to 0.9. So a green
-  // in regulation (any distance) is worth about a shot, and a miss with a short club a little less.
-  const MISSED_GREEN_SHOTS = 0.8; // a miss with a 9 iron or less
-  const GIR_SHOTS = 1.0;          // greens in regulation, from any distance
+  // published directly. cost: shots lost for each extra event. Every one counts as a single shot, so the shots a stat is worth are simply the difference between your number and the benchmark.
   const T5_METRICS = [
     { key: 'parFiveBogeys', kind: 'count', tiger: true, label: 'Bogeys or worse on par 5s', short: 'Par 5 bogeys', color: '#af52de', vals: [0.6, 1.4, 2.1, 2.8, 3.2], est: true, cost: 1,
       tab: 'transfer', fix: 'Par 5s are won with a tee shot in play and a sensible second. Play the course games in Transfer training with your driver and your lay-up club, and pick the number you will lay up to before you start.',
@@ -2982,19 +2975,19 @@
     { key: 'threePutts', kind: 'count', tiger: true, label: '3-putts', short: '3-putts', color: '#34c759', vals: [0.8, 1.5, 2.4, 3.8, 4.6], est: false, cost: 1,
       tab: 'putting', fix: 'Most 3-putts start with the first putt. Every Putting session opens with the Essential pace ladder, which trains your speed from 5 to 30 feet.',
       basis: 'Averages from large sets of tracked amateur rounds. Other sets of tracked rounds give similar or lower figures.' },
-    { key: 'missedGreens', kind: 'count', tiger: true, label: 'Missed greens with a 9 iron or less', short: 'Missed greens', color: '#ff9500', vals: [1.7, 2.1, 2.7, 3.1, 3.3], est: true, cost: MISSED_GREEN_SHOTS,
+    { key: 'missedGreens', kind: 'count', tiger: true, label: 'Missed greens with a 9 iron or less', short: 'Missed greens', color: '#ff9500', vals: [1.7, 2.1, 2.7, 3.1, 3.3], est: true, cost: 1,
       tab: 'calibration', fix: 'Missing with a scoring club comes down to strike and distance. Use the Calibration drills for face strike, low point and clubface direction with your wedges and short irons, then the wedge distance games in Short game.',
       basis: 'This is worked out as chances times misses. A golfer has about four to five full-swing approaches a round that need a 9 iron, pitching wedge or gap wedge (4.5 is used). From 9 iron range the green is hit about 60 to 65 percent of the time by a scratch golfer, 50 to 55 percent by a 5 handicap, about 40 percent by a 10, and about 32 and 27 percent by a 15 and a 20. That gives roughly 1.7, 2.1, 2.7, 3.1 and 3.3 misses a round, and about two for a 5 handicap. Shorter partial wedge shots are not counted.' },
     { key: 'doubleChips', kind: 'count', tiger: true, label: 'Double chips', short: 'Double chips', color: '#ff2d55', vals: [0.1, 0.6, 1.3, 2.0, 2.7], est: true, cost: 1,
       tab: 'shortgame', fix: 'Two chips usually means a poor strike or the wrong landing spot. The Short game games, such as Par 21 and the bunker and short-sided games, put those shots under pressure.',
       basis: 'This is built from typical ranges for three levels: about 0.1 a round for a scratch golfer, 0.4 to 0.8 for a 5 handicap (0.6 is used) and 1.5 to 2.5 for a 15 handicap (2.0 is used). The 10 and 20 handicaps are filled in along the same line, at 1.3 and 2.7. A double chip means failing to get the ball onto the green with the first chip or pitch from close to the green, for example by chunking it, blading it across the green or leaving it in the rough or fringe.' },
-    { key: 'gir', kind: 'pct', label: 'Greens in regulation', short: 'Greens', vals: [56.8, 46.1, 37.3, 26.4, 22.4], est: false, cost: GIR_SHOTS,
+    { key: 'gir', kind: 'pct', label: 'Greens in regulation', short: 'Greens', vals: [56.8, 46.1, 37.3, 26.4, 22.4], est: false, cost: 1,
       tab: 'calibration', fix: 'Greens come from approach distance and face direction. Work through the Calibration drills, then the Transfer games, with your mid and short irons.',
       basis: 'Average from a large set of tracked amateur rounds, with other sets within a few points.' },
     { key: 'ud', kind: 'pct', label: 'Up and down success', short: 'Up and downs', vals: [50.0, 37.7, 31.6, 25.1, 21.7], est: false, cost: 1,
       tab: 'shortgame', fix: 'Up and downs come from the landing spot and a holeable second putt. The Short game area games and Up and down streak give you reps under pressure.',
       basis: 'Average from a large set of tracked amateur rounds.' },
-    { key: 'driversOut', kind: 'count', label: 'Drivers not in play', short: 'Drivers out', vals: [1.3, 1.8, 2.5, 3.1, 3.7], est: true, cost: 1.2,
+    { key: 'driversOut', kind: 'count', label: 'Drivers not in play', short: 'Drivers out', vals: [1.3, 1.8, 2.5, 3.1, 3.7], est: true, cost: 1,
       tab: 'calibration', fix: 'Drivers out of play are a face-direction problem. The Clubface direction drills in Calibration score where the ball finishes, not where it starts. Use them with the driver.',
       basis: 'Large-scale tracked driving data gives the share of driver tee shots that end in a penalty or a recovery shot: 12 percent for 0 to 4.9 handicaps, about 23 percent for 10 to 15, 38 percent for 25 to 30 and 45 percent for 30 and over. The figures here fill in between those at about 11, 15, 20, 26 and 31 percent and apply them to about twelve drivers a round, which fits one to two a round for scratch golfers.' },
     { key: 'vspar', kind: 'vspar', label: 'Score vs par', short: 'Score', vals: [2.6, 7.0, 12.6, 17.3, 21.7], est: false, cost: 0,
@@ -3003,15 +2996,8 @@
   const T5_BY_KEY = Object.fromEntries(T5_METRICS.map((m) => [m.key, m]));
   const T5_FIVE = T5_METRICS.filter((m) => m.tiger);
   const T5_TOTAL = [0, 1, 2, 3, 4].map((i) => Math.round(T5_FIVE.reduce((a, m) => a + m.vals[i], 0) * 10) / 10);
-  // The benchmark at any handicap from 0 to 20: the five reference levels joined with straight lines.
-  const benchAt = (vals, h) => {
-    const x = Math.min(20, Math.max(0, h)) / 5;
-    if (Number.isInteger(x)) return vals[x];
-    const i = Math.min(3, Math.floor(x));
-    return vals[i] + (vals[i + 1] - vals[i]) * (x - i);
-  };
-  const bench = (m, level) => benchAt(m.vals, level);
-  const benchTotal = (level) => benchAt(T5_TOTAL, level);
+  const bench = (m, level) => m.vals[T5_LEVELS.indexOf(level)];
+  const benchTotal = (level) => T5_TOTAL[T5_LEVELS.indexOf(level)];
   const lvStr = (n) => String(Math.round(n * 10) / 10);
   const art = (n) => (/^(8|11|18)(\D|$)/.test(lvStr(n)) ? 'an' : 'a');
   const hcpN = (n) => art(n) + ' ' + lvStr(n) + ' handicap'; // a 7 handicap, an 8 handicap
@@ -3180,7 +3166,7 @@
           objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + n(PDF_W) + ' ' + n(PDF_H) + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + (6 + i * 2) + ' 0 R >>');
           objs.push('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
         });
-        objs.push('<< /Title (' + esc(title) + ') /Producer (Golf practice log) /CreationDate (D:' + new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14) + 'Z) >>');
+        objs.push('<< /Title (' + esc(title) + ') /Producer (Road To Scratch) /CreationDate (D:' + new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14) + 'Z) >>');
         let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const offs = [0];
         for (let i = 1; i < objs.length; i++) { offs[i] = out.length; out += i + ' 0 obj\n' + objs[i] + '\nendobj\n'; }
         const xr = out.length;
@@ -3209,7 +3195,7 @@
     page();
     // ---- title ----
     doc.text('Tiger 5 report', M, y + 24, 26, INK, { bold: true });
-    doc.text('Golf practice log', M + CW, y + 10, 10, GRAY, { align: 'right' });
+    doc.text('Road To Scratch', M + CW, y + 10, 10, GRAY, { align: 'right' });
     doc.text(r.generated, M + CW, y + 24, 10, GRAY, { align: 'right' });
     y += 36;
     para(r.subtitle, 10.5, GRAY);
@@ -3361,7 +3347,7 @@
       if (r.moreRounds) { y += 4; para(r.moreRounds, 9, GRAY); } }
 
     const total = doc.count();
-    for (let i = 0; i < total; i++) { doc.use(i); doc.text('Golf practice log \u00b7 Tiger 5 report \u00b7 page ' + (i + 1) + ' of ' + total, PDF_W / 2, PDF_H - 24, 8, GRAY, { align: 'center' }); }
+    for (let i = 0; i < total; i++) { doc.use(i); doc.text('Road To Scratch \u00b7 Tiger 5 report \u00b7 page ' + (i + 1) + ' of ' + total, PDF_W / 2, PDF_H - 24, 8, GRAY, { align: 'center' }); }
     return doc.build('Tiger 5 report');
   }
 
@@ -3390,26 +3376,9 @@
     const prev = win === 'last5' && all.length >= 6 ? all.slice(Math.max(0, all.length - 10), all.length - 5) : null;
     const setLevel = (v) => { ui.t5.level = v; renderApp(); }; // a choice lasts until you leave the tab
 
-    // Your own target handicap, from 0 to 20 in tenths. The benchmarks for it are worked out between the five reference levels, and it is saved.
-    const savedTarget = session.data.t5Target;
-    const targetInput = h('input', { type: 'text', inputmode: 'decimal', class: 't5-target-input' + (savedTarget != null && level === savedTarget ? ' on' : ''), 'aria-label': 'Your own target handicap, from 0 to 20', placeholder: 'e.g. 8', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', value: savedTarget == null ? '' : lvStr(savedTarget) });
-    const commitTarget = () => {
-      const raw = targetInput.value.trim().replace(',', '.');
-      if (raw === '') { // an empty box clears the saved target
-        if (savedTarget != null) { session.data.t5Target = null; persist(); }
-        ui.t5.level = T5_DEFAULT_LEVEL; renderApp(); return;
-      }
-      const v = Math.round(Number(raw) * 10) / 10;
-      if (!Number.isFinite(v) || v < 0 || v > 20) { toast('Enter a handicap from 0 to 20.'); targetInput.value = savedTarget == null ? '' : lvStr(savedTarget); return; }
-      session.data.t5Target = v; persist(); ui.t5.level = v; renderApp();
-    };
-    targetInput.onchange = commitTarget;
-
     const controls = h('div', { class: 'stack t5-controls' },
       h('div', { class: 't5-label', text: 'Compare with a handicap of' }),
       h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Compare with a handicap of' }, T5_LEVELS.map((v) => h('button', { type: 'button', class: 'seg-btn', text: String(v), 'aria-pressed': String(level === v), onclick: () => setLevel(v) }))),
-      h('label', { class: 't5-target' }, h('span', { text: 'Or your own target' }), targetInput),
-      savedTarget != null ? h('p', { class: 'hint', text: 'Saved. This page opens at your target. Clear the box to go back to a 5 handicap.' }) : null,
       h('div', { class: 'seg-ctl', role: 'group', 'aria-label': 'Rounds to include' }, [['last5', 'Last 5 rounds'], ['all', 'All rounds']].map(([id, label]) => h('button', {
         type: 'button', class: 'seg-btn', text: label, 'aria-pressed': String(win === id), onclick: () => { ui.t5.win = id; renderApp(); }
       }))));
@@ -3516,12 +3485,9 @@
         h('div', { class: 'rule-head' }, h('strong', { text: m.label }), h('span', { class: 'rule-val st-' + st }, t5Fmt(m, v), trend)),
         h('div', { class: 'rule-track' },
           T5_LEVELS.map((lv, i) => styled(h('span', { class: 'rule-tick' + (i === levelIdx ? ' target' : '') }), { left: xOf(lv).toFixed(1) + '%' })),
-          levelIdx < 0 ? styled(h('span', { class: 'rule-tick target' }), { left: xOf(level).toFixed(1) + '%' }) : null,
           v == null ? null : styled(h('span', { class: 'rule-pin st-' + st, 'aria-hidden': 'true' }), { left: pos.toFixed(1) + '%' }),
           you),
-        h('div', { class: 'rule-labels', 'aria-hidden': 'true' },
-          T5_LEVELS.map((lv, i) => (levelIdx < 0 && Math.abs(lv - level) < 3.4 ? null : styled(h('span', { class: i === levelIdx ? 'target' : '', text: i === levelIdx ? 'Goal ' + lv : String(lv) }), { left: xOf(lv).toFixed(1) + '%' }))),
-          levelIdx < 0 ? styled(h('span', { class: 'target', text: 'Goal ' + lvStr(level) }), { left: xOf(level).toFixed(1) + '%' }) : null),
+        h('div', { class: 'rule-labels', 'aria-hidden': 'true' }, T5_LEVELS.map((lv, i) => styled(h('span', { class: i === levelIdx ? 'target' : '', text: i === levelIdx ? 'Goal ' + lv : String(lv) }), { left: xOf(lv).toFixed(1) + '%' }))),
         h('div', { class: 'rule-foot', text: foot }));
     };
     const rulers = h('div', { class: 'card stack' },
@@ -3602,7 +3568,7 @@
         route: routeRows.map((r) => ({ label: r.label, you: r.v == null ? '-' : t5Fmt(r.m, r.v), goal: r.b == null ? '-' : t5Fmt(r.m, r.b), gap: r.gap == null ? '-' : r.gap > 0 ? fmt1(r.gap) : 'Ahead', ahead: r.gap != null && r.gap <= 0 })),
         routeTotal: fmt1(routeTotal),
         rulerHint: 'Each stat sits on a handicap scale where left is better and right is worse. The dot labelled You is your result and the dark bar is the handicap you chose.',
-        ticks: [...T5_LEVELS.map((lv, i) => ({ lv, x: xOf(lv), name: i === levelIdx ? 'Goal ' + lv : String(lv), goal: i === levelIdx, hideLabel: levelIdx < 0 && Math.abs(lv - level) < 3.4 })), ...(levelIdx < 0 ? [{ lv: level, x: xOf(level), name: 'Goal ' + lvStr(level), goal: true }] : [])], goalIndex: levelIdx,
+        ticks: T5_LEVELS.map((lv, i) => ({ lv, x: xOf(lv), name: i === levelIdx ? 'Goal ' + lv : String(lv), goal: i === levelIdx })), goalIndex: levelIdx,
         rulers: { tiger: rows(T5_FIVE), other: rows(T5_METRICS.filter((m) => !m.tiger)) },
         benchTitle: 'What each handicap typically makes, per 18 holes', levels: T5_LEVELS.map(String),
         bench: [...T5_FIVE.map((m) => ({ label: m.label, cells: m.vals.map(fmt1) })), { label: 'Tiger 5 total', total: true, cells: T5_TOTAL.map(fmt1) }, ...T5_METRICS.filter((m) => !m.tiger).map((m) => ({ label: m.label, cells: m.vals.map((v) => benchCell(m, v)) }))],
@@ -3703,11 +3669,11 @@
   async function exportBackup() {
     const raw = localStorage.getItem(VAULT_KEY);
     if (!raw) return false;
-    const name = 'golf-practice-backup-' + today() + '.json';
+    const name = 'road-to-scratch-backup-' + today() + '.json';
     try {
       const f = new File([raw], name, { type: 'application/json' });
       if (navigator.canShare && navigator.canShare({ files: [f] })) {
-        await navigator.share({ files: [f], title: 'Golf practice backup' });
+        await navigator.share({ files: [f], title: 'Road To Scratch backup' });
         markBackup();
         return true;
       }
