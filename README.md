@@ -164,3 +164,7 @@ While the app starts, the screen shows the icon and the name Road To Scratch, th
 ## Tempo: keeps going if the phone holds something up
 
 The Tempo metronome now keeps itself going. The next swing is queued on a timer and also on every animation frame, so if the phone holds up one of them the other carries on. If the sound clock jumps or the timer is held up for a while, the pattern starts again cleanly from that moment instead of racing to catch up, and a tone that fails to play is skipped instead of stopping everything. Before this, a held-up timer could leave the last swing finished with nothing after it, which showed as every box full and no sound. If the phone itself interrupts the sound (a call, another app), it still stops and tells you to tap Start.
+
+## Tempo opens at 30/10
+
+The Tempo page starts on the 3:1 long game ratio at the 30/10 speed (180 BPM). It starts there each time the app is opened or unlocked, and keeps whatever speed you choose until then.
