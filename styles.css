@@ -408,7 +408,9 @@ input[type="checkbox"]:checked {
 /* Progress ladders */
 .ladders { display: grid; gap: 18px; }
 .ladder-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.pips { display: flex; gap: 4px; margin-top: 8px; }
+.track { margin-top: 8px; }
+.track-name { display: block; font-size: 12px; font-weight: 600; color: var(--label2); }
+.pips { display: flex; gap: 4px; margin-top: 4px; }
 .pip { flex: 1; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0; padding: 6px 2px; background: var(--fill); color: var(--label2); border-radius: 8px; }
 .pip.on { background: var(--tint); color: var(--on-tint); }
 

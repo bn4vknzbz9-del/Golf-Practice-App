@@ -568,30 +568,40 @@
   ];
   const PUTTING = PUTTING_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + PUTT_FOCUS }));
 
-  /* Technique protocol: no club -> freezer -> smoothie -> foam ball -> real ball.
-     Progression from Dr Luke Benoit's 5x5 method. The Set your goal and Refine blocks follow
-     Adam Young's Diagnose, Intervene, Refine, Transfer structure. */
-  const STAGE_NAMES = ['No club', 'Freezer', 'Smoothie', 'Foam ball', 'Real ball'];
-  const STAGE_SHORT = ['No club', 'Freezer', 'Smoothie', 'Foam', 'Real'];
+  /* Technique protocol: two tracks, No ball then With ball. Each track starts with freezer swings and then
+     works through the Tempo page speeds, skipping every other speed and stopping at 24/8:
+     Freezer, Smoothie (ultra slow), 36/12, 30/10, 24/8. Progression from Dr Luke Benoit's 5x5 method.
+     The Set your goal and Refine blocks follow Adam Young's Diagnose, Intervene, Refine, Transfer structure.
+     A stage number is track * 5 + step, so 0 to 4 are No ball and 5 to 9 are With ball. */
+  const TRACKS = ['No ball', 'With ball'];
+  const STEP_SHORT = ['Freezer', 'Smoothie', '36/12', '30/10', '24/8'];
+  const STEP_FULL = ['Freezer swings', 'Smoothie (ultra slow) 120/40', 'Tempo 36/12 (Medium)', 'Tempo 30/10 (Slowest)', 'Tempo 24/8 (Medium)'];
+  const STAGE_COUNT = 10;
+  const REFINE_STAGE = 10;
+  const stageName = (i) => TRACKS[Math.floor(i / 5)] + ': ' + STEP_FULL[i % 5];
   const FIVE = 'Five good swings in a row, hitting the position you set. If one is wrong, start the set of five again and add 1 to your sets attempted.';
-  const STAGES = [
-    { name: 'No club', how: 'Hold the club across your shoulders (or hold no club) and rehearse the move into the position you set.\n' + FIVE },
-    { name: 'Freezer swings', how: 'Take the club slowly to the position (about four seconds), hold it for a second, then swing through at full speed. Check the position on video or in a mirror.\n' + FIVE },
-    { name: 'Smoothie swings', how: 'The same as the freezer but drop the pause: slow motion to the position, then full speed through in one flowing swing.\n' + FIVE },
-    { name: 'Foam ball', how: 'Add a foam ball and use the same method. You can alternate freezer and smoothie swings. The foam ball lets you change the pattern while hitting a ball, without chasing the reward of a pure real shot.\n' + FIVE },
-    { name: 'Real ball', how: 'Now hit real balls. You can think about the move as you swing. Your job is to get comfortable hitting real shots with the new pattern, and some of them will be bad: that is often a sign the pattern is changing. If a big miss shows up again and again, spend a few balls hitting it the other way on purpose to nudge impact back to a workable window, without losing the move.\n' + FIVE }
-  ];
+  const stageHow = (i) => {
+    const ball = i >= 5; const k = i % 5;
+    const what = ball ? 'Hit a ball with every swing (a foam ball or a real one, as you prefer). ' : 'No ball. Swing the club, or hold it across your shoulders, and rehearse the move into the position you set. ';
+    let how;
+    if (k === 0) how = 'Freezer swings. Take the club slowly to the position (about four seconds), hold it for a second, then swing through at full speed. Check the position on video or in a mirror.';
+    else if (k === 1) how = 'Smoothie swings at the ultra slow tempo on the Tempo page (4 second backswing). Slow motion to the position, then full speed through in one flowing swing with no pause.';
+    else how = 'Swing in time with the ' + STEP_SHORT[k] + ' speed on the Tempo page, in one flowing swing with no pause.';
+    return what + how + (ball && k === 0 ? ' The ball lets you change the pattern while hitting a shot, without chasing the reward of a pure shot.' : '') + (ball && k === 4 ? ' You can think about the move as you swing. Some shots will be bad, which is often a sign the pattern is changing. If a big miss shows up again and again, spend a few balls hitting it the other way on purpose to nudge impact back to a workable window, without losing the move.' : '') + '\n' + FIVE;
+  };
+  const STAGES = Array.from({ length: STAGE_COUNT }, (_, i) => ({ name: stageName(i), how: stageHow(i) }));
   const SET_BLOCK = { name: 'Set your goal', how: 'Diagnose first. Write down the mechanic and the exact position you want, film one baseline swing and compare it with that position. Pick a check you can judge on video or in a mirror. If the mechanic has several parts, work the pivot and transition first, then the arms and club. The goal of this session is to change your pattern, not to hit good shots, because trying to hit good shots at the same time splits your attention.' };
   const REFINE_BLOCK = { name: 'Refine on real balls', how: 'Keep the move and calibrate it. Hit 3 real balls with a little too much of the move, 3 with a little too little, then 3 with the amount you want. Finish with shots at a target, keeping your attention on the ball flight.' };
 
-  // Minutes for each block, by starting stage (all total 30). Stage -1 is Set your goal, 5 is Refine.
-  const PROTO_PLANS = {
-    0: [[-1, 3], [0, 3], [1, 6], [2, 6], [3, 6], [4, 6]],
-    1: [[-1, 3], [1, 6], [2, 6], [3, 7], [4, 8]],
-    2: [[-1, 3], [2, 7], [3, 9], [4, 11]],
-    3: [[-1, 3], [3, 10], [4, 17]],
-    4: [[-1, 3], [4, 12], [5, 15]]
-  };
+  // Minutes for each block. A session works from the starting stage to the end of that track, with Set your goal first
+  // and, on the With ball track, a Refine block last. Spread to the chosen session length by scaleMinutes.
+  function protoPlan(start) {
+    const end = (Math.floor(start / 5) + 1) * 5;
+    const plan = [[-1, 3]];
+    for (let st = start; st < end; st += 1) plan.push([st, 5]);
+    if (start >= 5) plan.push([REFINE_STAGE, 6]);
+    return plan;
+  }
 
   const CAL_BLOCK_MINUTES = 10;      // 3 games x 10 min = 30 min
   const TRANSFER_BLOCK_MINUTES = 10; // 3 games x 10 min = 30 min
@@ -742,9 +752,20 @@
     score: i.score == null ? null : Math.min(Math.round(num(i.score, 0, 100)), i.max == null ? 10 : Math.round(num(i.max, 1, 100))),
     passed: i.passed === true,
     notes: str(i.notes, 3000),
-    stage: Math.round(num(i.stage, -1, 5)),
-    rounds: Math.round(num(i.rounds, 0, 99))
+    stage: cleanStage(i),
+    rounds: Math.round(num(i.rounds, 0, 99)),
+    v: 2
   });
+
+  // Older sessions used one five-stage ladder (0 No club, 1 Freezer, 2 Smoothie, 3 Foam ball, 4 Real ball, 5 Refine).
+  // They map onto the new two-track ladder so earlier progress still counts. New items carry v: 2.
+  function cleanStage(i) {
+    const n = Math.round(num(i.stage, -1, 10));
+    if (i.v === 2) return n;
+    if (n === 5) return REFINE_STAGE;
+    if (n === 0) return -1;
+    return n === 1 ? 0 : n === 2 ? 1 : n >= 3 ? 5 : -1;
+  }
 
   // A session can cover several mechanics. Older records had one, kept as a one-item list.
   function cleanMechList(list, fallback) {
@@ -1214,7 +1235,7 @@
       rec.items.map((it) => h('div', { class: 'hist-item' },
         h('strong', { text: it.name }),
         h('p', { class: 'tag', text: it.cat + ', ' + it.minutes + ' min' }),
-        it.stage >= 0 && it.stage <= 4 ? h('p', { text: it.rounds + ' set' + (it.rounds === 1 ? '' : 's') + ' attempted, ' + (it.passed ? 'five in a row completed' : 'not completed') }) : null,
+        it.stage >= 0 && it.stage < STAGE_COUNT ? h('p', { text: it.rounds + ' set' + (it.rounds === 1 ? '' : 's') + ' attempted, ' + (it.passed ? 'five in a row completed' : 'not completed') }) : null,
         it.notes ? h('p', { class: 'notes', text: it.notes }) : null)),
       para('How it went', rec.notes),
       para('Next session', rec.next)
@@ -1369,17 +1390,19 @@
         const k = mechKey(name);
         if (!k) continue;
         let e = map.get(k);
-        if (!e) { e = { name: name.trim(), furthest: -1, last: p.date, sessions: 0 }; map.set(k, e); }
+        if (!e) { e = { name: name.trim(), done: new Set(), last: p.date, sessions: 0 }; map.set(k, e); }
         e.sessions += 1;
         if (p.date >= e.last) { e.last = p.date; e.name = name.trim(); }
-        for (const it of p.items) if (it.stage >= 0 && it.stage <= 4 && it.passed) e.furthest = Math.max(e.furthest, it.stage);
+        for (const it of p.items) if (it.stage >= 0 && it.stage < STAGE_COUNT && it.passed) e.done.add(it.stage);
       }
     }
     return [...map.values()].sort((a, b) => b.last.localeCompare(a.last));
   }
   function suggestedStart(mech) {
     const e = progressByMechanic().find((x) => mechKey(x.name) === mechKey(mech));
-    return !e || e.furthest < 0 ? 0 : Math.min(4, e.furthest + 1);
+    if (!e) return 0;
+    for (let i = 0; i < STAGE_COUNT; i += 1) if (!e.done.has(i)) return i; // the first step not yet ticked off
+    return STAGE_COUNT - 1;
   }
   // With several mechanics ticked, start at the stage of the one furthest behind.
   function suggestedStartMany(list) {
@@ -1399,16 +1422,17 @@
     return out;
   }
   function buildProtocol(start, len) {
-    const plan = PROTO_PLANS[start];
+    const plan = protoPlan(start);
     const mins = scaleMinutes(plan.map((p) => p[1]), len || 30);
     return plan.map(([st], idx) => {
       const minutes = mins[idx];
-      const def = st === -1 ? SET_BLOCK : st === 5 ? REFINE_BLOCK : STAGES[st];
-      const cat = st === -1 ? 'Diagnose' : st === 5 ? 'Refine' : 'Stage ' + (st + 1) + ' of 5';
-      return { id: uid(), cat, name: def.name, how: def.how, minutes, stage: st, rounds: 0, passed: false, score: null, notes: '' };
+      const def = st === -1 ? SET_BLOCK : st === REFINE_STAGE ? REFINE_BLOCK : STAGES[st];
+      const cat = st === -1 ? 'Diagnose' : st === REFINE_STAGE ? 'Refine' : TRACKS[Math.floor(st / 5)] + ', step ' + ((st % 5) + 1) + ' of 5';
+      return { id: uid(), cat, name: def.name, how: def.how, minutes, stage: st, rounds: 0, passed: false, score: null, notes: '', v: 2 };
     });
   }
-  const furthestPassed = (p) => p.items.reduce((m, it) => (it.stage >= 0 && it.stage <= 4 && it.passed ? Math.max(m, it.stage) : m), -1);
+  const furthestPassed = (p) => p.items.reduce((m, it) => (it.stage >= 0 && it.stage < STAGE_COUNT && it.passed ? Math.max(m, it.stage) : m), -1);
+  const stageShort = (i) => TRACKS[Math.floor(i / 5)] + ' ' + STEP_SHORT[i % 5];
 
   function progressBlock() {
     const list = progressByMechanic();
@@ -1416,8 +1440,10 @@
     return h('div', { class: 'stack' }, h('h3', { class: 'sub', text: 'Practice Ladder Overview' }), h('div', { class: 'ladders' }, list.map((e) => h('div', { class: 'ladder' },
       h('div', { class: 'ladder-top' },
         h('strong', { text: e.name }),
-        h('span', { class: 'tag', text: e.furthest < 0 ? 'No stage completed yet' : 'Furthest: ' + STAGE_NAMES[e.furthest] })),
-      h('div', { class: 'pips', 'aria-hidden': 'true' }, STAGE_SHORT.map((n, i) => h('span', { class: 'pip' + (i <= e.furthest ? ' on' : ''), text: n })))))));
+        h('span', { class: 'tag', text: e.done.size ? e.done.size + ' of ' + STAGE_COUNT + ' steps ticked off' : 'No step completed yet' })),
+      TRACKS.map((t, ti) => h('div', { class: 'track' },
+        h('span', { class: 'track-name', text: t }),
+        h('div', { class: 'pips', 'aria-hidden': 'true' }, STEP_SHORT.map((n, k) => h('span', { class: 'pip' + (e.done.has(ti * 5 + k) ? ' on' : ''), text: n })))))))));
   }
 
   /* ==========================================================
@@ -1665,13 +1691,13 @@
 
   function protocolSetup(d) {
     const known = () => d.mechList.some((m) => progressByMechanic().some((e) => mechKey(e.name) === mechKey(m)));
-    const sel = h('select', null, STAGE_NAMES.map((n, i) => h('option', { value: String(i), text: n })));
+    const sel = h('select', null, STAGES.map((st, i) => h('option', { value: String(i), text: st.name })));
     sel.value = String(d.start);
     const hint = h('p', { class: 'hint' });
     function updateHint() {
       hint.textContent = known()
-        ? 'Suggested start: ' + STAGE_NAMES[suggestedStartMany(d.mechList)] + ', based on your progress' + (d.mechList.length > 1 ? ' with the mechanic furthest behind' : '') + '. Change it to repeat an earlier stage.'
-        : 'New mechanic, so the suggested start is No club.';
+        ? 'Suggested start: ' + stageName(suggestedStartMany(d.mechList)) + ', the first step you have not ticked off' + (d.mechList.length > 1 ? ' for the mechanic furthest behind' : '') + '. Change it to repeat an earlier step.'
+        : 'New mechanic, so the suggested start is ' + stageName(0) + '.';
     }
     const mech = mechanicPicker(d, 'mechList', () => {
       d.mechanic = d.mechList.join(', ');
@@ -1683,7 +1709,7 @@
 
     return h('div', { class: 'stack' },
       disclosure('setup-intro', 'How this works', 'Hide how this works', [
-        h('p', { class: 'lead', text: lenWord(ui.len.technique) + ' to change one mechanic. You move from no club to freezer swings, smoothie swings, a foam ball and then real balls, with five good swings in a row at each stage.' }),
+        h('p', { class: 'lead', text: lenWord(ui.len.technique) + ' to change one mechanic. You work through two tracks, No ball and then With ball. Each starts with freezer swings, then moves through the Tempo page speeds, skipping every other speed and stopping at 24/8: Smoothie, 36/12, 30/10, 24/8. Tick each step off with five good swings in a row.' }),
         h('p', { class: 'hint', text: 'The goal is to change your pattern, not to hit good shots. Film yourself to check each swing hits the position. If one is wrong, start that set of five again.' })]),
       progressBlock(),
       field('Date', dateInput(d)),
@@ -1706,7 +1732,7 @@
   }
 
   function protoCard(item, i) {
-    const tracked = item.stage >= 0 && item.stage <= 4;
+    const tracked = item.stage >= 0 && item.stage < STAGE_COUNT;
     const out = h('output', { class: 'score-out', text: String(item.rounds) });
     const step = (delta) => () => { item.rounds = Math.min(99, Math.max(0, item.rounds + delta)); out.textContent = String(item.rounds); };
     const cb = h('input', { type: 'checkbox' });
@@ -1740,7 +1766,7 @@
         mechList: d.mechList.slice(0, 10),
         mechanic: d.mechList.join(', ').slice(0, 200),
         target: d.target.trim().slice(0, 500),
-        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, score: null, passed: !!i.passed, notes: i.notes.trim(), stage: i.stage, rounds: i.rounds })),
+        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, score: null, passed: !!i.passed, notes: i.notes.trim(), stage: i.stage, rounds: i.rounds, v: 2 })),
         notes: d.notes.trim().slice(0, 3000),
         next: d.next.trim().slice(0, 3000)
       });
@@ -1825,7 +1851,7 @@
       } else {
         const fp = furthestPassed(rec);
         nodes.push(entryShell(
-          [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') })],
+          [h('span', { class: 'd', text: fmtDate(rec.date) }), h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + stageShort(fp) : '') })],
           protocolBody(rec),
           () => startEdit('protocol', rec),
           () => removeRecord('protocols', rec.id)));
@@ -3680,7 +3706,7 @@
       else if (type === 'protocol') {
         const fp = furthestPassed(rec);
         tag = 'Technique protocol, ' + protocolMinutes(rec) + ' min';
-        sum = h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + STAGE_SHORT[fp] : '') });
+        sum = h('span', { class: 'sum', text: rec.mechanic + (fp >= 0 ? ', reached ' + stageShort(fp) : '') });
         body = protocolBody(rec);
         icon = 'technique';
       } else if (type === 'tempo') {
