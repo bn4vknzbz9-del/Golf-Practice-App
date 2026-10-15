@@ -339,7 +339,7 @@
   const FOCUS = 'Focus: use your full routine on every ball and keep your attention on the target and the ball flight, not on body positions.';
   const ANCHOR = 'New move under pressure';
   TRANSFER_BASE.push(G(ANCHOR,
-    'Use the mechanic from your latest technique protocol. Three targets with ' + T(20) + ' wide windows, three clubs and, if you can, your phone to film.',
+    'Use the mechanic from your latest technique practice. Three targets with ' + T(20) + ' wide windows, three clubs and, if you can, your phone to film.',
     '12 balls. Before each ball, draw the target and the club. Take one smoothie rehearsal swing with the new move beside the ball, step in, then hit with your attention on the target. Film as many as you can.',
     'Target and club change on every ball, never the same club twice in a row.',
     'Balls where the new move showed up and the ball finished inside a ' + T(20) + ' window, out of 12. Mark it passed at 6 or more.',
@@ -574,34 +574,12 @@
      The Set your goal and Refine blocks follow Adam Young's Diagnose, Intervene, Refine, Transfer structure.
      A stage number is track * 5 + step, so 0 to 4 are No ball and 5 to 9 are With ball. */
   const TRACKS = ['No ball', 'With ball'];
-  const STEP_SHORT = ['Freezer', 'Smoothie', '36/12', '30/10', '24/8'];
-  const STEP_FULL = ['Freezer swings', 'Smoothie (ultra slow) 120/40', 'Tempo 36/12 (Medium)', 'Tempo 30/10 (Slowest)', 'Tempo 24/8 (Medium)'];
+  const STEP_SHORT = ['Freezer', 'Ultra slow', '36/12', '30/10', '24/8'];
+  const STEP_NOTE = ['(pause at top)', '120/40', 'Medium', 'Slowest', 'Medium'];
+  const STEP_KIND = ['', 'Practice', 'Practice', 'On course', 'On course']; // which Tempo page group the speed is in
   const STAGE_COUNT = 10;
-  const REFINE_STAGE = 10;
-  const stageName = (i) => TRACKS[Math.floor(i / 5)] + ': ' + STEP_FULL[i % 5];
-  const FIVE = 'Five good swings in a row, hitting the position you set. If one is wrong, start the set of five again and add 1 to your sets attempted.';
-  const stageHow = (i) => {
-    const ball = i >= 5; const k = i % 5;
-    const what = ball ? 'Hit a ball with every swing (a foam ball or a real one, as you prefer). ' : 'No ball. Swing the club, or hold it across your shoulders, and rehearse the move into the position you set. ';
-    let how;
-    if (k === 0) how = 'Freezer swings. Take the club slowly to the position (about four seconds), hold it for a second, then swing through at full speed. Check the position on video or in a mirror.';
-    else if (k === 1) how = 'Smoothie swings at the ultra slow tempo on the Tempo page (4 second backswing). Slow motion to the position, then full speed through in one flowing swing with no pause.';
-    else how = 'Swing in time with the ' + STEP_SHORT[k] + ' speed on the Tempo page, in one flowing swing with no pause.';
-    return what + how + (ball && k === 0 ? ' The ball lets you change the pattern while hitting a shot, without chasing the reward of a pure shot.' : '') + (ball && k === 4 ? ' You can think about the move as you swing. Some shots will be bad, which is often a sign the pattern is changing. If a big miss shows up again and again, spend a few balls hitting it the other way on purpose to nudge impact back to a workable window, without losing the move.' : '') + '\n' + FIVE;
-  };
-  const STAGES = Array.from({ length: STAGE_COUNT }, (_, i) => ({ name: stageName(i), how: stageHow(i) }));
-  const SET_BLOCK = { name: 'Set your goal', how: 'Diagnose first. Write down the mechanic and the exact position you want, film one baseline swing and compare it with that position. Pick a check you can judge on video or in a mirror. If the mechanic has several parts, work the pivot and transition first, then the arms and club. The goal of this session is to change your pattern, not to hit good shots, because trying to hit good shots at the same time splits your attention.' };
-  const REFINE_BLOCK = { name: 'Refine on real balls', how: 'Keep the move and calibrate it. Hit 3 real balls with a little too much of the move, 3 with a little too little, then 3 with the amount you want. Finish with shots at a target, keeping your attention on the ball flight.' };
-
-  // Minutes for each block. A session works from the starting stage to the end of that track, with Set your goal first
-  // and, on the With ball track, a Refine block last. Spread to the chosen session length by scaleMinutes.
-  function protoPlan(start) {
-    const end = (Math.floor(start / 5) + 1) * 5;
-    const plan = [[-1, 3]];
-    for (let st = start; st < end; st += 1) plan.push([st, 5]);
-    if (start >= 5) plan.push([REFINE_STAGE, 6]);
-    return plan;
-  }
+  const REFINE_STAGE = 10; // only on sessions saved by the old protocol
+  const stageLabel = (i) => TRACKS[Math.floor(i / 5)] + ': ' + STEP_SHORT[i % 5]; // for example With ball: 36/12
 
   const CAL_BLOCK_MINUTES = 10;      // 3 games x 10 min = 30 min
   const TRANSFER_BLOCK_MINUTES = 10; // 3 games x 10 min = 30 min
@@ -790,7 +768,8 @@
         mechList: cleanMechList(t.mechList, str(t.mechanics, 200).trim()),
         mechanics: cleanMechList(t.mechList, str(t.mechanics, 200).trim()).join(', ').slice(0, 200),
         notes: str(t.notes, 3000),
-        improve: str(t.improve, 3000)
+        improve: str(t.improve, 3000),
+        reached: arr(t.reached).map((r) => ({ name: str(r.name, 100).trim(), stage: Math.round(num(r.stage, -1, STAGE_COUNT - 1)) })).filter((r) => r.name).slice(0, 10)
       });
     }
     for (const r of arr(d.tempo)) {
@@ -873,7 +852,7 @@
   let writeChain = Promise.resolve();
 
   function freshDrafts() {
-    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '' }, protocol: freshProtocol(), calibration: null, transfer: null, shortgame: null, putting: null, round: freshRound(), tempo: freshTempo() };
+    return { technique: { id: null, date: today(), mechList: [], mechanics: '', notes: '', improve: '', reach: {} }, protocol: freshProtocol(), calibration: null, transfer: null, shortgame: null, putting: null, round: freshRound(), tempo: freshTempo() };
   }
   // A new round starts with the course, tees and par of your latest one.
   function freshRound() {
@@ -1226,8 +1205,9 @@
   const protocolMinutes = (rec) => rec.items.reduce((a, i) => a + i.minutes, 0);
   const para = (label, text) => (text ? h('div', null, h('strong', { text: label }), h('p', { class: 'notes', text })) : null);
 
+  const reachedText = (rec) => (rec.reached || []).filter((r) => r.stage >= 0).map((r) => r.name + ': ' + stageLabel(r.stage)).join('; ');
   function logBody(rec) {
-    return [para('Mechanics', rec.mechanics), para('How it went', rec.notes), para('Improve next time', rec.improve)];
+    return [para('Mechanics', rec.mechanics), para('Got to on the progress ladder', reachedText(rec)), para('How it went', rec.notes), para('Improve next time', rec.improve)];
   }
   function protocolBody(rec) {
     return [
@@ -1298,11 +1278,11 @@
   function startEdit(type, rec, from) {
     const returnTo = from || null;
     if (type === 'log') {
-      drafts.technique = { ...rec, mechList: (rec.mechList || []).slice(), returnTo };
+      drafts.technique = { ...rec, mechList: (rec.mechList || []).slice(), reach: Object.fromEntries((rec.reached || []).map((r) => [r.name, r.stage])), returnTo };
       ui.tab = 'technique'; ui.mode = 'log';
     } else if (type === 'protocol') {
       drafts.protocol = { id: rec.id, date: rec.date, mechList: rec.mechList.slice(), mechanic: rec.mechanic, target: rec.target, start: 0, startTouched: true, items: rec.items.map((i) => ({ ...i })), notes: rec.notes, next: rec.next, timer: { base: 0, startedAt: null }, returnTo };
-      ui.tab = 'technique'; ui.mode = 'new';
+      ui.tab = 'technique'; ui.mode = 'new'; // old protocol sessions can still be corrected here
     } else if (type === 'round') {
       drafts.round = { ...rec, returnTo };
       ui.tab = 'rounds'; ui.mode = 'new';
@@ -1322,7 +1302,7 @@
   }
 
   /* ==========================================================
-     Section 1: technique practice (30-minute protocol, quick log, history)
+     Section 1: technique practice (practice plan, progress tracker)
      ========================================================== */
   const mechKey = (m) => m.trim().toLowerCase();
 
@@ -1383,67 +1363,54 @@
     'Add the mechanics you work on in Settings first. ',
     h('button', { type: 'button', class: 'link', text: 'Open Settings', onclick: () => { ui.tab = 'settings'; renderApp(true); } })));
 
+  // Progress by mechanic. Each practice plan records how far you got on the progress ladder, and every step up to that one counts as ticked off.
+  // Sessions saved by the old protocol still count the steps they passed.
   function progressByMechanic() {
     const map = new Map();
+    const get = (name, date) => {
+      const k = mechKey(name);
+      if (!k) return null;
+      let e = map.get(k);
+      if (!e) { e = { name: name.trim(), done: new Set(), last: date, sessions: 0 }; map.set(k, e); }
+      e.sessions += 1;
+      if (date >= e.last) { e.last = date; e.name = name.trim(); }
+      return e;
+    };
     for (const p of session.data.protocols) {
       for (const name of (p.mechList.length ? p.mechList : [p.mechanic])) {
-        const k = mechKey(name);
-        if (!k) continue;
-        let e = map.get(k);
-        if (!e) { e = { name: name.trim(), done: new Set(), last: p.date, sessions: 0 }; map.set(k, e); }
-        e.sessions += 1;
-        if (p.date >= e.last) { e.last = p.date; e.name = name.trim(); }
-        for (const it of p.items) if (it.stage >= 0 && it.stage < STAGE_COUNT && it.passed) e.done.add(it.stage);
+        const e = get(name, p.date);
+        if (e) for (const it of p.items) if (it.stage >= 0 && it.stage < STAGE_COUNT && it.passed) e.done.add(it.stage);
+      }
+    }
+    for (const t of session.data.technique) {
+      for (const r of t.reached) {
+        const e = get(r.name, t.date);
+        if (e) for (let i = 0; i <= r.stage; i += 1) e.done.add(i);
       }
     }
     return [...map.values()].sort((a, b) => b.last.localeCompare(a.last));
   }
-  function suggestedStart(mech) {
+  // How far a mechanic has got: the highest step ticked off, or -1 for none.
+  function furthestStep(mech) {
     const e = progressByMechanic().find((x) => mechKey(x.name) === mechKey(mech));
-    if (!e) return 0;
-    for (let i = 0; i < STAGE_COUNT; i += 1) if (!e.done.has(i)) return i; // the first step not yet ticked off
-    return STAGE_COUNT - 1;
-  }
-  // With several mechanics ticked, start at the stage of the one furthest behind.
-  function suggestedStartMany(list) {
-    return list.length ? Math.min(...list.map(suggestedStart)) : 0;
+    return e && e.done.size ? Math.max(...e.done) : -1;
   }
   function freshProtocol() {
     return { id: null, date: today(), mechList: [], mechanic: '', target: '', start: 0, startTouched: false, items: [], notes: '', next: '', timer: { base: 0, startedAt: null } };
   }
-  // Spread `total` minutes across blocks in proportion to the 30-minute plan, in whole minutes.
-  function scaleMinutes(bases, total) {
-    const sum = bases.reduce((a, b) => a + b, 0);
-    const raw = bases.map((b) => (b * total) / sum);
-    const out = raw.map(Math.floor);
-    let rem = total - out.reduce((a, b) => a + b, 0);
-    const order = raw.map((r, i) => [r - Math.floor(r), i]).sort((a, b) => b[0] - a[0]);
-    for (let k = 0; rem > 0; k += 1, rem -= 1) out[order[k % order.length][1]] += 1;
-    return out;
-  }
-  function buildProtocol(start, len) {
-    const plan = protoPlan(start);
-    const mins = scaleMinutes(plan.map((p) => p[1]), len || 30);
-    return plan.map(([st], idx) => {
-      const minutes = mins[idx];
-      const def = st === -1 ? SET_BLOCK : st === REFINE_STAGE ? REFINE_BLOCK : STAGES[st];
-      const cat = st === -1 ? 'Diagnose' : st === REFINE_STAGE ? 'Refine' : TRACKS[Math.floor(st / 5)] + ', step ' + ((st % 5) + 1) + ' of 5';
-      return { id: uid(), cat, name: def.name, how: def.how, minutes, stage: st, rounds: 0, passed: false, score: null, notes: '', v: 2 };
-    });
-  }
   const furthestPassed = (p) => p.items.reduce((m, it) => (it.stage >= 0 && it.stage < STAGE_COUNT && it.passed ? Math.max(m, it.stage) : m), -1);
-  const stageShort = (i) => TRACKS[Math.floor(i / 5)] + ' ' + STEP_SHORT[i % 5];
+  const stageShort = (i) => TRACKS[Math.floor(i / 5)] + ' ' + (STEP_KIND[i % 5] ? STEP_KIND[i % 5].toLowerCase() + ' ' : '') + STEP_SHORT[i % 5];
 
   function progressBlock() {
     const list = progressByMechanic();
-    if (!list.length) return h('p', { class: 'hint', text: 'Your progress ladder appears here after your first protocol.' });
-    return h('div', { class: 'stack' }, h('h3', { class: 'sub', text: 'Practice Ladder Overview' }), h('div', { class: 'ladders' }, list.map((e) => h('div', { class: 'ladder' },
+    if (!list.length) return h('p', { class: 'hint', text: 'Your progress ladder appears here after your first practice plan.' });
+    return h('div', { class: 'stack' }, h('h3', { class: 'sub', text: 'Progress ladder' }), h('div', { class: 'ladders' }, list.map((e) => h('div', { class: 'ladder' },
       h('div', { class: 'ladder-top' },
         h('strong', { text: e.name }),
         h('span', { class: 'tag', text: e.done.size ? e.done.size + ' of ' + STAGE_COUNT + ' steps ticked off' : 'No step completed yet' })),
       TRACKS.map((t, ti) => h('div', { class: 'track' },
         h('span', { class: 'track-name', text: t }),
-        h('div', { class: 'pips', 'aria-hidden': 'true' }, STEP_SHORT.map((n, k) => h('span', { class: 'pip' + (e.done.has(ti * 5 + k) ? ' on' : ''), text: n })))))))));
+        h('div', { class: 'pips', 'aria-hidden': 'true' }, STEP_SHORT.map((n, k) => h('span', { class: 'pip' + (e.done.has(ti * 5 + k) ? ' on' : ''), text: STEP_KIND[k] ? STEP_KIND[k] + ' speed\n' + n : n })))))))));
   }
 
   /* ==========================================================
@@ -1584,9 +1551,9 @@
         h('p', { class: 'lead', text: fmtH(total) + ' hours across ' + rows.length + ' technique change' + (rows.length === 1 ? '' : 's') + '.' }),
         h('ul', { class: 'legend' }, legend.map(([c, l]) => h('li', null, h('span', { class: 'swatch st-' + c }), l))),
         trackingChart(rows),
-        h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, and a session on several mechanics adds its full time to each. Quick logs do not add hours. Exactly 15 or 20 hours counts as light green.' }))
+        h('p', { class: 'hint', text: 'Hours add up the full time of each saved protocol, and a session on several mechanics adds its full time to each. Practice plans do not add hours. Exactly 15 or 20 hours counts as light green.' }))
       : h('div', { class: 'stack card' }, sectionHead('technique', 'Technique hours'),
-        h('p', { class: 'empty', text: 'No protocol sessions saved yet. Run a protocol under Technique and the hours for each technique change appear here.' }));
+        h('p', { class: 'empty', text: 'No technique hours yet. Hours come from technique sessions saved with the earlier protocol.' }));
 
     const calSeries = [...Object.keys(CAL).map((c, i) => ({ name: c, cls: 'l' + i, filter: (it) => it.cat === c })), { name: 'All drills', cls: 'l3', filter: null }];
     return h('section', { class: 'stack' },
@@ -1643,14 +1610,6 @@
       range,
       h('div', { class: 'len-ticks', 'aria-hidden': 'true' }, ['30', '40', '50', '60'].map((x) => h('span', { text: x }))));
   }
-  function setTechniqueLength(len) {
-    const d = drafts.protocol;
-    if (len === ui.len.technique) return;
-    if (d.items.length && d.items.some((i) => i.rounds > 0 || i.passed) && !window.confirm('Change the length? Progress you logged on this plan will be lost.')) { renderApp(); return; }
-    ui.len.technique = len;
-    if (d.items.length) { d.items = buildProtocol(d.start, len); d.len = len; d.timer = { base: 0, startedAt: null }; }
-    renderApp();
-  }
   function setSessionLength(kind, len) {
     const d = drafts[kind];
     if (len === ui.len[kind]) return;
@@ -1661,15 +1620,15 @@
   }
 
   function techniqueView() {
+    // The old protocol screen is gone. Its only use now is correcting a session saved earlier, opened from the Progress tracker.
+    if (ui.mode === 'new' && !(drafts.protocol.id && drafts.protocol.items.length)) ui.mode = 'log';
     let body;
     if (ui.mode === 'history') body = techniqueHistory();
     else if (ui.mode === 'log') body = techniqueForm();
-    else body = drafts.protocol.items.length ? protocolSession(drafts.protocol) : protocolSetup(drafts.protocol);
-    const showLength = ui.mode === 'new' && !drafts.protocol.id;
+    else body = protocolSession(drafts.protocol);
     return h('section', null,
       pageTitle('technique', 'Technique practice'),
-      modeBar([['new', 'Protocol'], ['log', 'Quick log'], ['history', 'History']]),
-      showLength ? lengthControl('technique', setTechniqueLength) : null,
+      modeBar([['log', 'Practice plan'], ['history', 'Progress tracker']]),
       body);
   }
 
@@ -1687,48 +1646,6 @@
     btn.addEventListener('click', () => { if (openText.has(key)) openText.delete(key); else openText.add(key); paint(); });
     paint();
     return h('div', { class: 'fold-wrap' }, btn, box);
-  }
-
-  function protocolSetup(d) {
-    const known = () => d.mechList.some((m) => progressByMechanic().some((e) => mechKey(e.name) === mechKey(m)));
-    const sel = h('select', null, STAGES.map((st, i) => h('option', { value: String(i), text: st.name })));
-    sel.value = String(d.start);
-    const hint = h('p', { class: 'hint' });
-    function updateHint() {
-      hint.textContent = known()
-        ? 'Suggested start: ' + stageName(suggestedStartMany(d.mechList)) + ', the first step you have not ticked off' + (d.mechList.length > 1 ? ' for the mechanic furthest behind' : '') + '. Change it to repeat an earlier step.'
-        : 'New mechanic, so the suggested start is ' + stageName(0) + '.';
-    }
-    const mech = mechanicPicker(d, 'mechList', () => {
-      d.mechanic = d.mechList.join(', ');
-      if (!d.startTouched) { d.start = suggestedStartMany(d.mechList); sel.value = String(d.start); }
-      updateHint();
-    });
-    sel.addEventListener('change', () => { d.start = Number(sel.value); d.startTouched = true; });
-    updateHint();
-
-    return h('div', { class: 'stack' },
-      disclosure('setup-intro', 'How this works', 'Hide how this works', [
-        h('p', { class: 'lead', text: lenWord(ui.len.technique) + ' to change one mechanic. You work through two tracks, No ball and then With ball. Each starts with freezer swings, then moves through the Tempo page speeds, skipping every other speed and stopping at 24/8: Smoothie, 36/12, 30/10, 24/8. Tick each step off with five good swings in a row.' }),
-        h('p', { class: 'hint', text: 'The goal is to change your pattern, not to hit good shots. Film yourself to check each swing hits the position. If one is wrong, start that set of five again.' })]),
-      progressBlock(),
-      field('Date', dateInput(d)),
-      field('Mechanics I am working on (tick one or more)', mech),
-      mechanicHint(),
-      field('Position I am aiming for', textInput(d, 'target', 500, 'For example: lead wrist flat at the top')),
-      field('Start at', sel),
-      hint,
-      h('button', {
-        type: 'button', class: 'primary', text: 'Generate ' + lenLabel(ui.len.technique) + ' protocol',
-        onclick: () => {
-          if (!d.mechList.length) { toast('Choose at least one mechanic'); return; }
-          d.mechanic = d.mechList.join(', ');
-          d.items = buildProtocol(d.start, ui.len.technique);
-          d.len = ui.len.technique;
-          d.timer = { base: 0, startedAt: null };
-          renderApp();
-        }
-      }));
   }
 
   function protoCard(item, i) {
@@ -1777,11 +1694,6 @@
       renderApp(true);
       toast(editing ? 'Changes saved' : 'Session saved');
     }
-    function changeSetup() {
-      if (d.items.some((i) => i.rounds > 0 || i.passed) && !window.confirm('Change the setup? Progress you logged will be lost.')) return;
-      d.items = [];
-      renderApp();
-    }
     function discard() {
       if (!window.confirm(editing ? 'Discard your changes?' : 'Discard this session?')) return;
       leaveEdit(d);
@@ -1800,12 +1712,30 @@
       field('What to do next session', textArea(d, 'next', 4, 3000)),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: editing ? 'Save changes' : 'Save session', onclick: save }),
-        editing ? null : h('button', { type: 'button', class: 'ghost', text: 'Change setup', onclick: changeSetup }),
         h('button', { type: 'button', class: 'ghost', text: editing ? 'Cancel edit' : 'Discard', onclick: discard })));
+  }
+
+  // The progress ladder as a diagram: Set your goal, then No ball and With ball, each running through the same five steps.
+  function ladderDiagram() {
+    const track = (ti) => h('div', { class: 'lad-track' },
+      h('strong', { class: 'lad-name', text: TRACKS[ti] }),
+      h('div', { class: 'lad-steps' }, STEP_SHORT.map((n, k) => h('div', { class: 'lad-step ' + (k === 0 ? 'f' : STEP_KIND[k] === 'Practice' ? 'p' : 'o') },
+        STEP_KIND[k] ? h('span', { class: 'lad-kind', text: STEP_KIND[k] + ' speed' }) : null,
+        h('span', { class: 'lad-main', text: n }),
+        h('span', { class: 'lad-note', text: STEP_NOTE[k] })))));
+    return h('div', { class: 'card stack lad' },
+      h('h3', { class: 'sub', text: 'Progress ladder' }),
+      h('p', { class: 'hint', text: 'Five good swings in a row ticks a step off. Each track skips every other tempo speed and stops at 24/8.' }),
+      h('div', { class: 'lad-goal', text: 'Set your goal: diagnose first' }),
+      h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
+      track(0),
+      h('div', { class: 'lad-turn', 'aria-hidden': 'true' }, h('span', { class: 'lad-turn-b' }), h('span', { class: 'lad-turn-t', text: 'Add the ball, same speeds again' })),
+      track(1));
   }
 
   function techniqueForm() {
     const d = drafts.technique;
+    if (!d.reach) d.reach = {};
     async function save() {
       if (!d.mechList.length) { toast('Choose at least one mechanic'); return; }
       upsert(session.data.technique, {
@@ -1814,7 +1744,8 @@
         mechList: d.mechList.slice(0, 10),
         mechanics: d.mechList.join(', ').slice(0, 200),
         notes: d.notes.trim().slice(0, 3000),
-        improve: d.improve.trim().slice(0, 3000)
+        improve: d.improve.trim().slice(0, 3000),
+        reached: d.mechList.slice(0, 10).map((name) => ({ name, stage: Math.round(num(d.reach[name] == null ? -1 : d.reach[name], -1, STAGE_COUNT - 1)) }))
       });
       await persist();
       leaveEdit(d, 'history');
@@ -1822,10 +1753,36 @@
       renderApp(true);
       toast(d.id ? 'Changes saved' : 'Entry saved');
     }
+    // One row per mechanic: tick it in the first column, then say how far you got on the ladder in the second.
+    const opts = mechanicOptions();
+    const grid = h('div', { class: 'reach', role: 'group', 'aria-label': 'Mechanics and how far you got' },
+      h('span', { class: 'lbl', text: 'Mechanic' }), h('span', { class: 'lbl', text: 'Got to' }));
+    opts.forEach((m) => {
+      const on = d.mechList.some((x) => mechKey(x) === mechKey(m));
+      const cb = h('input', { type: 'checkbox' });
+      cb.checked = on;
+      const sel = h('select', { 'aria-label': 'How far you got on ' + m });
+      sel.append(h('option', { value: '-1', text: 'No step ticked off' }));
+      for (let i = 0; i < STAGE_COUNT; i += 1) sel.append(h('option', { value: String(i), text: stageLabel(i) }));
+      if (d.reach[m] == null) d.reach[m] = furthestStep(m);
+      sel.value = String(d.reach[m]);
+      sel.disabled = !on;
+      sel.addEventListener('change', () => { d.reach[m] = Number(sel.value); });
+      cb.addEventListener('change', () => {
+        const next = cb.checked ? [...d.mechList, m] : d.mechList.filter((x) => mechKey(x) !== mechKey(m));
+        d.mechList = opts.filter((o) => next.some((x) => mechKey(x) === mechKey(o)));
+        sel.disabled = !cb.checked;
+      });
+      grid.append(h('label', { class: 'pick' }, cb, m), sel);
+    });
+    if (!opts.length) grid.append(h('p', { class: 'hint', text: 'No mechanics added yet.' }));
     return h('div', { class: 'stack' },
+      ladderDiagram(),
       d.id ? h('p', { class: 'banner', text: 'Editing an earlier entry' }) : null,
       field('Date', dateInput(d)),
-      field('Mechanics I worked on (tick one or more)', mechanicPicker(d, 'mechList')),
+      h('div', { class: 'field' }, h('span', { class: 'lbl', text: 'Mechanics I worked on, and how far I got' }),
+        h('p', { class: 'hint', text: 'Tick each mechanic, then choose the furthest step you reached on the progress ladder. It starts from the step you have already reached.' }),
+        grid),
       mechanicHint(),
       field('How the practice went', textArea(d, 'notes', 5, 3000)),
       field('How to improve the next practice', textArea(d, 'improve', 5, 3000)),
@@ -1840,7 +1797,7 @@
       ...session.data.protocols.map((rec) => ({ type: 'protocol', rec }))
     ].sort((a, b) => b.rec.date.localeCompare(a.rec.date));
     const nodes = [progressBlock()];
-    if (!entries.length) nodes.push(h('p', { class: 'empty', text: 'No entries yet. Run a 30-minute protocol or add a quick log.' }));
+    if (!entries.length) nodes.push(h('p', { class: 'empty', text: 'No entries yet. Save a practice plan and your progress appears here.' }));
     entries.forEach(({ type, rec }) => {
       if (type === 'log') {
         nodes.push(entryShell(
@@ -1943,7 +1900,7 @@
     },
     transfer: {
       title: 'Transfer training', unit: 'test', gen: genTransfer,
-      intro: (len) => lenWord(len) + ' of course-style games you can play at a driving range: ' + NUMWORD[len / 10] + ' ten-minute games drawn from seventeen. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique protocol under pressure. Your score is the number of balls that hit (Range Stableford, Three targets, Infinity levels, Two-ball test and Weakest link are scored in points instead), and you tick Passed when you reach the pass mark.'
+      intro: (len) => lenWord(len) + ' of course-style games you can play at a driving range: ' + NUMWORD[len / 10] + ' ten-minute games drawn from seventeen. Targets and clubs change on every ball, you use your full routine, there is a consequence for a miss, and your attention stays on the target. The first game always tests the new move from your technique practice under pressure. Your score is the number of balls that hit (Range Stableford, Three targets, Infinity levels, Two-ball test and Weakest link are scored in points instead), and you tick Passed when you reach the pass mark.'
     }
   };
 
@@ -3702,7 +3659,7 @@
 
     const nodes = entries.map(({ type, rec }) => {
       let tag; let sum; let body; let icon = type;
-      if (type === 'log') { tag = 'Quick log'; sum = h('span', { class: 'sum', text: rec.mechanics }); body = logBody(rec); icon = 'technique'; }
+      if (type === 'log') { tag = 'Practice plan'; sum = h('span', { class: 'sum', text: rec.mechanics }); body = logBody(rec); icon = 'technique'; }
       else if (type === 'protocol') {
         const fp = furthestPassed(rec);
         tag = 'Technique protocol, ' + protocolMinutes(rec) + ' min';
