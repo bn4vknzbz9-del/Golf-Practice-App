@@ -1720,16 +1720,19 @@
     const track = (ti) => h('div', { class: 'lad-track' },
       h('strong', { class: 'lad-name', text: TRACKS[ti] }),
       h('div', { class: 'lad-steps' }, STEP_SHORT.map((n, k) => h('div', { class: 'lad-step ' + (k === 0 ? 'f' : STEP_KIND[k] === 'Practice' ? 'p' : 'o') },
-        STEP_KIND[k] ? h('span', { class: 'lad-kind', text: STEP_KIND[k] + ' speed' }) : null,
-        h('span', { class: 'lad-main', text: n }),
-        h('span', { class: 'lad-note', text: STEP_NOTE[k] })))));
+        h('span', { class: 'lad-txt' }, h('span', { class: 'lad-main', text: n }), h('span', { class: 'lad-note', text: STEP_NOTE[k] })),
+        STEP_KIND[k] ? h('span', { class: 'lad-kind', text: STEP_KIND[k] + ' speed' }) : null))));
     return h('div', { class: 'card stack lad' },
       h('h3', { class: 'sub', text: 'Progress ladder' }),
-      h('p', { class: 'hint', text: 'Five good swings in a row ticks a step off. Each track skips every other tempo speed and stops at 24/8.' }),
+      h('p', { class: 'lad-desc', text: 'Work through the progress ladder below to master technique changes. Start with no ball and video your swings to ensure you are executing the swing change.' }),
+      h('p', { class: 'lad-desc', text: 'Perform five swings with the correct technique at each tempo speed to unlock the next level.' }),
+      h('p', { class: 'lad-desc', text: 'The progression will allow you to move to practicing with a ball and to ingrain the swing change at on course speed.' }),
       h('div', { class: 'lad-goal', text: 'Set your goal: diagnose first' }),
       h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
       track(0),
-      h('div', { class: 'lad-turn', 'aria-hidden': 'true' }, h('span', { class: 'lad-turn-b' }), h('span', { class: 'lad-turn-t', text: 'Add the ball, same speeds again' })),
+      h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
+      h('p', { class: 'lad-turn', text: 'Add the ball, then the same speeds again' }),
+      h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
       track(1));
   }
 
