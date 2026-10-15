@@ -1732,7 +1732,7 @@
         h('li', null, h('span', { class: 'lad-dot p' }), 'Practice speed'),
         h('li', null, h('span', { class: 'lad-dot o' }), 'On course speed')),
       track(0),
-      h('p', { class: 'lad-turn', text: '\u2193 Add the ball, then the same speeds again' }),
+      h('p', { class: 'lad-turn', text: 'Add the ball, then the same speeds again' }),
       track(1));
   }
 
