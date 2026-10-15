@@ -1720,19 +1720,19 @@
     const track = (ti) => h('div', { class: 'lad-track' },
       h('strong', { class: 'lad-name', text: TRACKS[ti] }),
       h('div', { class: 'lad-steps' }, STEP_SHORT.map((n, k) => h('div', { class: 'lad-step ' + (k === 0 ? 'f' : STEP_KIND[k] === 'Practice' ? 'p' : 'o') },
-        h('span', { class: 'lad-txt' }, h('span', { class: 'lad-main', text: n }), h('span', { class: 'lad-note', text: STEP_NOTE[k] })),
-        STEP_KIND[k] ? h('span', { class: 'lad-kind', text: STEP_KIND[k] + ' speed' }) : null))));
+        h('span', { class: 'lad-main', text: n }),
+        h('span', { class: 'lad-note', text: STEP_NOTE[k] })))));
     return h('div', { class: 'card stack lad' },
       h('h3', { class: 'sub', text: 'Progress ladder' }),
       h('p', { class: 'lad-desc', text: 'Work through the progress ladder below to master technique changes. Start with no ball and video your swings to ensure you are executing the swing change.' }),
       h('p', { class: 'lad-desc', text: 'Perform five swings with the correct technique at each tempo speed to unlock the next level.' }),
       h('p', { class: 'lad-desc', text: 'The progression will allow you to move to practicing with a ball and to ingrain the swing change at on course speed.' }),
       h('div', { class: 'lad-goal', text: 'Set your goal: diagnose first' }),
-      h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
+      h('ul', { class: 'lad-key', 'aria-label': 'Key' },
+        h('li', null, h('span', { class: 'lad-dot p' }), 'Practice speed'),
+        h('li', null, h('span', { class: 'lad-dot o' }), 'On course speed')),
       track(0),
-      h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
-      h('p', { class: 'lad-turn', text: 'Add the ball, then the same speeds again' }),
-      h('span', { class: 'lad-down', 'aria-hidden': 'true' }),
+      h('p', { class: 'lad-turn', text: '\u2193 Add the ball, then the same speeds again' }),
       track(1));
   }
 

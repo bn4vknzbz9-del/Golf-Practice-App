@@ -698,26 +698,25 @@ body[data-area="tiger5"] { --tint: #0a7aa0; --tint-fill: rgba(10, 122, 160, 0.12
 .chip.wide { grid-column: 1 / -1; }
 
 /* Progress ladder diagram (Technique, Practice plan): steps run down the page, with an arrow between each */
-.lad { gap: 12px; }
+.lad { gap: 10px; }
 .lad .sub { margin: 0; }
 .lad-desc { margin: 0; font-size: 15px; line-height: 1.4; }
-.lad-goal { text-align: center; font-weight: 600; font-size: 15px; padding: 12px; border-radius: 14px; background: var(--fill); }
-.lad-down { display: block; position: relative; width: 0; height: 16px; margin: 0 auto; border-left: 2px solid var(--label2); opacity: 0.4; }
-.lad-down::after { content: ''; position: absolute; left: -6px; bottom: 0; width: 8px; height: 8px; border-right: 2px solid var(--label2); border-bottom: 2px solid var(--label2); transform: rotate(45deg) translate(-1px, -1px); }
-.lad-track { display: grid; gap: 8px; }
-.lad-name { font-size: 18px; }
-.lad-steps { display: grid; gap: 14px; }
-.lad-step { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 14px; border-radius: 14px; background: var(--fill); }
-.lad-step.p { background: rgba(175, 82, 222, 0.16); }
-.lad-step.o { background: rgba(30, 127, 52, 0.16); }
-.lad-step:not(:last-child)::after { content: ''; position: absolute; left: 50%; bottom: -11px; width: 7px; height: 7px; border-right: 2px solid var(--label2); border-bottom: 2px solid var(--label2); opacity: 0.5; transform: translateX(-50%) rotate(45deg); }
-.lad-txt { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; min-width: 0; }
-.lad-main { font-size: 17px; font-weight: 700; }
-.lad-note { font-size: 13px; opacity: 0.75; }
-.lad-kind { flex: none; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: var(--a-technique); }
-.lad-step.o .lad-kind { color: #1e7f34; }
-@media (prefers-color-scheme: dark) { .lad-step.o { background: rgba(48, 209, 88, 0.2); } .lad-step.o .lad-kind { color: #30d158; } }
-.lad-turn { text-align: center; font-size: 13px; font-weight: 600; margin: 0; }
+.lad-goal { text-align: center; font-weight: 600; font-size: 14px; padding: 8px 12px; border-radius: 12px; background: var(--fill); }
+.lad-key { display: flex; justify-content: center; gap: 16px; margin: 0; padding: 0; list-style: none; font-size: 12px; font-weight: 600; }
+.lad-key li { display: flex; align-items: center; gap: 6px; }
+.lad-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--a-technique); }
+.lad-dot.o { background: #1e7f34; }
+.lad-track { display: grid; gap: 6px; }
+.lad-name { font-size: 16px; }
+.lad-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.lad-step { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 58px; padding: 6px 2px; border-radius: 12px; text-align: center; background: var(--fill); }
+.lad-step.p { background: rgba(175, 82, 222, 0.18); }
+.lad-step.o { background: rgba(30, 127, 52, 0.18); }
+.lad-step:not(:last-child)::after { content: ''; position: absolute; right: -9px; top: 50%; width: 6px; height: 6px; border-top: 2px solid var(--label2); border-right: 2px solid var(--label2); opacity: 0.5; transform: translateY(-50%) rotate(45deg); }
+.lad-main { font-size: 13px; font-weight: 700; line-height: 1.15; }
+.lad-note { font-size: 10px; line-height: 1.15; opacity: 0.75; }
+@media (prefers-color-scheme: dark) { .lad-step.o { background: rgba(48, 209, 88, 0.22); } .lad-dot.o { background: #30d158; } }
+.lad-turn { text-align: center; font-size: 12px; font-weight: 600; margin: 0; }
 /* Mechanics and how far you got */
 .reach { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 4px 12px; align-items: center; }
 .reach .lbl { margin: 0 0 0 4px; }
