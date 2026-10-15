@@ -2,6 +2,7 @@
 
 A private practice tracker with these sections:
 
+- **Guide**: the first tab. It explains what each part of the app is for, in the order you use them (Technique, Calibration, Transfer, Short game and Putting, Rounds and Level Up), with a button to jump to each, plus a short list of Tempo, Practice trends and Practice log.
 - **Technique**: two pages. **Practice plan** opens with the progress ladder diagram: Set your goal, then a No ball track and a With ball track, each running Freezer (pause at top), Ultra slow 120/40 and 36/12 (practice speeds), then 30/10 and 24/8 (on course speeds). Below it you tick the mechanics you worked on from your Settings list and, in a second column, choose how far you got on the ladder for each one. It starts from where that mechanic already is. Then write how the practice went and how to improve next time. **Progress tracker** shows a ladder for each mechanic with every step up to where you got ticked off, then your saved entries. Sessions saved with the earlier protocol still count, and can still be edited or deleted from the tracker.
 - **Calibration**: generated sessions of structured games, one club and one target throughout, from three games (30 minutes) up to six (1 hour), drawn from 32 games that are each 15 balls or fewer. Extra games go to the category you have practised least. Your score for each game is the number of balls that hit.
 - **Transfer**: generated sessions of range-friendly games, from three (30 minutes) up to six (1 hour), drawn from seventeen. Clubs and targets change on every ball, and the first game always tests your new move under pressure. Your score is the number of balls that hit (five games keep their own point scores: Range Stableford goes to 24, and Three targets, Infinity levels, Two-ball test and Weakest link go to 10), and you tick Passed at the pass mark.
@@ -101,7 +102,7 @@ Open any saved session in the Practice log, or in the History of its own tab, an
 
 **Short game and Putting** work like Transfer training: a 30 to 60 minute session of ten-minute games, each scored on the same slider with a pass mark. A short game session always starts with a course-style game such as Par 21: three easy, three medium and three hard chips, each chipped and then putted out before you move to the next, counting every shot, with par 21 for the nine. Par 21 is scored as 30 minus your total shots, so par (21 shots) is 9 points, one under is 10, and the slider shows your shots next to the points (for example "9 of 12 points (21 shots, par)"). It counts as passed at par or better. Every putting session starts with the Essential pace ladder, a distance-control game with five lives where you step back 6 inches after each putt that stops inside its gate, and the other games are drawn at random from the rest. Speed matters more than line in these games, so most of them score where the ball stops. Sessions appear in the Practice log and in Practice trends, and can be edited or deleted like any other.
 
-**Rounds** records a round: date, where it was, tees, holes (18 or 9), total score and par, with your score vs par worked out for you. It counts the Tiger 5 (bogeys or worse on par 5s, double bogeys or worse, 3-putts, missed greens with a 9 iron or less, and double chips), plus greens in regulation, drivers not in play, up and downs made and up and down chances. History lists every round, and Stats shows your averages (all rounds and the last five, per 18 holes) and charts of score vs par, Tiger 5 total, greens in regulation and up and down success.
+**Rounds** records a round: date, where it was, tees, holes (18 or 9), total score and par, with your score vs par worked out for you. It counts the five key mistakes (bogeys or worse on par 5s, double bogeys or worse, 3-putts, missed greens with a 9 iron or less, and double chips), plus greens in regulation, drivers not in play, up and downs made and up and down chances. History lists every round, and Stats shows your averages (all rounds and the last five, per 18 holes) and charts of score vs par, key mistakes total, greens in regulation and up and down success.
 
 The tab bar scrolls sideways now that there are nine tabs; the current tab always scrolls into view.
 
@@ -111,14 +112,14 @@ The Short game tab has a toggle between **Short game area** and **Simulator**. T
 
 The progress ladders on the Technique tab are headed Practice Ladder Overview.
 
-## Tiger 5 trends
+## Level Up
 
-The Tiger 5 tab turns your saved rounds into trends and shows where you are weakest. Choose the handicap you want to compare with (0, 5, 10, 15 or 20). The tab always opens comparing with a 5 handicap and whether to look at your last five rounds or all of them. Every number is per 18 holes, so a nine-hole round counts for half.
+The Level Up tab turns your saved rounds into trends and shows where you are weakest. Choose the handicap you want to compare with (0, 5, 10, 15 or 20). The tab always opens comparing with a 5 handicap and whether to look at your last five rounds or all of them. Every number is per 18 holes, so a nine-hole round counts for half.
 
-- **Top card:** your Tiger 5 total against a golfer at the chosen handicap, the handicap your results match, how much it moved since the five rounds before, and two stacked bars showing what your Tiger 5 is made of next to the benchmark's.
+- **Top card:** your key mistakes total against a golfer at the chosen handicap, the handicap your results match, how much it moved since the five rounds before, and two stacked bars showing what your key mistakes are made of next to the benchmark's.
 - **Work on first:** your biggest gaps in order, with roughly how many shots a round each is worth, a suggestion and a button that takes you to the tab that practises it (for example 3-putts lead to Putting and its Essential pace ladder).
-- **Where you stand:** every stat on one handicap scale from 0 to 20. The dot is the handicap your results match and the highlighted mark is the one you chose, so a dot to the right of it is a weakness. The Tiger 5 are bogeys or worse on par 5s, double bogeys or worse, 3-putts, missed greens with a 9 iron or less and double chips. The other stats are greens in regulation, up and down success, drivers not in play and score vs par.
-- **Over time:** your Tiger 5 total for each round, and a small chart for every stat with a dashed line at the benchmark.
+- **Where you stand:** every stat on one handicap scale from 0 to 20. The dot is the handicap your results match and the highlighted mark is the one you chose, so a dot to the right of it is a weakness. It is one list. The five key mistakes are bogeys or worse on par 5s, double bogeys or worse, 3-putts, missed greens with a 9 iron or less and double chips. The other stats are greens in regulation, up and down success, drivers not in play and score vs par.
+- **Over time:** your key mistakes total for each round, and a small chart for every stat with a dashed line at the benchmark.
 
 **Where the benchmarks come from.** Doubles or worse, 3-putts, greens in regulation, up and down success and score are averages from large sets of tracked amateur rounds. Four stats are built from the closest tracked data:
 
@@ -131,7 +132,7 @@ The About the benchmarks section at the bottom of the tab explains each one. Dif
 
 ## Bottom tabs
 
-Each tab at the bottom wears the colour of its page: Technique purple, Calibration blue, Transfer orange, Short game sand, Putting green, Tempo pink, Rounds gold, Tiger 5 cyan, Practice trends teal and Practice log indigo. The tabs are sized to be easy to see and tap. Each tab is as wide as its label, with the same gap between every label and the next along the whole bar. The gap is worked out for your screen so that five tabs and part of the sixth show at once, so the next tab always peeks in, and the bar scrolls sideways for the rest. (On a screen wide enough for all ten, they spread evenly across it.) The current tab is shown with a soft coloured pill behind its icon and a heavier label. The colours are the darker text shades in light mode and the brighter ones in dark mode, so the small labels stay readable.
+Each tab at the bottom wears the colour of its page: Technique purple, Calibration blue, Transfer orange, Short game sand, Putting green, Tempo pink, Rounds gold, Level Up cyan, Practice trends teal and Practice log indigo. The tabs are sized to be easy to see and tap. Each tab is as wide as its label, with the same gap between every label and the next along the whole bar. The gap is worked out for your screen so that five tabs and part of the sixth show at once, so the next tab always peeks in, and the bar scrolls sideways for the rest. (On a screen wide enough for all ten, they spread evenly across it.) The current tab is shown with a soft coloured pill behind its icon and a heavier label. The colours are the darker text shades in light mode and the brighter ones in dark mode, so the small labels stay readable.
 
 ## Where you stand
 
@@ -141,15 +142,15 @@ The gap to your goal is written in plain terms. Greens in regulation are shown a
 
 ## Route to your target handicap
 
-At the bottom of the Tiger 5 page a table shows the route to the handicap you chose at the top of the page (0, 5, 10, 15 or 20), and it changes when you change that choice. For greens in regulation, drivers not in play, 3-putts and up and down % it shows your result, the target's figure and the gap in shots a round, worked out with the same shot values as Where you stand. A stat that is already at or better than the target reads Ahead, and the last row adds up the shots still to find.
+At the bottom of the Level Up page a table shows the route to the handicap you chose at the top of the page (0, 5, 10, 15 or 20), and it changes when you change that choice. For greens in regulation, drivers not in play, 3-putts and up and down % it shows your result, the target's figure and the gap in shots a round, worked out with the same shot values as Where you stand. A stat that is already at or better than the target reads Ahead, and the last row adds up the shots still to find.
 
-## Export the Tiger 5 report as a PDF
+## Export the Level Up report as a PDF
 
-At the very bottom of the Tiger 5 page, Export as PDF makes a PDF of the report for the rounds and handicap you have selected. It has the top summary and what each stat is made of, Work on first, the route to your target handicap, every stat on the handicap ruler, what each handicap typically makes, and the rounds included. On an iPhone it opens the share sheet, where you can send it by message or email, or choose Save to Files. Where sharing is not available the PDF downloads instead. The PDF is made on your device and nothing is uploaded.
+At the very bottom of the Level Up page, Export as PDF makes a PDF of the report for the rounds and handicap you have selected. It has the top summary and what each stat is made of, Work on first, the route to your target handicap, every stat on the handicap ruler, what each handicap typically makes, and the rounds included. On an iPhone it opens the share sheet, where you can send it by message or email, or choose Save to Files. Where sharing is not available the PDF downloads instead. The PDF is made on your device and nothing is uploaded.
 
 ## Last 12 months, a new order and a tidier PDF
 
-The Tiger 5 page has three choices for which rounds to use: Last 5 rounds, Last 12 months and All rounds. Last 12 months uses every round dated in the past year and compares the change with the 12 months before that. The page runs: top card, Work on first, Route to your target, Where you stand, Over time, Share this report and, last of all, About the benchmarks. The PDF no longer includes the table of what each handicap typically makes.
+The Level Up page has three choices for which rounds to use: Last 5 rounds, Last 12 months and All rounds. Last 12 months uses every round dated in the past year and compares the change with the 12 months before that. The page runs: top card, Work on first, Route to your target, Where you stand, Over time, Share this report and, last of all, About the benchmarks. The PDF no longer includes the table of what each handicap typically makes.
 
 The icon of the selected tab at the bottom now has its coloured highlight centred behind the whole icon.
 
@@ -173,6 +174,6 @@ The Tempo page starts on the 3:1 long game ratio at the 30/10 speed (180 BPM). I
 
 On the 3:1 long game the preset speeds are in two groups, each with a name. Technique Practice Speeds are 39/13 Slow, 36/12 Medium and 33/11 Quicker. On Course Speeds are 30/10 Slowest, 27/9 Slow, 24/8 Medium, 21/7 Fast and 18/6 Fastest. The 2:1 short game keeps its single list of presets (20/10, 18/9, 16/8 and 14/7). The speeds themselves, and the timing of the tones, have not changed.
 
-### Smoothie (ultra slow)
+### Ultra slow
 
-The first button under Technique Practice Speeds is Smoothie (ultra slow), 120/40: a 4 second backswing (3 beats of 1.33 seconds, which is 45 BPM), then 1.55 seconds from the top to impact, and a rest as long as the whole swing, 5.55 seconds. 45 BPM is below the dial's 80 BPM end, so the Smoothie button sets it and the dial rests at its slow end while the centre shows 45. Turning the dial, or the arrow keys, takes it back onto the dial's scale from 80 BPM.
+The first button under Technique Practice Speeds is Ultra slow, 120/40: a 4 second backswing (3 beats of 1.33 seconds, which is 45 BPM), then 1.55 seconds from the top to impact, and a rest as long as the whole swing, 5.55 seconds. 45 BPM is below the dial's 80 BPM end, so the Ultra slow button sets it and the dial rests at its slow end while the centre shows 45. Turning the dial, or the arrow keys, takes it back onto the dial's scale from 80 BPM.

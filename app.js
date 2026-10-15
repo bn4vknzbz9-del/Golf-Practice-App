@@ -340,7 +340,7 @@
   const ANCHOR = 'New move under pressure';
   TRANSFER_BASE.push(G(ANCHOR,
     'Use the mechanic from your latest technique practice. Three targets with ' + T(20) + ' wide windows, three clubs and, if you can, your phone to film.',
-    '12 balls. Before each ball, draw the target and the club. Take one smoothie rehearsal swing with the new move beside the ball, step in, then hit with your attention on the target. Film as many as you can.',
+    '12 balls. Before each ball, draw the target and the club. Take one ultra slow rehearsal swing with the new move beside the ball, step in, then hit with your attention on the target. Film as many as you can.',
     'Target and club change on every ball, never the same club twice in a row.',
     'Balls where the new move showed up and the ball finished inside a ' + T(20) + ' window, out of 12. Mark it passed at 6 or more.',
     'Pattern transfer', 12));
@@ -843,7 +843,7 @@
   function loadSync() {
     try { const v = Number(localStorage.getItem('golfpractice.tempo.sync.v1')); return Number.isFinite(v) ? Math.min(600, Math.max(-100, Math.round(v))) : 0; } catch (e) { return 0; }
   }
-  const T5_DEFAULT_LEVEL = 5; // the handicap the Tiger 5 tab compares with each time it is opened
+  const T5_DEFAULT_LEVEL = 5; // the handicap the Level Up tab compares with each time it is opened
   const freshUi = () => ({ tab: 'technique', mode: 'new', logFilter: 'all', place: 'area', t5: { level: T5_DEFAULT_LEVEL, win: 'last5' }, tempo: { ratio: '3:1', bpm: 180 /* the 30/10 speed */, rest: 4, sound: true, ticks: false, sync: loadSync() }, conv: { dist: 150, width: 20 }, len: { technique: 30, calibration: 30, transfer: 30, shortgame: 30, putting: 30 } });
   let ui = freshUi();
   let drafts = freshDrafts();
@@ -1062,6 +1062,7 @@
      App shell
      ========================================================== */
   const ICONS = {
+    guide: ['M12 3a9 9 0 1 0 0.01 0', 'M12 11v5.5', 'M12 7.7h.01'],
     technique: ['M4 7h9', 'M17 7h3', 'M4 17h3', 'M11 17h9', 'M15 4.5v5', 'M9 14.5v5'],
     calibration: ['M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18', 'M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8', 'M12 2v3', 'M12 19v3', 'M2 12h3', 'M19 12h3'],
     transfer: ['M6 21V3.5', 'M6 4.5h12l-3 4l3 4H6'],
@@ -1099,7 +1100,7 @@
       s('path', { d: 'M22 64h24' }));
   }
 
-  const TABS = [['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['shortgame', 'Short game'], ['putting', 'Putting'], ['tempo', 'Tempo'], ['rounds', 'Rounds'], ['tiger5', 'Tiger 5'], ['trends', 'Practice trends'], ['log', 'Practice log']];
+  const TABS = [['guide', 'Guide'], ['technique', 'Technique'], ['calibration', 'Calibration'], ['transfer', 'Transfer'], ['shortgame', 'Short game'], ['putting', 'Putting'], ['tempo', 'Tempo'], ['rounds', 'Rounds'], ['tiger5', 'Level Up'], ['trends', 'Practice trends'], ['log', 'Practice log']];
 
   // Fill the left part of each slider track, as iOS does. Runs after each render and whenever a slider moves.
   function paintRange(el) {
@@ -1135,6 +1136,7 @@
     requestPersist();
     let view;
     if (ui.tab === 'settings') view = settingsView();
+    else if (ui.tab === 'guide') view = guideView();
     else if (ui.tab === 'technique') view = techniqueView();
     else if (ui.tab === 'tempo') view = tempoView();
     else if (ui.tab === 'trends') view = trendsView();
@@ -1151,13 +1153,13 @@
       TABS.map(([id, label]) => h('button', {
         type: 'button', class: 'tab t-' + id,
         'aria-current': ui.tab === id ? 'page' : false,
-        onclick: () => { if (id === 'tiger5' && ui.tab !== 'tiger5') ui.t5.level = T5_DEFAULT_LEVEL; ui.tab = id; renderApp(true); } // Tiger 5 opens comparing with a 5 handicap
+        onclick: () => openTab(id)
       }, h('span', { class: 'tab-ico' }, tabIcon(id)), h('span', { class: 'tab-label', text: label }))));
     const reminder = backupDue() ? h('div', { class: 'stack reminder' },
       h('p', { class: 'banner', text: 'Your log lives only on this device. Back it up so clearing Safari history cannot erase it.' }),
       h('div', { class: 'actions' },
         h('button', { type: 'button', class: 'primary', text: 'Back up now', onclick: async () => { if (await exportBackup()) { toast('Backup saved'); renderApp(); } } }))) : null;
-    if (['technique', 'calibration', 'transfer', 'shortgame', 'putting', 'tempo', 'rounds', 'tiger5'].includes(ui.tab)) document.body.setAttribute('data-area', ui.tab); // the accent colour follows the tab
+    if (['guide', 'technique', 'calibration', 'transfer', 'shortgame', 'putting', 'tempo', 'rounds', 'tiger5'].includes(ui.tab)) document.body.setAttribute('data-area', ui.tab); // the accent colour follows the tab
     else document.body.removeAttribute('data-area');
     root.replaceChildren(header, h('main', null, reminder, view), nav);
     fitTabs(nav);
@@ -1617,6 +1619,47 @@
     ui.len[kind] = len;
     if (d) drafts[kind] = { id: null, date: d.date, items: META[kind].gen(len), timer: { base: 0, startedAt: null }, len, place: d.place };
     renderApp();
+  }
+
+  // Open a tab. The Level Up tab opens comparing with a 5 handicap each time.
+  function openTab(id) {
+    if (id === 'tiger5' && ui.tab !== 'tiger5') ui.t5.level = T5_DEFAULT_LEVEL;
+    ui.tab = id;
+    renderApp(true);
+  }
+
+  /* ==========================================================
+     Guide: what each part of the app is for
+     ========================================================== */
+  const tabLabel = (id) => (TABS.find((t) => t[0] === id) || [id, id])[1];
+  function guideView() {
+    const open = (id, many) => h('button', { type: 'button', class: 'ghost guide-go t-' + id, text: (many ? '' : 'Open ') + tabLabel(id), 'aria-label': 'Open ' + tabLabel(id), onclick: () => openTab(id) });
+    const step = (n, ids, tagline, body) => h('li', { class: 'guide-step area-' + ids[0] },
+      h('div', { class: 'guide-rail' }, h('span', { class: 'guide-num', text: String(n) })),
+      h('div', { class: 'guide-card' },
+        h('div', { class: 'guide-tiles' }, ids.map((id) => iconTile(id))),
+        h('h3', { text: ids.map(tabLabel).join(' and ') }),
+        h('p', { class: 'guide-tag', text: tagline }),
+        body ? h('p', { class: 'guide-body', text: body }) : null,
+        h('div', { class: 'guide-actions' }, ids.map((id) => open(id, ids.length > 1)))));
+    const extra = (id, text) => h('li', { class: 'guide-extra' }, iconTile(id), h('div', null, h('strong', { text: tabLabel(id) }), h('span', { text })), h('button', { type: 'button', class: 'link', text: 'Open', 'aria-label': 'Open ' + tabLabel(id), onclick: () => openTab(id) }));
+    return h('section', null,
+      pageTitle('guide', 'Guide'),
+      h('div', { class: 'guide-hero' },
+        appIcon(),
+        h('h3', { text: 'Your road to scratch' }),
+        h('p', { text: 'Build the change, build the skill, take it to the course, then track the results. Pick the area your game needs the most work, but make sure you don\u2019t spend all your time on one area. Balance is key.' })),
+      h('ol', { class: 'guide-steps' },
+        step(1, ['technique'], 'Build swing changes.', 'Work one swing change at a time up the progress ladder, from no ball to hitting balls at on course speed.'),
+        step(2, ['calibration'], 'Build skill.', 'Drills that train your strike, low point and clubface direction.'),
+        step(3, ['transfer'], 'Take your new technique and skills to a course-like environment.', 'This prepares you for playing, and it is essential to improving your on-course play.'),
+        step(4, ['shortgame', 'putting'], 'Improve your performance under pressure in on-course style games.', null),
+        step(5, ['rounds', 'tiger5'], 'Track your rounds easily and see where you need to improve to hit your handicap target.', null)),
+      h('h3', { class: 'sub guide-sub', text: 'Also in the app' }),
+      h('ul', { class: 'guide-extras' },
+        extra('tempo', 'A swing tempo trainer, with practice and on course speeds.'),
+        extra('trends', 'Your hours and results over time.'),
+        extra('log', 'Everything you have saved, in one list.')));
   }
 
   function techniqueView() {
@@ -2264,7 +2307,7 @@
       // The preset speeds are shown in two groups, each speed with a plain name.
       groups: [
         // Smoothie is below the dial's scale (4 seconds from takeaway to top is 45 BPM), so it is set by its button; the dial then rests at its slow end.
-        { title: 'Technique Practice Speeds', cols: 3, speeds: [[120, 40, 'Smoothie (ultra slow)', true], [39, 13, 'Slow'], [36, 12, 'Medium'], [33, 11, 'Quicker']] },
+        { title: 'Technique Practice Speeds', cols: 3, speeds: [[120, 40, 'Ultra slow', true], [39, 13, 'Slow'], [36, 12, 'Medium'], [33, 11, 'Quicker']] },
         { title: 'On Course Speeds', cols: 5, speeds: [[30, 10, 'Slowest'], [27, 9, 'Slow'], [24, 8, 'Medium'], [21, 7, 'Fast'], [18, 6, 'Fastest']] }
       ]
     },
@@ -2324,7 +2367,7 @@
     const slow = list[0][1];
     const fast = list[list.length - 1][1];
     const hit = list.find(([, d]) => Math.abs(downFrames - d) <= 0.3);
-    if (ratio === '3:1' && Math.abs(bpm - SMOOTHIE_BPM) < 0.01) return 'Matches the Smoothie (ultra slow) preset.';
+    if (ratio === '3:1' && Math.abs(bpm - SMOOTHIE_BPM) < 0.01) return 'Matches the Ultra slow preset.';
     if (hit) return 'Matches the ' + hit[0] + '/' + hit[1] + ' preset.';
     if (downFrames > slow) return ratio === '3:1' ? 'Slower than the Technique Practice Speeds (' + list[0][0] + '/' + slow + '), good for learning the feel.' : 'Slower than the slowest preset (' + list[0][0] + '/' + slow + '), good for learning the feel.';
     if (downFrames < fast) return ratio === '3:1' ? 'Faster than the fastest On Course Speed (' + list[list.length - 1][0] + '/' + fast + ').' : 'Faster than the fastest preset (' + list[list.length - 1][0] + '/' + fast + ').';
@@ -2803,8 +2846,8 @@
 
 
   /* ==========================================================
-     Rounds: scores and the Tiger 5
-     The Tiger 5 are five things Tiger Woods tries to avoid in a round. Here the fourth is "missed greens with a 9 iron or less".
+     Rounds: scores and the five key mistakes
+     The five key mistakes are things to avoid in a round. Here the fourth is "missed greens with a 9 iron or less".
      ========================================================== */
   const T5 = [
     ['parFiveBogeys', 'Bogeys or worse on par 5s', 'Par 5s where you made bogey or worse.'],
@@ -2825,7 +2868,7 @@
       line('Tees', r.tees || 'Not recorded'),
       line('Score', r.score + ' on a par ' + r.par + ' (' + vsParText(vsPar(r)) + '), ' + r.holes + ' holes'),
       h('div', { class: 'hist-item' },
-        h('strong', { text: 'Tiger 5: ' + tiger5(r) }),
+        h('strong', { text: 'Key mistakes: ' + tiger5(r) }),
         T5.map(([k, label]) => h('p', { text: label + ': ' + r[k] }))),
       h('div', { class: 'hist-item' },
         line('Greens in regulation', r.gir + ' of ' + r.holes + ' (' + pctText(r.gir, r.holes) + ')'),
@@ -2874,7 +2917,7 @@
     function refresh() {
       const sc = num0(d.score); const pr = num0(d.par);
       sumEl.textContent = sc > 0 && pr > 0 ? 'Score ' + sc + ' on a par ' + pr + ': ' + vsParText(sc - pr) + ' vs par' : 'Enter your score and the par to see your score vs par.';
-      t5El.textContent = 'Tiger 5 total: ' + T5.reduce((a, [k]) => a + d[k], 0);
+      t5El.textContent = 'Key mistakes: ' + T5.reduce((a, [k]) => a + d[k], 0);
     }
     function counter(key, label, hint) {
       const out = h('output', { class: 'score-out', text: String(d[key]) });
@@ -2940,7 +2983,7 @@
       holeBtns,
       h('div', { class: 'two-up' }, field('Total score', numInput('score', 'Total score', 3)), field('Par', numInput('par', 'Course par', 2))),
       sumEl,
-      h('h3', { class: 'sub', text: 'Tiger 5' }),
+      h('h3', { class: 'sub', text: 'Key mistakes' }),
       h('p', { class: 'hint', text: 'Count each of these during the round. Fewer is better.' }),
       h('div', { class: 'panel count-list' }, T5.map(([k, label, hint]) => counter(k, label, hint))),
       t5El,
@@ -2972,7 +3015,7 @@
     const rowsDef = [
       ['Rounds', (rs) => String(rs.length)],
       ['Score vs par (18 holes)', (rs) => { const v = per18(rs, vsPar); return v == null ? '\u2013' : (v > 0 ? '+' : v < 0 ? '\u2212' : '') + Math.abs(Math.round(v * 10) / 10); }],
-      ['Tiger 5 total', (rs) => one(per18(rs, tiger5))],
+      ['Key mistakes', (rs) => one(per18(rs, tiger5))],
       ...T5.map(([k, label]) => ['\u00a0\u00a0' + label, (rs) => one(per18(rs, (r) => r[k]))]),
       ['Greens in regulation', (rs) => pctText(rs.reduce((a, r) => a + r.gir, 0), rs.reduce((a, r) => a + r.holes, 0))],
       ['Drivers not in play', (rs) => one(per18(rs, (r) => r.driversOut))],
@@ -2988,10 +3031,10 @@
       : null);
     return h('div', { class: 'stack' },
       h('div', { class: 'card stack' }, sectionHead('rounds', 'Averages'), table,
-        h('p', { class: 'hint', text: 'Counts are scaled to 18 holes, so a nine-hole round counts for half. Fewer is better for the Tiger 5, drivers not in play and score vs par.' })),
+        h('p', { class: 'hint', text: 'Counts are scaled to 18 holes, so a nine-hole round counts for half. Fewer is better for the key mistakes, drivers not in play and score vs par.' })),
       all.length > 1 ? null : h('p', { class: 'hint', text: 'Save two or more rounds to see charts over time.' }),
       chart('Score vs par', all.map((r) => (r.score - r.par) / r.holes * 18), { fmt: (v) => vsParText(Math.round(v)) }, 'Lower is better. Nine-hole rounds are doubled.'),
-      chart('Tiger 5 total', all.map((r) => tiger5(r) / r.holes * 18), { min: 0 }, 'Lower is better. Per 18 holes.'),
+      chart('Key mistakes', all.map((r) => tiger5(r) / r.holes * 18), { min: 0 }, 'Lower is better. Per 18 holes.'),
       chart('Greens in regulation', all.map((r) => (r.gir / r.holes) * 100), { min: 0, max: 100, noPad: true, fmt: (v) => Math.round(v) + '%' }),
       chart('Up and down success', all.map((r) => (r.udChances > 0 ? (r.udMade / r.udChances) * 100 : null)), { min: 0, max: 100, noPad: true, fmt: (v) => Math.round(v) + '%' }, 'Rounds with no up and down chances recorded are left out.'));
   }
@@ -3006,7 +3049,7 @@
 
 
   /* ==========================================================
-     Tiger 5 trends: your Tiger 5 and other stats over time, set against what golfers at 0, 5, 10, 15 and 20 handicaps typically make.
+     Level Up: your key mistakes and other stats over time, set against what golfers at 0, 5, 10, 15 and 20 handicaps typically make.
      All numbers are per 18 holes, so a nine-hole round counts for half.
      ========================================================== */
   const T5_LEVELS = [0, 5, 10, 15, 20];
@@ -3138,7 +3181,7 @@
   }
 
   /* ==========================================================
-     The Tiger 5 report as a PDF. A small PDF writer (A4, the standard Helvetica fonts, plain shapes and text) so nothing else is needed.
+     The Level Up report as a PDF. A small PDF writer (A4, the standard Helvetica fonts, plain shapes and text) so nothing else is needed.
      ========================================================== */
   const PDF_W = 595.28; const PDF_H = 841.89;
   const HELV_W = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
@@ -3242,7 +3285,7 @@
 
     page();
     // ---- title ----
-    doc.text('Tiger 5 report', M, y + 24, 26, INK, { bold: true });
+    doc.text('Level Up report', M, y + 24, 26, INK, { bold: true });
     doc.text('Road To Scratch', M + CW, y + 10, 10, GRAY, { align: 'right' });
     doc.text(r.generated, M + CW, y + 24, 10, GRAY, { align: 'right' });
     y += 36;
@@ -3255,7 +3298,7 @@
       ensure(H);
       doc.round(M, y, CW, H, 12, '#f2f2f7');
       const x0 = M + 16; let yy = y + 16;
-      doc.text('Your Tiger 5 per 18 holes', x0, yy + 9, 10, GRAY, { bold: true });
+      doc.text('Your key mistakes per 18 holes', x0, yy + 9, 10, GRAY, { bold: true });
       doc.text(r.total, x0, yy + 48, 40, ST[r.totalStatus], { bold: true });
       doc.text(r.levelLabel, M + CW - 16, yy + 9, 10, GRAY, { bold: true, align: 'right' });
       doc.text(r.benchTotal, M + CW - 16, yy + 36, 24, INK, { bold: true, align: 'right' });
@@ -3355,8 +3398,7 @@
       y += 72;
     };
     doc.use(doc.count() - 1);
-    para('Tiger 5', 10.5, GRAY, CW, true); r.rulers.tiger.forEach(drawRuler);
-    para('Other stats', 10.5, GRAY, CW, true); r.rulers.other.forEach(drawRuler);
+    r.rulers.all.forEach(drawRuler);
 
     // ---- the rounds behind it ----
     heading('Rounds included');
@@ -3379,8 +3421,8 @@
       if (r.moreRounds) { y += 4; para(r.moreRounds, 9, GRAY); } }
 
     const total = doc.count();
-    for (let i = 0; i < total; i++) { doc.use(i); doc.text('Road To Scratch \u00b7 Tiger 5 report \u00b7 page ' + (i + 1) + ' of ' + total, PDF_W / 2, PDF_H - 24, 8, GRAY, { align: 'center' }); }
-    return doc.build('Tiger 5 report');
+    for (let i = 0; i < total; i++) { doc.use(i); doc.text('Road To Scratch \u00b7 Level Up report \u00b7 page ' + (i + 1) + ' of ' + total, PDF_W / 2, PDF_H - 24, 8, GRAY, { align: 'center' }); }
+    return doc.build('Level Up report');
   }
 
   // Uses the iPhone share sheet when available (Save to Files, Mail, Messages), otherwise downloads the file.
@@ -3423,9 +3465,7 @@
     const benchTable = h('table', { class: 'stats-table bench-table' },
       h('thead', null, h('tr', null, h('th', { text: 'Per 18 holes' }), T5_LEVELS.map((v) => h('th', { text: String(v) })))),
       h('tbody', null,
-        T5_FIVE.map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: fmt1(v) })))),
-        h('tr', { class: 'total' }, h('th', { scope: 'row', text: 'Tiger 5 total' }), T5_TOTAL.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: fmt1(v) }))),
-        T5_METRICS.filter((m) => !m.tiger).map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v)) }))))));
+        T5_METRICS.map((m) => h('tr', null, h('th', { scope: 'row', text: m.label }), m.vals.map((v, i) => h('td', { class: T5_LEVELS[i] === level ? 'cur' : '', text: (m.kind === 'pct' ? Math.round(v) + '%' : m.kind === 'vspar' ? vsParText(Math.round(v)) : fmt1(v)) }))))));
     const about = disclosure('t5-about', 'About the benchmarks', 'Hide the benchmarks', [
       benchTable,
       h('p', { class: 'hint', text: 'The columns are the handicap. Bogeys or worse on par 5s, missed greens, double chips and drivers not in play are built from related tracked data, and the notes below say how each was built. The rest are averages from large sets of tracked amateur rounds. Different sets of tracked rounds give different figures, for example scratch golfers average anywhere from about 0.5 to 1.7 three-putts a round.' }),
@@ -3434,20 +3474,20 @@
 
     if (!all.length) {
       return h('section', { class: 'stack' },
-        pageTitle('tiger5', 'Tiger 5'),
+        pageTitle('tiger5', 'Level Up'),
         controls,
-        h('p', { class: 'empty', text: 'No rounds yet. Save a round in the Rounds tab and your Tiger 5, greens, up and downs and score appear here, set against what golfers at each handicap typically make.' }),
+        h('p', { class: 'empty', text: 'No rounds yet. Save a round in the Rounds tab and your key mistakes, greens, up and downs and score appear here, set against what golfers at each handicap typically make.' }),
         h('div', { class: 'card stack' }, sectionHead('tiger5', 'What each handicap typically makes'), benchTable));
     }
     if (!rs.length) { // there are rounds, but none in the window you chose
       return h('section', { class: 'stack' },
-        pageTitle('tiger5', 'Tiger 5'),
+        pageTitle('tiger5', 'Level Up'),
         controls,
         h('p', { class: 'empty', text: 'No rounds in the last 12 months. Choose All rounds to see everything you have saved.' }),
         h('div', { class: 'card stack' }, about));
     }
 
-    // ---- the top card: your Tiger 5 total against the benchmark, with what it is made of ----
+    // ---- the top card: your key mistakes total against the benchmark, with what it is made of ----
     const total = t5Total(rs);
     const tb = benchTotal(level);
     const totalHcp = handicapOf(T5_TOTAL, total);
@@ -3465,12 +3505,12 @@
     const hero = h('div', { class: 'card stack t5-hero' },
       h('div', { class: 't5-hero-top' },
         h('div', null,
-          h('div', { class: 't5-small', text: 'Your Tiger 5 per 18 holes' }),
+          h('div', { class: 't5-small', text: 'Your key mistakes per 18 holes' }),
           h('div', { class: 't5-big st-' + totalStatus, text: fmt1(total) })),
         h('div', { class: 't5-hero-side' },
           h('div', { class: 't5-small', text: level === 0 ? 'Scratch' : capFirst(hcpN(level)) }),
           h('div', { class: 't5-mid', text: fmt1(tb) }))),
-      h('p', { class: 't5-line' }, 'Over ' + periodWords + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with '), h('strong', { text: hcpWords(totalHcp) }), '.',
+      h('p', { class: 't5-line' }, 'Over ' + periodWords + ', your key mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with '), h('strong', { text: hcpWords(totalHcp) }), '.',
         diff != null && Math.abs(diff) >= 0.05 ? ' ' : null,
         diff != null && Math.abs(diff) >= 0.05 ? h('span', { class: 'delta ' + (diff < 0 ? 'good' : 'bad'), text: (diff < 0 ? '\u25BC ' : '\u25B2 ') + fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than ' + prevWords }) : null),
       bar('You', yourVals, true),
@@ -3537,10 +3577,7 @@
     const rulers = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Where you stand'),
       h('p', { class: 'hint', text: 'Each stat sits on a handicap scale where left is better and right is worse. The green or red arrow beside each result is the change since ' + prevWords + '.' }),
-      h('h3', { class: 'sub', text: 'Tiger 5' }),
-      T5_FIVE.map(ruler),
-      h('h3', { class: 'sub', text: 'Other stats' }),
-      T5_METRICS.filter((m) => !m.tiger).map(ruler));
+      T5_METRICS.map(ruler));
 
     // ---- over time ----
     const recent = all.slice(-12);
@@ -3556,9 +3593,9 @@
         h('div', { class: 'mini-foot', text: 'Dashed: ' + hcpOf(level) + ', ' + t5Fmt(m, b) }));
     };
     const totalChart = all.length > 1
-      ? [valueChart(all.slice(-20).map((r) => r.date), all.slice(-20).map((r) => (tiger5(r) / r.holes) * 18), 'Tiger 5 total per round', { min: 0, noPad: true, bench: tb, benchLabel: lvStr(level) + ' hcp ' + fmt1(tb) }),
-        h('p', { class: 'hint', text: 'Your Tiger 5 total for each round, per 18 holes, against ' + hcpOf(level) + '. Lower is better.' })]
-      : h('p', { class: 'hint', text: 'Save two or more rounds to see your Tiger 5 over time.' });
+      ? [valueChart(all.slice(-20).map((r) => r.date), all.slice(-20).map((r) => (tiger5(r) / r.holes) * 18), 'Key mistakes per round', { min: 0, noPad: true, bench: tb, benchLabel: lvStr(level) + ' hcp ' + fmt1(tb) }),
+        h('p', { class: 'hint', text: 'Your key mistakes total for each round, per 18 holes, against ' + hcpOf(level) + '. Lower is better.' })]
+      : h('p', { class: 'hint', text: 'Save two or more rounds to see your key mistakes over time.' });
     const over = h('div', { class: 'card stack' },
       sectionHead('tiger5', 'Over time'),
       totalChart,
@@ -3599,7 +3636,7 @@
         generated: pdate(today()),
         subtitle: (win === 'all' ? 'All ' + rs.length + (rs.length === 1 ? ' round' : ' rounds') : win === 'last12' ? 'Last 12 months, ' + rs.length + (rs.length === 1 ? ' round' : ' rounds') : 'Last ' + rs.length + (rs.length === 1 ? ' round' : ' rounds')) + ' \u00b7 ' + (pdate(rs[0].date) === pdate(rs[rs.length - 1].date) ? pdate(rs[0].date) : pdate(rs[0].date) + ' to ' + pdate(rs[rs.length - 1].date)) + ' \u00b7 per 18 holes \u00b7 compared with ' + goalWords,
         total: fmt1(total), totalStatus, benchTotal: fmt1(tb), levelLabel: level === 0 ? 'Scratch' : capFirst(hcpN(level)),
-        summary: 'Over ' + periodWords + ', your Tiger 5 mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with ') + hcpWords(totalHcp) + '.',
+        summary: 'Over ' + periodWords + ', your key mistakes are ' + (totalHcp > 20.5 || totalHcp < -0.5 ? '' : 'in line with ') + hcpWords(totalHcp) + '.',
         delta: diff != null && Math.abs(diff) >= 0.05 ? { good: diff < 0, text: fmt1(Math.abs(diff)) + ' ' + (diff < 0 ? 'fewer' : 'more') + ' than ' + prevWords } : null,
         parts: T5_FIVE.map((m) => ({ short: m.short, color: m.color })),
         bars: [{ label: 'You', vals: yourVals }, { label: hcpShort(level), vals: T5_FIVE.map((m) => bench(m, level)) }],
@@ -3612,7 +3649,7 @@
         routeTotal: fmt1(routeTotal),
         rulerHint: 'Each stat sits on a handicap scale where left is better and right is worse. The dot labelled You is your result and the dark bar is the handicap you chose.',
         ticks: T5_LEVELS.map((lv, i) => ({ lv, x: xOf(lv), name: i === levelIdx ? 'Goal ' + lv : String(lv), goal: i === levelIdx })), goalIndex: levelIdx,
-        rulers: { tiger: rows(T5_FIVE), other: rows(T5_METRICS.filter((m) => !m.tiger)) },
+        rulers: { all: rows(T5_METRICS) },
         rounds: shown.map((rd) => ({ date: pdate(rd.date), course: (rd.course || 'Round') + (rd.holes === 9 ? ' (9 holes)' : ''), score: String(rd.score), vs: vsParText(rd.score - rd.par) })),
         moreRounds: rs.length > shown.length ? 'The ' + shown.length + ' most recent of ' + rs.length + ' rounds are listed.' : ''
       };
@@ -3621,7 +3658,7 @@
     exportBtn.onclick = async () => {
       exportBtn.disabled = true;
       try {
-        const how = await shareFile(buildTiger5Pdf(makeReport()), 'tiger-5-report-' + today() + '.pdf', 'application/pdf', 'Tiger 5 report');
+        const how = await shareFile(buildTiger5Pdf(makeReport()), 'level-up-report-' + today() + '.pdf', 'application/pdf', 'Level Up report');
         if (how === 'downloaded') toast('PDF saved');
       } catch (err) { toast('Could not make the PDF.'); }
       exportBtn.disabled = false;
@@ -3632,7 +3669,7 @@
       h('div', { class: 'actions' }, exportBtn));
 
     return h('section', { class: 'stack' },
-      pageTitle('tiger5', 'Tiger 5'),
+      pageTitle('tiger5', 'Level Up'),
       controls, hero, work, route, rulers, over,
       exportCard, h('div', { class: 'card stack' }, about));
   }
