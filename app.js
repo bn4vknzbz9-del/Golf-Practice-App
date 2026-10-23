@@ -579,8 +579,8 @@
   const STAGE_COUNT = STEPS * 2;
   const REFINE_STAGE = STAGE_COUNT; // only on sessions saved by the old protocol
   const stageLabel = (i) => TRACKS[Math.floor(i / STEPS)] + ': ' + STEP_SHORT[i % STEPS]; // for example With ball: 50% speed
-  // The speed to reach at a step, in mph: a fixed 10 for Slow Mo, otherwise a share of your max swing speed.
-  const stepMph = (k, max) => (k === 1 ? SLOW_MO_MPH : STEP_PCT[k] && max ? Math.round(max * STEP_PCT[k]) : null);
+  // The speed to reach at a step, in mph: a fixed 10 for Slow Mo, a share of your max swing speed rounded to the nearest 5 for 25%, 50% and 75%, and your max itself for full speed.
+  const stepMph = (k, max) => (k === 1 ? SLOW_MO_MPH : !STEP_PCT[k] || !max ? null : k === STEPS - 1 ? max : Math.round((max * STEP_PCT[k]) / 5) * 5);
 
   const CAL_BLOCK_MINUTES = 10;      // 3 games x 10 min = 30 min
   const TRANSFER_BLOCK_MINUTES = 10; // 3 games x 10 min = 30 min
