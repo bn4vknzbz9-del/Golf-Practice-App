@@ -568,18 +568,19 @@
   ];
   const PUTTING = PUTTING_BASE.map((g) => ({ name: g.name, cat: g.cat, balls: g.balls, pointsMax: g.pointsMax, how: g.how + '\n' + PUTT_FOCUS }));
 
-  /* Technique protocol: two tracks, No ball then With ball. Each track starts with freezer swings and then
-     works through the Tempo page speeds, skipping every other speed and stopping at 24/8:
-     Freezer, Smoothie (ultra slow), 36/12, 30/10, 24/8. Progression from Dr Luke Benoit's 5x5 method.
-     The Set your goal and Refine blocks follow Adam Young's Diagnose, Intervene, Refine, Transfer structure.
-     A stage number is track * 5 + step, so 0 to 4 are No ball and 5 to 9 are With ball. */
+  /* Technique progress ladder: two tracks, No ball then With ball. Each track starts with freezer swings and then
+     works up through speeds set as a share of your own max swing speed: Slow Mo (10 mph), 25%, 50%, 75% and full speed.
+     Progression from Dr Luke Benoit's 5x5 method. A stage number is track * 6 + step, so 0 to 5 are No ball and 6 to 11 are With ball. */
   const TRACKS = ['No ball', 'With ball'];
-  const STEP_SHORT = ['Freezer', 'Ultra slow', '36/12', '30/10', '24/8'];
-  const STEP_NOTE = ['(pause at top)', '120/40', 'Medium', 'Slowest', 'Medium'];
-  const STEP_KIND = ['', 'Practice', 'Practice', 'On course', 'On course']; // which Tempo page group the speed is in
-  const STAGE_COUNT = 10;
-  const REFINE_STAGE = 10; // only on sessions saved by the old protocol
-  const stageLabel = (i) => TRACKS[Math.floor(i / 5)] + ': ' + STEP_SHORT[i % 5]; // for example With ball: 36/12
+  const STEPS = 6;
+  const STEP_SHORT = ['Freezer', 'Slow Mo', '25% speed', '50% speed', '75% speed', 'Full speed'];
+  const STEP_PCT = [null, null, 0.25, 0.5, 0.75, 1]; // a share of max swing speed; Slow Mo is a fixed 10 mph
+  const SLOW_MO_MPH = 10;
+  const STAGE_COUNT = STEPS * 2;
+  const REFINE_STAGE = STAGE_COUNT; // only on sessions saved by the old protocol
+  const stageLabel = (i) => TRACKS[Math.floor(i / STEPS)] + ': ' + STEP_SHORT[i % STEPS]; // for example With ball: 50% speed
+  // The speed to reach at a step, in mph: a fixed 10 for Slow Mo, otherwise a share of your max swing speed.
+  const stepMph = (k, max) => (k === 1 ? SLOW_MO_MPH : STEP_PCT[k] && max ? Math.round(max * STEP_PCT[k]) : null);
 
   const CAL_BLOCK_MINUTES = 10;      // 3 games x 10 min = 30 min
   const TRANSFER_BLOCK_MINUTES = 10; // 3 games x 10 min = 30 min
@@ -711,7 +712,7 @@
   /* ==========================================================
      Data model and validation
      ========================================================== */
-  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [], calLevel: 'below' });
+  const emptyData = () => ({ technique: [], protocols: [], mechanics: [], calibration: [], transfer: [], shortgame: [], putting: [], rounds: [], tempo: [], calLevel: 'below', swingMph: null });
 
   // Two blocks were renamed. Games saved under the earlier name, and any text that mentioned a person, are brought up to date.
   const renamed = (name) => (name === 'Set the target' ? 'Set your goal' : /^\w+ ladder, five lives$/.test(name) ? 'Essential pace ladder' : name);
@@ -732,17 +733,20 @@
     notes: str(i.notes, 3000),
     stage: cleanStage(i),
     rounds: Math.round(num(i.rounds, 0, 99)),
-    v: 2
+    v: 3
   });
 
-  // Older sessions used one five-stage ladder (0 No club, 1 Freezer, 2 Smoothie, 3 Foam ball, 4 Real ball, 5 Refine).
-  // They map onto the new two-track ladder so earlier progress still counts. New items carry v: 2.
+  // Older sessions used other ladders. They map onto this one so earlier progress still counts. New items carry v: 3.
+  // v 2 was five steps a track (Freezer, Ultra slow, 36/12, 30/10, 24/8), so steps 0 to 4 stay where they are and the With ball track moves up one place.
+  // Before that, one ladder of 0 No club, 1 Freezer, 2 Smoothie, 3 Foam ball, 4 Real ball and 5 Refine.
+  const fromFiveSteps = (n) => (n < 0 ? n : n <= 4 ? n : n + 1);
   function cleanStage(i) {
-    const n = Math.round(num(i.stage, -1, 10));
-    if (i.v === 2) return n;
+    const n = Math.round(num(i.stage, -1, REFINE_STAGE));
+    if (i.v === 3) return n;
+    if (i.v === 2) return n === 10 ? REFINE_STAGE : fromFiveSteps(n);
     if (n === 5) return REFINE_STAGE;
     if (n === 0) return -1;
-    return n === 1 ? 0 : n === 2 ? 1 : n >= 3 ? 5 : -1;
+    return n === 1 ? 0 : n === 2 ? 1 : n >= 3 ? STEPS : -1;
   }
 
   // A session can cover several mechanics. Older records had one, kept as a one-item list.
@@ -760,6 +764,7 @@
   function cleanData(d) {
     const out = emptyData();
     if (!d || typeof d !== 'object') return out;
+    out.swingMph = Number.isFinite(Number(d.swingMph)) && d.swingMph !== null && Number(d.swingMph) >= 20 && Number(d.swingMph) <= 200 ? Math.round(Number(d.swingMph) * 10) / 10 : null; // your max swing speed in mph, for the speeds on the progress ladder
     out.calLevel = d.calLevel === 'above' ? 'above' : 'below'; // which calibration drills you see: all of them, or without the harder ones
     for (const t of arr(d.technique)) {
       out.technique.push({
@@ -769,7 +774,8 @@
         mechanics: cleanMechList(t.mechList, str(t.mechanics, 200).trim()).join(', ').slice(0, 200),
         notes: str(t.notes, 3000),
         improve: str(t.improve, 3000),
-        reached: arr(t.reached).map((r) => ({ name: str(r.name, 100).trim(), stage: Math.round(num(r.stage, -1, STAGE_COUNT - 1)) })).filter((r) => r.name).slice(0, 10)
+        reached: arr(t.reached).map((r) => ({ name: str(r.name, 100).trim(), stage: t.lv === 3 ? Math.round(num(r.stage, -1, STAGE_COUNT - 1)) : fromFiveSteps(Math.round(num(r.stage, -1, 9))) })).filter((r) => r.name).slice(0, 10),
+        lv: 3
       });
     }
     for (const r of arr(d.tempo)) {
@@ -1401,7 +1407,7 @@
     return { id: null, date: today(), mechList: [], mechanic: '', target: '', start: 0, startTouched: false, items: [], notes: '', next: '', timer: { base: 0, startedAt: null } };
   }
   const furthestPassed = (p) => p.items.reduce((m, it) => (it.stage >= 0 && it.stage < STAGE_COUNT && it.passed ? Math.max(m, it.stage) : m), -1);
-  const stageShort = (i) => TRACKS[Math.floor(i / 5)] + ' ' + (STEP_KIND[i % 5] ? STEP_KIND[i % 5].toLowerCase() + ' ' : '') + STEP_SHORT[i % 5];
+  const stageShort = (i) => TRACKS[Math.floor(i / STEPS)] + ' ' + STEP_SHORT[i % STEPS];
 
   function progressBlock() {
     const list = progressByMechanic();
@@ -1412,7 +1418,7 @@
         h('span', { class: 'tag', text: e.done.size ? e.done.size + ' of ' + STAGE_COUNT + ' steps ticked off' : 'No step completed yet' })),
       TRACKS.map((t, ti) => h('div', { class: 'track' },
         h('span', { class: 'track-name', text: t }),
-        h('div', { class: 'pips', 'aria-hidden': 'true' }, STEP_SHORT.map((n, k) => h('span', { class: 'pip' + (e.done.has(ti * 5 + k) ? ' on' : ''), text: STEP_KIND[k] ? STEP_KIND[k] + ' speed\n' + n : n })))))))));
+        h('div', { class: 'pips', 'aria-hidden': 'true' }, STEP_SHORT.map((n, k) => h('span', { class: 'pip' + (e.done.has(ti * STEPS + k) ? ' on' : ''), text: k === 0 ? n : n.replace(' ', '\n') })))))))));
   }
 
   /* ==========================================================
@@ -1650,7 +1656,7 @@
         h('h3', { text: 'Your road to scratch' }),
         h('p', { text: 'Build the change, build the skill, take it to the course, then track the results. Pick the area your game needs the most work, but make sure you don\u2019t spend all your time on one area. Balance is key.' })),
       h('ol', { class: 'guide-steps' },
-        step(1, ['technique'], 'Build swing changes.', 'Work one swing change at a time up the progress ladder, from no ball to hitting balls at on course speed.'),
+        step(1, ['technique'], 'Build swing changes.', 'Work one swing change at a time up the progress ladder, from no ball to hitting balls at full speed.'),
         step(2, ['calibration'], 'Build skill.', 'Drills that train your strike, low point and clubface direction.'),
         step(3, ['transfer'], 'Take your new technique and skills to a course-like environment.', 'This prepares you for playing, and it is essential to improving your on-course play.'),
         step(4, ['shortgame', 'putting'], 'Improve your performance under pressure in on-course style games.', null),
@@ -1726,7 +1732,7 @@
         mechList: d.mechList.slice(0, 10),
         mechanic: d.mechList.join(', ').slice(0, 200),
         target: d.target.trim().slice(0, 500),
-        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, score: null, passed: !!i.passed, notes: i.notes.trim(), stage: i.stage, rounds: i.rounds, v: 2 })),
+        items: d.items.map((i) => ({ id: i.id, cat: i.cat, name: i.name, how: i.how, minutes: i.minutes, score: null, passed: !!i.passed, notes: i.notes.trim(), stage: i.stage, rounds: i.rounds, v: 3 })),
         notes: d.notes.trim().slice(0, 3000),
         next: d.next.trim().slice(0, 3000)
       });
@@ -1758,25 +1764,58 @@
         h('button', { type: 'button', class: 'ghost', text: editing ? 'Cancel edit' : 'Discard', onclick: discard })));
   }
 
-  // The progress ladder as a diagram: Set your goal, then No ball and With ball, each running through the same five steps.
+  // The progress ladder as a diagram: Set your goal, then No ball and With ball. Each track starts with Freezer, then the
+  // five speeds, and every speed shows its mph for the max swing speed entered above. update() refreshes those speeds as you type.
   function ladderDiagram() {
+    const mphEls = [];
+    const MAIN = ['', 'Slow Mo', '25%', '50%', '75%', 'Full'];
     const track = (ti) => h('div', { class: 'lad-track' },
       h('strong', { class: 'lad-name', text: TRACKS[ti] }),
-      h('div', { class: 'lad-steps' }, STEP_SHORT.map((n, k) => h('div', { class: 'lad-step ' + (k === 0 ? 'f' : STEP_KIND[k] === 'Practice' ? 'p' : 'o') },
-        h('span', { class: 'lad-main', text: n }),
-        h('span', { class: 'lad-note', text: STEP_NOTE[k] })))));
-    return h('div', { class: 'card stack lad' },
+      h('div', { class: 'lad-freezer' }, h('strong', { text: 'Freezer' }), h('span', { text: ' (pause at top)' })),
+      h('div', { class: 'lad-steps' }, [1, 2, 3, 4, 5].map((k) => {
+        const mph = h('span', { class: 'lad-mph' });
+        mphEls.push([mph, k]);
+        return h('div', { class: 'lad-step s' + k },
+          h('span', { class: 'lad-main', text: MAIN[k] }),
+          k === 1 ? null : h('span', { class: 'lad-note', text: 'speed' }),
+          mph);
+      })));
+    const hint = h('p', { class: 'lad-hint', text: 'Enter your max swing speed above to see the speed to reach at each step.' });
+    const card = h('div', { class: 'card stack lad' },
       h('h3', { class: 'sub', text: 'Progress ladder' }),
       h('p', { class: 'lad-desc', text: 'Work through the progress ladder below to master technique changes. Start with no ball and video your swings to ensure you are executing the swing change.' }),
-      h('p', { class: 'lad-desc', text: 'Perform five swings with the correct technique at each tempo speed to unlock the next level.' }),
-      h('p', { class: 'lad-desc', text: 'The progression will allow you to move to practicing with a ball and to ingrain the swing change at on course speed.' }),
+      h('p', { class: 'lad-desc', text: 'Perform five swings with the correct technique at each speed to unlock the next level.' }),
+      h('p', { class: 'lad-desc', text: 'The progression will allow you to move to practicing with a ball and to ingrain the swing change at full speed.' }),
       h('div', { class: 'lad-goal', text: 'Set your goal: diagnose first' }),
-      h('ul', { class: 'lad-key', 'aria-label': 'Key' },
-        h('li', null, h('span', { class: 'lad-dot p' }), 'Practice speed'),
-        h('li', null, h('span', { class: 'lad-dot o' }), 'On course speed')),
+      hint,
       track(0),
       h('p', { class: 'lad-turn', text: 'Add the ball, then the same speeds again' }),
       track(1));
+    card.refreshSpeeds = () => {
+      const max = session.data.swingMph;
+      mphEls.forEach(([el, k]) => { const v = stepMph(k, max); el.textContent = v == null ? '\u2013 mph' : v + ' mph'; });
+      hint.hidden = !!max;
+    };
+    card.refreshSpeeds();
+    return card;
+  }
+
+  // Where you enter your max swing speed. It is saved with your data and sets the mph at each step of the ladder.
+  function swingSpeedCard(ladder) {
+    const input = h('input', { type: 'text', inputmode: 'decimal', maxlength: 5, placeholder: 'For example 95', 'aria-label': 'Max swing speed in miles per hour', value: session.data.swingMph == null ? '' : String(session.data.swingMph) });
+    input.addEventListener('input', () => {
+      const raw = input.value.replace(/[^0-9.]/g, '');
+      if (raw !== input.value) input.value = raw;
+      const v = Number(raw);
+      session.data.swingMph = raw !== '' && Number.isFinite(v) && v >= 20 && v <= 200 ? Math.round(v * 10) / 10 : null;
+      ladder.refreshSpeeds();
+    });
+    input.addEventListener('change', () => { persist(); });
+    return h('div', { class: 'card stack speed-card' },
+      h('label', { class: 'field' },
+        h('span', { class: 'lbl', text: 'Your max swing speed (mph)' }),
+        input),
+      h('p', { class: 'hint', text: 'Enter your top swing speed, for example with a driver. The ladder below turns it into the speed to reach at each step: Slow Mo is 10 mph, then 25%, 50%, 75% and full speed.' }));
   }
 
   function techniqueForm() {
@@ -1822,8 +1861,10 @@
       grid.append(h('label', { class: 'pick' }, cb, m), sel);
     });
     if (!opts.length) grid.append(h('p', { class: 'hint', text: 'No mechanics added yet.' }));
+    const ladder = ladderDiagram();
     return h('div', { class: 'stack' },
-      ladderDiagram(),
+      swingSpeedCard(ladder),
+      ladder,
       d.id ? h('p', { class: 'banner', text: 'Editing an earlier entry' }) : null,
       field('Date', dateInput(d)),
       h('div', { class: 'field' }, h('span', { class: 'lbl', text: 'Mechanics I worked on, and how far I got' }),
